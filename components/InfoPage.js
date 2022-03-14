@@ -10,11 +10,18 @@ import {
   TouchableOpacity,
   Share,
   FlatList,
+  ImageBackground,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import {AirbnbRating, Divider} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import BottomSheet from './BottomSheet';
+import MI from 'react-native-vector-icons/MaterialIcons';
+import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
+import {SamplePlay} from './SamplePlay';
+import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
@@ -22,25 +29,91 @@ export default function InfoPage({route, navigation}) {
   var id = route.params.state;
   var categoryid = route.params.category;
 
+  const {theme} = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#000';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+
   const [book, setBook] = useState([]);
-  const [similar,setSimilar] = useState([]);
+  const [similar, setSimilar] = useState([]);
+  const [refresh, setRefresh] = useState(false);
 
-  const fetchBook = async(id) => {
-    var body = {"type": '1', 'books_id': id }
-    var result = await postData("api/getBooksid", body);
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+  const [popularBooks, setPopularBooks] = useState([]);
+  const [premiumBooks, setPremiumBooks] = useState([]);
+  const [comments, setComments] = useState([]);
+
+  const fetchBook = async id => {
+    var body = {type: '1', books_id: id};
+    var result = await postData('api/getBooksid', body);
     setBook(result.data[0]);
-  }
+  };
 
-  const fetchSimilarBooks = async(id) => {
-    var body = {"type": '2', "category_id": id }
-    var result = await postData("api/getSimiler", body);
+  const fetchSimilarBooks = async id => {
+    var body = {type: '1', category_id: id};
+    var result = await postData('api/getSimiler', body);
     setSimilar(result.data);
-  }
+  };
+
+  const fetchNewArrivals = async () => {
+    var body = {type: '1', skip: 0};
+    var result = await postData('api/getNewarrival', body);
+    setNewArrivals(result.data);
+  };
+
+  const fetchTopRated = async () => {
+    var body = {type: '1', skip: 0};
+    var result = await postData('api/getToprated', body);
+    setTopRated(result.data);
+  };
+
+  const fetchPopularBooks = async () => {
+    var body = {type: '1', skip: 0};
+    var result = await postData('api/getPopulerbooks', body);
+    setPopularBooks(result.data);
+  };
+
+  const fetchPremiumBooks = async () => {
+    var body = {type: '1', skip: 0};
+    var result = await postData('api/getPremiumbooks', body);
+    setPremiumBooks(result.data);
+  };
+
+  const fetchAllComments = async () => {
+    var body = {type: '1', books_id: id};
+    var result = await postData('api/getComment', body);
+    if (result.msg === 'Success') {
+      setComments(result.data);
+    }
+  };
+
+  const renderComments = ({item}) => {
+    return (
+      item.review_status === '1' && (
+        <View style={styles.commentContainer}>
+          <View>
+            <Text style={[styles.commentHeader, {color: textColor}]}>
+              {item.comment}
+            </Text>
+          </View>
+          <View>
+            <Text style={[styles.commentFooter, {color: textColor}]}>- {item.name}</Text>
+          </View>
+        </View>
+      )
+    );
+  };
 
   useEffect(() => {
     fetchBook(id);
+    fetchAllComments();
     fetchSimilarBooks(categoryid);
-  },[])
+    fetchNewArrivals();
+    fetchTopRated();
+    fetchPopularBooks();
+    fetchPremiumBooks();
+  }, []);
 
   const onShare = async () => {
     try {
@@ -71,7 +144,7 @@ export default function InfoPage({route, navigation}) {
   };
 
   const onTextLayout = useCallback(
-    (e) => {
+    e => {
       if (e.nativeEvent.lines.length > 3 && !textShown) {
         setShowMoreButton(true);
         setNumLines(3);
@@ -84,131 +157,351 @@ export default function InfoPage({route, navigation}) {
     setNumLines(textShown ? undefined : 3);
   }, [textShown]);
 
-  const SimilarBooks = ({item, index}) => {
+  const DisplayItem = ({item}) => {
     return (
-      <TouchableOpacity
-        key={index}
-        onPress={() =>
-          navigation.navigate('MusicPlayer', {state: item, data: similar})
-        }>
-        <View style={styles.nextWrapper}>
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          // width: width * 0.30,
+        }}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.push('InfoPage', {
+              state: item.id,
+              category: item.bookcategoryid,
+            })
+          }>
           <Image
+            style={[styles.nextImage]}
             source={{
               uri: `${ServerURL}/admin/upload/bookcategory/${item.bookcategoryid}/${item.photo}`,
             }}
-            style={styles.nextImage}
           />
-          <View >
+        </TouchableOpacity>
+        <SamplePlay
+          item={item}
+          propsStyles={{
+            position: 'absolute',
+            top: '45%',
+            left: '5%',
+            elevation: 10,
+          }}
+        />
+        <View
+          style={{
+            width: width * 0.28,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: 5,
+            justifyContent: 'space-between',
+          }}>
+          <MaterialCommunityIcons
+            style={{paddingRight: 1}}
+            name="account-voice"
+            size={15}
+            color={textColor}
+          />
           <TextTicker
-            style={[styles.nextImageText,{color: useColorScheme() === 'dark' ? '#FFF' : '#000'}]}
+            style={[
+              styles.moreimageText,
+              {
+                color: textColor,
+              },
+            ]}
             duration={10000}
             loop
             bounce
             repeatSpacer={50}
             marqueeDelay={1000}
             useNativeDriver>
-            {item.bookname}
+            {item.narrator}
           </TextTicker>
+        </View>
+        <View style={{flexDirection: 'row'}}>
+          <MI
+            style={{paddingRight: 3}}
+            name="remove-red-eye"
+            size={15}
+            color={textColor}
+          />
+          <View
+            style={{
+              width: width * 0.24,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+            }}>
+            <Text
+              style={{
+                paddingLeft: 5,
+                // width: width * 0.55,
+                fontSize: 12,
+                overflow: 'hidden',
+                color: textColor,
+              }}>
+              {item.viewcount !== null ? item.viewcount : 0}
+            </Text>
+            <AirbnbRating
+              starContainerStyle={{paddingLeft: 0}}
+              count={5}
+              showRating={false}
+              defaultRating={item.percentage !== null ? item.percentage : 0}
+              size={7}
+            />
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
+
+  // const onRefresh = () => {
+  //   setRefresh(true);
+  //   fetchBook(id);
+  //   fetchAllComments();
+  //   fetchSimilarBooks(categoryid);
+  //   fetchNewArrivals();
+  //   fetchTopRated();
+  //   fetchPopularBooks();
+  //   fetchPremiumBooks();
+  //   setRefresh(false);
+  // }
 
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: useColorScheme() === 'dark' ? '#212121' : '#FFF',
+          backgroundColor: backgroundColor,
         },
       ]}>
-      <View style={{paddingBottom: 60}}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          
-          <View style={styles.wrapper}>
-            <Image
-              source={{
-                uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
-              }}
-              style={styles.image}
-            />
-          </View>
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                },
-              ]}>
-              {book.bookname}
-            </Text>
+      <View style={{paddingBottom:50}}>
+        <ScrollView showsVerticalScrollIndicator={false}
+        //  refreshControl={
+        //   <RefreshControl
+        //     refreshing={refresh}
+        //     onRefresh={onRefresh}
+        //   />
+        // } 
+        >
+          <ImageBackground
+            resizeMode="cover"
+            source={require('../../images/musicbg.jpg')}
+            imageStyle={{opacity: 0.4}}
+            style={{paddingVertical: 20}}>
+            <View style={styles.wrapper}>
+              <Image
+                source={{
+                  uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
+                }}
+                style={styles.image}
+              />
+            </View>
+          </ImageBackground>
+          <Text
+            style={[
+              styles.imageText,
+              {
+                color: textColor,
+              },
+            ]}>
+            {book.bookname}
+          </Text>
           <View style={styles.textContainer}>
-            <View style={[styles.textWrapper,{alignItems: 'center'}]}>
+            <View style={[styles.textWrapper, {alignItems: 'center'}]}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    width: width*0.48,
+                    color: textColor,
+                    width: width * 0.48,
                   },
                 ]}>
                 Written By :{' '}
               </Text>
-              <Text style={styles.text}>{book.bookauthor}</Text>
+              <Text style={[styles.text, {color: textColor}]}>
+                {book.bookauthor}
+              </Text>
             </View>
-            <View style={[styles.textWrapper,{alignItems: 'center'}]}>
+            <View style={[styles.textWrapper, {alignItems: 'center'}]}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    width: width*0.48,
+                    color: textColor,
+                    width: width * 0.48,
                   },
                 ]}>
                 Narrated By :{' '}
               </Text>
-              <Text style={styles.text}>{book.narrator}</Text>
+              <Text style={[styles.text, {color: textColor}]}>
+                {book.narrator}
+              </Text>
             </View>
-            <View style={[styles.textWrapper,{alignItems: 'center'}]}>
+            <View style={[styles.textWrapper, {alignItems: 'center'}]}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    width: width*0.48,
+                    color: textColor,
+                    width: width * 0.48,
                   },
                 ]}>
                 Category :{' '}
               </Text>
-              <Text style={styles.text}>{book.bookcategory}</Text>
+              <Text style={[styles.text, {color: textColor}]}>
+                {book.bookcategory}
+              </Text>
             </View>
-            <View style={[styles.textWrapper,{alignItems: 'center'}]}>
+            <View style={[styles.textWrapper, {alignItems: 'center'}]}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    width: width*0.48,
+                    color: textColor,
+                    width: width * 0.48,
                   },
                 ]}>
                 Views :{' '}
               </Text>
-              <Text style={styles.text}>{book.viewcount}</Text>
+              <Text style={[styles.text, {color: textColor}]}>
+                {book.viewcount}
+              </Text>
             </View>
-            <View style={[styles.textWrapper,{alignItems: 'center'}]}>
+
+            {book.premiumtype === 'Premium' ? (
+              <>
+                <View style={[styles.textWrapper, {alignItems: 'center'}]}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        width: width * 0.48,
+                      },
+                    ]}>
+                    Premium Type :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    {book.premiumtype}
+                  </Text>
+                </View>
+                <View style={[styles.textWrapper, {alignItems: 'center'}]}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        width: width * 0.48,
+                      },
+                    ]}>
+                    Validity :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    {book.validity} days
+                  </Text>
+                </View>
+                <View style={[styles.textWrapper, {alignItems: 'center'}]}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        width: width * 0.48,
+                      },
+                    ]}>
+                    Price :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    ₹ {book.price}
+                  </Text>
+                </View>
+                <View style={[styles.textWrapper, {alignItems: 'center'}]}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        width: width * 0.48,
+                      },
+                    ]}>
+                    Doller Price :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    $ {book.dollerprice}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <></>
+            )}
+            <View style={[styles.textWrapper, {alignItems: 'center'}]}>
               <Text
                 style={[
                   styles.text,
                   {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    width: width*0.48,
+                    color: textColor,
+                    width: width * 0.48,
                   },
                 ]}>
                 Rating :{' '}
               </Text>
-              <Text style={styles.text}>{book.percentage}</Text>
+              <AirbnbRating
+                starContainerStyle={{paddingLeft: 0}}
+                count={5}
+                showRating={false}
+                defaultRating={book.percentage !== null ? book.percentage : 0}
+                size={11}
+              />
             </View>
+            {book.description !== '' ? (
+              <View
+                style={[
+                  styles.textWrapper,
+                  {
+                    flexDirection: 'column',
+                    // alignItems: 'center'
+                  },
+                ]}>
+                <View style={{flexDirection: 'row'}}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        fontSize: 16,
+                        width: width * 0.48,
+                      },
+                    ]}>
+                    Description :{' '}
+                  </Text>
+                  {showMoreButton ? (
+                    <TouchableOpacity onPress={toggleTextShown}>
+                      <Text
+                        style={{color: '#FFD369'}}>
+                        {textShown ? 'Read Less' : 'Read More'}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                <View>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        width: width * 0.9,
+                        textAlign: 'justify',
+                        color: textColor,
+                      },
+                    ]}
+                    numberOfLines={numLines}
+                    ellipsizeMode="tail"
+                    onTextLayout={onTextLayout}>
+                    {book.description}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             <View
               style={[
                 styles.textWrapper,
@@ -217,48 +510,179 @@ export default function InfoPage({route, navigation}) {
                   // alignItems: 'center'
                 },
               ]}>
-              <Text
-                style={[
-                  styles.text,
-                  {
-                    color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                    fontSize: 16,
-                    width: width*0.48,
-                  },
-                ]}>
-                Description :{' '}
-              </Text>
-              <View>
-              <Text
-                style={[styles.text,{
-                  width: width*0.80,
-                  textAlign: 'left',
-                }]}
-                numberOfLines={numLines}
-                ellipsizeMode="tail"
-                onTextLayout={onTextLayout}
-                >
-                {book.description}
-              </Text>
-              {showMoreButton ? (
-                <Text onPress={toggleTextShown} style={{color: '#FFD369'}}>
-                  {textShown ? 'Read Less' : 'Read More'}
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={[
+                    styles.text,
+                    {
+                      color: textColor,
+                      fontSize: 16,
+                      width: width * 0.48,
+                      paddingVertical: 5,
+                    },
+                  ]}>
+                  Comments :{' '}
                 </Text>
-              ) : null}
+              </View>
+              <View>
+                <FlatList
+                  data={comments}
+                  persistentScrollbar
+                  nestedScrollEnabled
+                  maxHeight={height * 0.43}
+                  renderItem={renderComments}
+                  keyExtractor={item => item.id}
+                />
               </View>
             </View>
           </View>
-          <View style={styles.btnContainer}>
+
+          <View style={{paddingBottom: 10, paddingLeft: 20}}>
+            <Text
+              style={[
+                styles.imageText,
+                {
+                  color: textColor,
+                  paddingVertical: 20,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                },
+              ]}>
+              Similar Books
+            </Text>
+            <FlatList
+              data={similar}
+              renderItem={({item, index}) => (
+                <DisplayItem item={item} index={index} />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={() => (
+                <View style={{padding: 30, marginHorizontal: 150}}>
+                  <ActivityIndicator size="large" />
+                </View>
+              )}
+            />
+            <Text
+              style={[
+                styles.imageText,
+                {
+                  color: textColor,
+                  paddingVertical: 20,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                },
+              ]}>
+              New Arrivals
+            </Text>
+            <FlatList
+              data={newArrivals}
+              renderItem={({item, index}) => (
+                <DisplayItem item={item} index={index} />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={() => (
+                <View style={{padding: 30, marginHorizontal: 150}}>
+                  <ActivityIndicator size="large" />
+                </View>
+              )}
+            />
+            <Text
+              style={[
+                styles.imageText,
+                {
+                  color: textColor,
+                  paddingVertical: 20,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                },
+              ]}>
+              Top Rated
+            </Text>
+            <FlatList
+              data={topRated}
+              renderItem={({item, index}) => (
+                <DisplayItem item={item} index={index} />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={() => (
+                <View style={{padding: 30, marginHorizontal: 150}}>
+                  <ActivityIndicator size="large" />
+                </View>
+              )}
+            />
+            <Text
+              style={[
+                styles.imageText,
+                {
+                  color: textColor,
+                  paddingVertical: 20,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                },
+              ]}>
+              Popular Books
+            </Text>
+            <FlatList
+              data={popularBooks}
+              renderItem={({item, index}) => (
+                <DisplayItem item={item} index={index} />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={() => (
+                <View style={{padding: 30, marginHorizontal: 150}}>
+                  <ActivityIndicator size="large" />
+                </View>
+              )}
+            />
+            <Text
+              style={[
+                styles.imageText,
+                {
+                  color: textColor,
+                  paddingVertical: 20,
+                  paddingHorizontal: 0,
+                  fontSize: 16,
+                },
+              ]}>
+              Premium Books
+            </Text>
+            <FlatList
+              data={premiumBooks}
+              renderItem={({item, index}) => (
+                <DisplayItem item={item} index={index} />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              ListEmptyComponent={() => (
+                <View style={{padding: 30, marginHorizontal: 150}}>
+                  <ActivityIndicator size="large" />
+                </View>
+              )}
+            />
+          </View>
+        </ScrollView>
+      </View>
+      {/* <BottomSheet navigation={navigation} /> */}
+      <View style={styles.btnContainer}>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('MusicPlayer', {state: book, data: similar})
-              }
-              >
+              }>
               <View
                 style={[
                   styles.btn,
                   {
                     width: width * 0.62,
+                    marginRight: 10,
                   },
                 ]}>
                 <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
@@ -276,29 +700,6 @@ export default function InfoPage({route, navigation}) {
               </View>
             </TouchableOpacity>
           </View>
-          <View>
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: useColorScheme() === 'dark' ? '#FFF' : '#000',
-                  paddingHorizontal: 20,
-                },
-              ]}>
-              Similar Books
-            </Text>
-          </View>
-          <FlatList
-            data={similar}
-            renderItem={({item, index}) => (
-              <SimilarBooks item={item} index={index} />
-            )}
-            keyExtractor={(item, index) => index.toString()}
-            numColumns={3}
-          />
-        </ScrollView>
-      </View>
-      <BottomSheet navigation={navigation} />
     </View>
   );
 }
@@ -313,7 +714,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     width: width,
-    padding: 20,
+    // paddingTop: 20,
   },
   image: {
     width: 300,
@@ -332,6 +733,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     paddingHorizontal: 20,
     flexWrap: 'wrap',
+    paddingTop: 5,
   },
   textContainer: {
     paddingHorizontal: 20,
@@ -348,6 +750,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexWrap: 'wrap',
     // backgroundColor:'red',
+    width: width * 0.5,
   },
   btn: {
     padding: 10,
@@ -356,12 +759,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 5,
+    // margin: 5,
     borderRadius: 5,
   },
   btnContainer: {
     width: width,
-    padding: 10,
+    paddingHorizontal: 10,
+    position: 'absolute',
+    bottom: 0,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
@@ -373,20 +778,71 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     width: width * 0.32,
     paddingHorizontal: 15,
-    paddingVertical:10
+    paddingVertical: 10,
   },
   nextImage: {
     height: height * 0.17,
     width: width * 0.28,
-    marginRight: 30,
+    marginRight: 15,
     resizeMode: 'stretch',
-    borderRadius:5,
+    borderRadius: 5,
   },
   nextImageText: {
     fontWeight: '600',
     fontSize: 12,
     width: width * 0.25,
     overflow: 'hidden',
-    paddingTop: 5
+    paddingTop: 5,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Calibri',
+    paddingTop: 6,
+    paddingBottom: 15,
+  },
+  categoryImage: {
+    height: height * 0.24,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    // alignItems: 'center',
+    overflowX: 'scroll',
+  },
+  moreimage: {
+    height: height * 0.17,
+    width: width * 0.28,
+    marginRight: 15,
+    resizeMode: 'stretch',
+    borderRadius: 5,
+    // elevation: 5,
+    // shadowOpacity: 2,
+    // shadowRadius: 14,
+    // shadowColor: 'red',
+    // shadowOffset: {width: 0, height: 0},
+  },
+  moreimageText: {
+    fontWeight: '600',
+    fontSize: 12,
+    paddingLeft: 5,
+    // width: width * 0.24,
+    overflow: 'hidden',
+  },
+  commentContainer: {
+    // height: 70,
+    width: width * 0.9,
+    paddingTop: 10,
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-between',
+  },
+  commentHeader: {
+    fontSize: 14,
+    width: width*0.5,
+  },
+  commentFooter: {
+    fontSize: 10,
+    textAlign: 'right',
+    paddingRight: 10,
   },
 });

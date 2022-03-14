@@ -9,20 +9,29 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import {Avatar, ListItem} from 'react-native-elements';
+import {Avatar, ListItem, Icon} from 'react-native-elements';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useDrawerStatus } from '@react-navigation/drawer';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const DrawerContent = ({navigation}) => {
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  const textColor2 = theme === 'dark' ? '#ff9000' : '#191414';
   const isDrawerOpen = useDrawerStatus() === 'open';
 
   const [category, setCategory] = React.useState([]);
   const [expanded, setExpanded] = React.useState(false);
+  const [lexpanded, setLExpanded] = React.useState(false);
   const [userData, setUserData] = React.useState([]);
 
   const fetchAllCategory = async () => {
@@ -64,8 +73,8 @@ export const DrawerContent = ({navigation}) => {
           <ListItem.Content>
             <ListItem.Title
               style={{
-                fontSize: 14,
-                color: useColorScheme() === 'dark' ? '#ff9000' : '#000',
+                fontSize: 12,
+                color: textColor2,
               }}>
               {item.bookcategory}
             </ListItem.Title>
@@ -124,6 +133,7 @@ export const DrawerContent = ({navigation}) => {
                   styles.text,
                   {
                     color: textColor,
+                    fontWeight: '700'
                   },
                 ]}>
                 Categories
@@ -138,63 +148,160 @@ export const DrawerContent = ({navigation}) => {
         <FlatList
           data={category}
           nestedScrollEnabled
+          persistentScrollbar
           maxHeight={height * 0.43}
-          showsVerticalScrollIndicator={false}
           renderItem={({item}) => <DisplayCategory item={item} />}
           keyExtractor={item => item.id}
         />
       </ListItem.Accordion>
+
+      <ListItem
+        onPress={() => {
+          if (userData.length !== 0) {
+          navigation.navigate('EditProfile')
+          }
+          else {
+            navigation.navigate('Login')
+          }
+        navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <FontAwesome5 name="user-alt" size={20} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Profile</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        onPress={() => {
+          navigation.navigate('Subscriptions');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <Icon name="category" type="materialicons" color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Membership</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
       <ListItem
         onPress={() => {
           navigation.navigate('AboutUs');
           navigation.closeDrawer();
         }}
         containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content>
+           <Icon name="info-outline" type="materialicons" color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>About Us</Text>
           </ListItem.Title>
         </ListItem.Content>
-        <ListItem.Chevron />
       </ListItem>
-
       <ListItem
-        onPress={() => {navigation.navigate('PrivacyPolicy')
-        navigation.closeDrawer();}}
-       containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content>
+        onPress={() => {
+          navigation.navigate('AboutUs');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <Icon name="questioncircle" type="antdesign" color={textColor} size={22}/>
+        <ListItem.Content style={{paddingLeft:20}}>
           <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>
-              Privacy Policy
-            </Text>
+            <Text style={[styles.text, {color: textColor,}]}>Help</Text>
           </ListItem.Title>
         </ListItem.Content>
-        <ListItem.Chevron />
+      </ListItem>
+      <ListItem
+        onPress={() => {
+          navigation.navigate('JoinUs');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <Icon name="free-breakfast" type="materialicons" color={textColor} size={22}/>
+        <ListItem.Content style={{paddingLeft:20}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor,}]}>Join Us</Text>
+          </ListItem.Title>
+        </ListItem.Content>
       </ListItem>
 
       <ListItem
         onPress={() => {navigation.navigate('FAQ')
         navigation.closeDrawer();}}
         containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content>
+          <MaterialCommunityIcons name="frequently-asked-questions" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>FAQ</Text>
           </ListItem.Title>
         </ListItem.Content>
-        <ListItem.Chevron />
       </ListItem>
 
       <ListItem
         onPress={() => {navigation.navigate('Disclaimer')
         navigation.closeDrawer();}}
         containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content>
+          <MaterialCommunityIcons name="exclamation-thick" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>Disclaimer</Text>
           </ListItem.Title>
         </ListItem.Content>
-        <ListItem.Chevron />
       </ListItem>
+
+      <ListItem
+        onPress={() => {navigation.navigate('Settings')
+        navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialIcons name="settings" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Settings</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+
+      <ListItem.Accordion
+        containerStyle={{backgroundColor: backgroundColor}}
+        content={
+          <>
+          <Icon name="privacy-tip" type="materialicons" color={textColor} size={22}/>
+            <ListItem.Content style={{paddingLeft:35}}>
+              <ListItem.Title
+                style={[
+                  styles.text,
+                  {
+                    color: textColor,
+                    fontWeight: '700'
+                  },
+                ]}>
+                Legal
+              </ListItem.Title>
+            </ListItem.Content>
+          </>
+        }
+        isExpanded={lexpanded}
+        onPress={() => {
+          setLExpanded(!lexpanded)
+        }}>
+        <ListItem
+        onPress={() => {navigation.navigate('PrivacyPolicy')
+        navigation.closeDrawer();}}
+       containerStyle={{backgroundColor: backgroundColor}}>
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor2}]}>
+              Privacy Policy
+            </Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      
+      </ListItem.Accordion>
+      
     </View>
   );
 };
@@ -204,7 +311,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   text: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

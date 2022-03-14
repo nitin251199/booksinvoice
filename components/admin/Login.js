@@ -18,11 +18,14 @@ import {Button, ButtonGroup} from 'react-native-elements';
 import {postData} from '../FetchApi';
 import {useDispatch} from 'react-redux';
 import {storeDatasync} from '../AsyncStorage';
+import PhoneInput from 'react-native-phone-number-input';
+import { ThemeContext } from '../ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const Login = ({navigation}) => {
   const refRBSheet = useRef();
+  const phoneInput = useRef(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,9 +34,12 @@ export const Login = ({navigation}) => {
   const [show, setShow] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
-  const textColor = useColorScheme() === 'dark' ? '#fff' : '#000';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#fff' : '#000';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const otpLogin = () => {
     return (
@@ -73,23 +79,47 @@ export const Login = ({navigation}) => {
             }}>
             <View
               style={[
-                styles.input,
+                // styles.input,
                 {
                   borderColor: textColor,
                 },
               ]}>
-              <AntDesign
+              {/* <AntDesign
                 style={{marginHorizontal: 10}}
                 name="user"
                 size={30}
                 color={textColor}
-              />
-              <TextInput
+              /> */}
+              {/* <TextInput
                 value={mobileNo}
                 style={{width: '90%'}}
                 placeholder="Mobile Number"
                 placeholderTextColor={textColor}
                 onChangeText={text => setMobileNo(text)}
+              /> */}
+              <PhoneInput
+                ref={phoneInput}
+                defaultValue={mobileNo}
+                defaultCode="IN"
+                layout="first"
+                textContainerStyle={{
+                  borderRadius: 10,
+                  alignItems: 'center',
+                  paddingVertical: 0,
+                }}
+                containerStyle={{
+                  borderWidth: 1,
+                  borderColor: textColor,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                }}
+                placeholder="Mobile Number"
+                onChangeFormattedText={text => {
+                  setMobileNo(text);
+                }}
+                withDarkTheme={useColorScheme() === 'dark' ? true : false}
+                withShadow
+                autoFocus
               />
             </View>
             {show ? (
@@ -137,7 +167,6 @@ export const Login = ({navigation}) => {
               <TouchableOpacity
                 onPress={() => {
                   generateOTP();
-                  setShow(true);
                 }}>
                 <View
                   style={[
@@ -176,30 +205,36 @@ export const Login = ({navigation}) => {
     if (result.msg === 'Login') {
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
-      dispatch({type: 'ADD_USER', payload: [result.data.id,result.data]});
-      // alert("Login Successfully")
+      dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
+      dispatch({type: 'SET_LOGIN', payload: true});
+      storeDatasync('isLogin', true);
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
-      // ToastAndroid.show('Invalid OTP !', ToastAndroid.LONG);
       alert('Invalid Creditentials');
     }
     setLoading(false);
   };
 
   const generateOTP = async () => {
-    var body = {
-      type: '1',
-      user_type: selectedIndex === 0 ? 'individual' : 'organisation',
-      usermobile: mobileNo,
-    };
-    var result = await postData('api/getGenerate', body);
-    if (result.reaction === 'success') {
-      ToastAndroid.show(
-        'OTP has been sent to your mobile no. successfully!',
-        ToastAndroid.LONG,
-      );
+    const checkValid = phoneInput.current?.isValidNumber(mobileNo);
+    if (checkValid) {
+      setShow(true);
+      var body = {
+        type: '1',
+        user_type: selectedIndex === 0 ? 'individual' : 'organisation',
+        usermobile: mobileNo,
+      };
+      var result = await postData('api/getGenerate', body);
+      if (result.reaction === 'success') {
+        ToastAndroid.show(
+          'OTP has been sent to your mobile no. successfully!',
+          ToastAndroid.LONG,
+        );
+      } else {
+        ToastAndroid.show('Something Went Wrong!', ToastAndroid.LONG);
+      }
     } else {
-      ToastAndroid.show('Something Went Wrong!', ToastAndroid.LONG);
+      alert(phoneInput.current?.isValidNumber());
     }
   };
 
@@ -216,8 +251,9 @@ export const Login = ({navigation}) => {
     if (result.msg === 'Login') {
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
-      dispatch({type: 'ADD_USER', payload: [result.data.id,result.data]});
-      // alert("Login Successfully")
+      dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
+      dispatch({type: 'SET_LOGIN', payload: true});
+      storeDatasync('isLogin', true);
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
       // ToastAndroid.show('Invalid OTP !', ToastAndroid.LONG);
@@ -256,7 +292,7 @@ export const Login = ({navigation}) => {
         containerStyle={{
           marginTop: 20,
           borderRadius: 10,
-          borderColor: backgroundColor,
+          borderColor: '#212121',
         }}
         selectedButtonStyle={{backgroundColor: '#ff9000'}}
         textStyle={{color: '#000'}}
@@ -270,10 +306,10 @@ export const Login = ({navigation}) => {
               borderColor: textColor,
             },
           ]}>
-          <AntDesign
+          <MaterialCommunityIcons
             style={{marginHorizontal: 10}}
-            name="user"
-            size={30}
+            name="email"
+            size={25}
             color={textColor}
           />
           <TextInput
@@ -290,31 +326,38 @@ export const Login = ({navigation}) => {
               borderColor: textColor,
             },
           ]}>
-          <AntDesign
+          <MaterialCommunityIcons
             style={{marginHorizontal: 10}}
             name="key"
-            size={30}
+            size={25}
             color={textColor}
           />
           <TextInput
-            style={{width: '80%'}}
-            secureTextEntry={true}
+            style={{width: '70%'}}
+            secureTextEntry={!showPass}
             placeholder="Password"
             placeholderTextColor={textColor}
             onChangeText={text => setPassword(text)}
           />
+          <MaterialCommunityIcons
+            onPress={() => setShowPass(!showPass)}
+            style={{marginHorizontal: 10}}
+            name={showPass ? 'eye-off' : 'eye'}
+            size={25}
+            color={textColor}
+          />
         </View>
       </View>
-        <Button
-          onPress={() => handleLogin()}
-          title="Log In"
-          loading={loading}
-          loadingProps={{
-            color: '#000'
-          }}
-          titleStyle={styles.btnText}
-          buttonStyle={styles.btn}
-        />
+      <Button
+        onPress={() => handleLogin()}
+        title="Log In"
+        loading={loading}
+        loadingProps={{
+          color: '#000',
+        }}
+        titleStyle={styles.btnText}
+        buttonStyle={styles.btn}
+      />
       <View
         style={{
           flexDirection: 'row',
@@ -340,18 +383,17 @@ export const Login = ({navigation}) => {
           Forgot Password ?
         </Text>
       </View>
-      <View style={{flexDirection: 'row'}}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          width: width * 0.3,
+        }}>
         <TouchableOpacity>
-          <Image
-            style={{width: 50, height: 50, marginHorizontal: 15}}
-            source={require('../../images/facebook.png')}
-          />
+          <MaterialCommunityIcons name="facebook" size={50} color="#4267B2" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Image
-            style={{width: 50, height: 50, marginHorizontal: 15}}
-            source={require('../../images/google.png')}
-          />
+          <MaterialCommunityIcons name="google" size={50} color="#DB4437" />
         </TouchableOpacity>
       </View>
       {otpLogin()}
@@ -363,7 +405,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    paddingTop: 80,
   },
   logo: {
     resizeMode: 'contain',
@@ -382,7 +423,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   inputContainer: {
-    marginVertical: 20,
+    marginVertical: 10,
   },
   input: {
     borderWidth: 1,
@@ -391,7 +432,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 10,
-    margin: 15,
+    margin: 10,
   },
   btn: {
     backgroundColor: '#ff9000',
@@ -399,10 +440,11 @@ const styles = StyleSheet.create({
     padding: 15,
     alignItems: 'center',
     borderRadius: 10,
+    marginVertical: 15,
   },
   btnText: {
     fontWeight: '700',
     fontSize: 20,
-    color: '#000'
+    color: '#000',
   },
 });

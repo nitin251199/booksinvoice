@@ -12,7 +12,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import {AirbnbRating, FAB} from 'react-native-elements';
+import {AirbnbRating, Divider, FAB} from 'react-native-elements';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -20,149 +20,146 @@ import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
 import BottomSheet from './BottomSheet';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const CategoryPage = ({navigation, route}) => {
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
 
-  const DisplayBooks = ({item}) => {
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+
+  const displayBooks = ({item}) => {
     return (
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          // width: width * 0.30,
-          paddingBottom: 30,
-        }}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('InfoPage', {
-              state: item.id,
-              category: item.bookcategoryid,
-            })
-          }>
-          <Image
-            style={[styles.image]}
-            source={{
-              uri: `${ServerURL}/admin/upload/bookcategory/${item.bookcategoryid}/${item.photo}`,
-            }}
-          />
-        </TouchableOpacity>
-        {/* <SamplePlay item={item} /> */}
+      <View>
         <View
           style={{
-            width: width * 0.28,
+            display: 'flex',
             flexDirection: 'row',
-            alignItems: 'center',
-            paddingTop: 5,
-            justifyContent: 'space-between',
+            // width: width * 0.30,
+            paddingVertical: 15,
           }}>
-          <MaterialCommunityIcons
-            style={{paddingRight: 3}}
-            name="account-voice"
-            size={15}
-            color={useColorScheme() === 'dark' ? '#FFD369' : '#000'}
-          />
-          <TextTicker
-            style={[
-              styles.imageText,
-              {
-                color: useColorScheme() === 'dark' ? '#FFD369' : '#000',
-              },
-            ]}
-            duration={10000}
-            loop
-            bounce
-            repeatSpacer={50}
-            marqueeDelay={1000}
-            useNativeDriver>
-            {item.narrator}
-          </TextTicker>
-        </View>
-        <View style={{flexDirection: 'row'}}>
-          <MI
-            style={{paddingRight: 3}}
-            name="remove-red-eye"
-            size={15}
-            color={useColorScheme() === 'dark' ? '#FFD369' : '#000'}
-          />
-          <View
-            style={{
-              width: width * 0.24,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-            }}>
-            <Text
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('InfoPage', {
+                state: item.id,
+                category: item.bookcategoryid,
+              })
+            }>
+            <Image
+              style={[styles.image]}
+              source={{
+                uri: `${ServerURL}/admin/upload/bookcategory/${item.bookcategoryid}/${item.photo}`,
+              }}
+            />
+          </TouchableOpacity>
+          <SamplePlay
+          item={item}
+          propsStyles={{
+            position: 'absolute',
+            top: '73%',
+            left: '1%',
+            elevation: 10,
+          }}
+        />
+          <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
+            <TextTicker
               style={{
-                paddingLeft: 5,
-                // width: width * 0.55,
-                fontSize: 12,
-                overflow: 'hidden',
-                color: useColorScheme() === 'dark' ? '#FFD369' : '#000',
-              }}>
-              {item.viewcount !== null ? item.viewcount : 0}
-            </Text>
+                fontSize: 17,
+                color: textColor,
+                fontWeight: '700',
+                paddingVertical: 5,
+              }}
+              duration={10000}
+              loop
+              bounce
+              repeatSpacer={50}
+              marqueeDelay={1000}
+              useNativeDriver>
+              {item.bookname}
+            </TextTicker>
+            <Text style={{color: textColor}}>{item.bookauthor}</Text>
+            <Text style={{color: textColor}}>{item.bookcategory}</Text>
+            <Text style={{color: textColor}}>Narrator: {item.narrator}</Text>
             <AirbnbRating
-              starContainerStyle={{paddingLeft: 0}}
+              starContainerStyle={{marginLeft: -160}}
               count={5}
               showRating={false}
               defaultRating={item.percentage !== null ? item.percentage : 0}
-              size={7}
+              size={14}
             />
           </View>
+          {/* <SamplePlay item={item} /> */}
         </View>
+        <Divider />
       </View>
     );
   };
 
   const [books, setBooks] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [skip, setSkip] = React.useState(0);
 
   const fetchBooksbyid = async id => {
+    setIsLoading(true);
     let type = route.params.item.bookcategory;
     switch (type) {
-      case "New Arrivals":
-        var body = {type: 1};
+      case 'New Arrivals':
+        var body = {type: 1, skip: skip};
         var newarrivals = await postData('api/getNewarrival', body);
-        setBooks(newarrivals.data);
-        setLoading(false);
+        setBooks([...books, ...newarrivals.data]);
+        setIsLoading(false);
         break;
 
-      case "Top Rated":
-        var body = {type: 1};
+      case 'Top Rated':
+        var body = {type: 1, skip: skip};
         var top = await postData('api/getToprated', body);
-        setBooks(top.data);
-        setLoading(false);
+        setBooks([...books, ...top.data]);
+        setIsLoading(false);
         break;
 
-      case "Popular Books":
-        var body = {type: 1};
+      case 'Popular Books':
+        var body = {type: 1, skip: skip};
         var popular = await postData('api/getPopulerbooks', body);
-        setBooks(popular.data);
-        setLoading(false);
+        setBooks([...books, ...popular.data]);
+        setIsLoading(false);
         break;
 
-      case "Premium":
-        var body = {type: 1};
+      case 'Premium':
+        var body = {type: 1, skip: skip};
         var premium = await postData('api/getPremiumbooks', body);
-        setBooks(premium.data);
-        setLoading(false);
+        setBooks([...books, ...premium.data]);
+        setIsLoading(false);
         break;
 
       default:
-        var body = {type: '1', category_id: id};
+        var body = {type: '1', category_id: id, skip: skip};
         var result = await postData('api/getBooksbyid', body);
-        setBooks(result.data);
-        setLoading(false);
+        if (result.msg !== 'Profile Not Available') {
+          setBooks([...books, ...result.data]);
+        }
+        setIsLoading(false);
         break;
     }
   };
 
+  const loadMore = () => {
+    setSkip(skip + 20);
+  };
+
+  const renderLoader = () => {
+    return isLoading ? (
+      <View>
+        <ActivityIndicator size="large" />
+      </View>
+    ) : null;
+  };
+
   useEffect(() => {
     fetchBooksbyid(route.params.item.id);
-  }, []);
+  }, [skip]);
 
   var category = route.params.category;
 
@@ -174,7 +171,7 @@ export const CategoryPage = ({navigation, route}) => {
           backgroundColor: backgroundColor,
         },
       ]}>
-      <View style={{alignItems: 'center', paddingBottom: 60}}>
+      <View style={{alignItems: 'center'}}>
         <ScrollView showsVerticalScrollIndicator={false}>
           {category ? (
             <View style={styles.imageWrapper}>
@@ -231,37 +228,29 @@ export const CategoryPage = ({navigation, route}) => {
               onPress={() =>
                 navigation.navigate('MusicPlayer', {
                   data: books,
-                  state: books[1],
+                  state: books[0],
                 })
               }>
               <Ionicons
                 name="ios-play-circle"
                 size={75}
-                color="#FFD369"
+                color="#ff9000"
                 style={{paddingBottom: 10}}
               />
             </TouchableOpacity>
           </View>
           <View style={styles.categoryImage}>
-            {loading ? (
-              <View style={{alignItems: 'center', justifyContent: 'center'}}>
-                <ActivityIndicator
-                  size="large"
-                  style={{alignItems: 'center', justifyContent: 'center'}}
-                />
-              </View>
-            ) : (
-              <FlatList
-                data={books}
-                numColumns={3}
-                renderItem={({item}) => <DisplayBooks item={item} />}
-                keyExtractor={item => item.id}
-              />
-            )}
+            <FlatList
+              data={books}
+              renderItem={displayBooks}
+              keyExtractor={item => item.id}
+              ListFooterComponent={renderLoader}
+              onEndReached={() => loadMore(route.params.item.id)}
+              onEndReachedThreshold={0.1}
+            />
           </View>
         </ScrollView>
       </View>
-      <BottomSheet navigation={navigation} />
     </View>
   );
 };
@@ -290,8 +279,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    height: height * 0.17,
-    width: width * 0.28,
+    height: height * 0.15,
+    width: width * 0.24,
     marginRight: 20,
     resizeMode: 'stretch',
     borderRadius: 5,

@@ -22,14 +22,18 @@ import {
   Overlay,
 } from 'react-native-elements';
 import {useDispatch, useSelector} from 'react-redux';
-import {checkSyncData, getSyncData, removeDatasync} from './AsyncStorage';
+import {checkSyncData, getSyncData, removeDatasync, storeDatasync} from './AsyncStorage';
 import {postData} from './FetchApi';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const EditProfile = ({navigation}) => {
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -52,7 +56,6 @@ export const EditProfile = ({navigation}) => {
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
 
-
   const fetchProfile = async () => {
     var key = await checkSyncData();
 
@@ -60,9 +63,6 @@ export const EditProfile = ({navigation}) => {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
     }
-
-
-
   };
 
   const fetchUserData = async () => {
@@ -120,37 +120,37 @@ export const EditProfile = ({navigation}) => {
   const fetchAllStates = async id => {
     var body = {type: 1, country_id: id};
     var result = await postData('api/getState', body);
-    if(result.msg !== 'Profile Not Available'){
-    setStateList(result.data);
+    if (result.msg !== 'Profile Not Available') {
+      setStateList(result.data);
     }
   };
 
   const fillState = () => {
-    if(stateList.length){
-    return stateList.map((item, index) => {
-      return <Picker.Item label={item.name} value={item.id} />;
-    });
-  }else{
-    return <Picker.Item label={stateName} value={state} />;
-  }
+    if (stateList.length) {
+      return stateList.map((item, index) => {
+        return <Picker.Item label={item.name} value={item.id} />;
+      });
+    } else {
+      return <Picker.Item label={stateName} value={state} />;
+    }
   };
 
   const fetchAllCity = async id => {
     var body = {type: 1, state_id: id};
     var result = await postData('api/getCity', body);
-    if(result.msg !== 'Profile Not Available'){
+    if (result.msg !== 'Profile Not Available') {
       setCityList(result.data);
-  }
+    }
   };
 
   const fillCity = () => {
-    if(cityList.length){
-    return cityList.map((item, index) => {
-      return <Picker.Item label={item.name} value={item.id} />;
-    });
-  }else{
-    return <Picker.Item label={cityName} value={city}/>;
-  }
+    if (cityList.length) {
+      return cityList.map((item, index) => {
+        return <Picker.Item label={item.name} value={item.id} />;
+      });
+    } else {
+      return <Picker.Item label={cityName} value={city} />;
+    }
   };
 
   useEffect(() => {
@@ -168,12 +168,10 @@ export const EditProfile = ({navigation}) => {
   };
 
   const editUser = async () => {
-    if(currentPassword === "" && newPassword === "" )
-    {
+    if (currentPassword === '' && newPassword === '') {
       if (newPassword !== confirmPassword) {
         alert('Password not match with confirm password');
-      }
-      else{
+      } else {
         var body = {
           type: 1,
           user_id: userData.id,
@@ -195,19 +193,32 @@ export const EditProfile = ({navigation}) => {
           alert('Profile Updated Successfully');
           fetchProfile();
           toggleOverlay();
-           storeDatasync(userData.id, {"id": userData.id, "user_name": name, "useremail": email, "usertype": userData.usertype})
-          dispatch({type: 'ADD_USER', payload: [userData.id,{id: userData.id, user_name: name, useremail: email, usertype: userData.usertype}]})
+          storeDatasync(userData.id, {
+            id: userData.id,
+            user_name: name,
+            useremail: email,
+            usertype: userData.usertype,
+          });
+          dispatch({
+            type: 'ADD_USER',
+            payload: [
+              userData.id,
+              {
+                id: userData.id,
+                user_name: name,
+                useremail: email,
+                usertype: userData.usertype,
+              },
+            ],
+          });
         } else {
           alert('Something went wrong');
         }
       }
-    }
-    else if(currentPassword !== "" && newPassword !== "" )
-    {
+    } else if (currentPassword !== '' && newPassword !== '') {
       if (newPassword !== confirmPassword) {
         alert('Password not match with confirm password');
-      }
-      else{
+      } else {
         var body = {
           type: 1,
           user_id: userData.id,
@@ -229,16 +240,30 @@ export const EditProfile = ({navigation}) => {
           alert('Profile Updated Successfully');
           fetchProfile();
           toggleOverlay();
-           storeDatasync(userData.id, {"id": userData.id, "user_name": name, "useremail": email, "usertype": userData.usertype})
-          dispatch({type: 'ADD_USER', payload: [userData.id,{id: userData.id, user_name: name, useremail: email, usertype: userData.usertype}]})
+          storeDatasync(userData.id, {
+            id: userData.id,
+            user_name: name,
+            useremail: email,
+            usertype: userData.usertype,
+          });
+          dispatch({
+            type: 'ADD_USER',
+            payload: [
+              userData.id,
+              {
+                id: userData.id,
+                user_name: name,
+                useremail: email,
+                usertype: userData.usertype,
+              },
+            ],
+          });
         } else {
           alert('Something went wrong');
         }
       }
-    }
-    else
-    {
-      alert("Please enter new password");
+    } else {
+      alert('Please enter new password');
     }
   };
 
@@ -270,8 +295,9 @@ export const EditProfile = ({navigation}) => {
               <TextInput
                 value={name}
                 onChangeText={text => setName(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="Name"
+                placeholderTextColor="#999"
               />
               <View style={{flexDirection: 'row'}}>
                 <TextInput
@@ -283,23 +309,26 @@ export const EditProfile = ({navigation}) => {
                       borderBottomColor: 'gray',
                       width: width * 0.4,
                       marginRight: 10,
+                      color:textColor
                     },
                   ]}
                   placeholder="Address"
+                  placeholderTextColor="#999"
                 />
                 <TextInput
                   value={pinCode}
                   onChangeText={text => setPinCode(text)}
                   style={[
                     styles.textInput,
-                    {borderBottomColor: 'gray', width: width * 0.4},
+                    {borderBottomColor: 'gray', width: width * 0.4,color:textColor},
                   ]}
                   placeholder="Pin Code"
+                  placeholderTextColor="#999"
                 />
               </View>
               <Picker
                 selectedValue={country}
-                style={[styles.textInput, {borderWidth: 1, marginVertical: 10}]}
+                style={[styles.textInput, {borderWidth: 1, marginVertical: 10,color:textColor}]}
                 mode="dropdown"
                 onValueChange={(itemValue, itemIndex) => {
                   setCountry(itemValue);
@@ -317,7 +346,7 @@ export const EditProfile = ({navigation}) => {
                   selectedValue={state}
                   style={[
                     styles.textInput,
-                    {borderWidth: 1, width: width * 0.4, marginRight: 10},
+                    {borderWidth: 1, width: width * 0.4, marginRight: 10,color:textColor},
                   ]}
                   mode="dropdown"
                   onValueChange={(itemValue, itemIndex) => {
@@ -331,7 +360,7 @@ export const EditProfile = ({navigation}) => {
                   selectedValue={city}
                   style={[
                     styles.textInput,
-                    {borderWidth: 1, width: width * 0.4},
+                    {borderWidth: 1, width: width * 0.4,color:textColor},
                   ]}
                   mode="dropdown"
                   onValueChange={(itemValue, itemIndex) => {
@@ -345,36 +374,41 @@ export const EditProfile = ({navigation}) => {
               <TextInput
                 value={phone}
                 onChangeText={text => setPhone(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="Contact Number"
+                placeholderTextColor="#999"
               />
               <TextInput
                 value={email}
-                editable = {false}
+                editable={false}
                 onChangeText={text => setEmail(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="Email"
+                placeholderTextColor="#999"
               />
               <TextInput
                 value={currentPassword}
                 secureTextEntry
                 onChangeText={text => setCurrentPassword(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="Current Password"
+                placeholderTextColor="#999"
               />
               <TextInput
                 value={newPassword}
                 secureTextEntry
                 onChangeText={text => setNewPassword(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="New Password"
+                placeholderTextColor="#999"
               />
               <TextInput
                 secureTextEntry
                 value={confirmPassword}
                 onChangeText={text => setConfirmPassword(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray'}]}
+                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
                 placeholder="Confirm Password"
+                placeholderTextColor="#999"
               />
             </View>
             <View style={{padding: 20, flexDirection: 'row'}}>
@@ -407,6 +441,17 @@ export const EditProfile = ({navigation}) => {
         </View>
       </Modal>
     );
+  };
+
+  const handleLogout = async () => {
+    setShow(true);
+    await removeDatasync(userData.id);
+    dispatch({type: 'SET_LOGIN', payload: false});
+    storeDatasync('isLogin', false);
+    navigation.navigate('Homepage');
+    // dispatch({type: 'REMOVE_USER', payload: userData.id});
+    setShow(false);
+    ToastAndroid.show('Logout Successfully', ToastAndroid.SHORT);
   };
 
   return (
@@ -454,6 +499,22 @@ export const EditProfile = ({navigation}) => {
       </Card>
       <Divider />
       <View style={styles.listWrapper}>
+      <TouchableOpacity onPress={() => toggleOverlay()}>
+          <ListItem
+            containerStyle={[
+              styles.listContainer,
+              {backgroundColor: backgroundColor},
+            ]}>
+            <ListItem.Title
+              style={{fontSize: 18, fontWeight: '800', color: textColor}}>
+              Update Profile
+            </ListItem.Title>
+            <ListItem.Subtitle
+              style={{fontSize: 12, fontWeight: '300', color: textColor}}>
+              Update your profile
+            </ListItem.Subtitle>
+          </ListItem>
+        </TouchableOpacity>
         <TouchableOpacity>
           <ListItem
             containerStyle={[
@@ -470,7 +531,7 @@ export const EditProfile = ({navigation}) => {
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>navigation.navigate('FavouriteBooks')}>
           <ListItem
             containerStyle={[
               styles.listContainer,
@@ -510,23 +571,15 @@ export const EditProfile = ({navigation}) => {
             ]}>
             <ListItem.Title
               style={{fontSize: 18, fontWeight: '800', color: textColor}}>
-              Transaction History
+              My Downloads
             </ListItem.Title>
             <ListItem.Subtitle
               style={{fontSize: 12, fontWeight: '300', color: textColor}}>
-              Book purchase history
+              View all your downloads
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={async () => {
-            setShow(true);
-            await removeDatasync(userData.id);
-            navigation.navigate('Homepage');
-            dispatch({type: 'REMOVE_USER', payload: userData.id});
-            setShow(false);
-            ToastAndroid.show('Logout Successfully', ToastAndroid.SHORT);
-          }}>
+        <TouchableOpacity onPress={() => handleLogout()}>
           <ListItem
             containerStyle={[
               styles.listContainer,
@@ -579,6 +632,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'flex-start',
     flexDirection: 'column',
+    height:height*0.083
   },
   textInput: {borderBottomWidth: 1, width: width * 0.83},
   centeredView: {

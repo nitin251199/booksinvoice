@@ -1,13 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 import {
-  ActivityIndicator,
   FlatList,
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   Text,
-  TextInput,
-  useColorScheme,
   RefreshControl,
   BackHandler,
 } from 'react-native';
@@ -16,14 +11,13 @@ import MI from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StyleSheet, View, Dimensions} from 'react-native';
 import {AirbnbRating, Divider, Image, Tile} from 'react-native-elements';
-import BottomSheet from './BottomSheet';
-import {getData, postData, ServerURL} from './FetchApi';
+import { postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import SkeletonContent from 'react-native-skeleton-content-nonexpo';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
-import {WelcomePage} from './WelcomePage';
+import { ThemeContext } from './ThemeContext';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -31,29 +25,39 @@ const BannerHeight = 140;
 const {width, height} = Dimensions.get('window');
 
 export default function Homepage({navigation, route}) {
+
+  const { theme } = React.useContext(ThemeContext);
+
   const [data, setData] = useState(
-    Object.values(useSelector(state => state.books.newArrivals)),
+    Object.values(useSelector(state => state.home.new_arrival)),
   );
+
   const [banner, setBanner] = useState(
-    Object.values(useSelector(state => state.banner)),
+    Object.values(useSelector(state => state.home.Banner_image)),
   );
+
   const [topRated, setTopRated] = useState(
-    Object.values(useSelector(state => state.books.topRated)),
+    Object.values(useSelector(state => state.home.top_rated)),
   );
+
   const [popularBooks, setPopularBooks] = useState(
-    Object.values(useSelector(state => state.books.popularBooks)),
+    Object.values(useSelector(state => state.home.populars_books)),
   );
+
   const [premiumBooks, setPremiumBooks] = useState(
-    Object.values(useSelector(state => state.books.premium)),
+    Object.values(useSelector(state => state.home.Premium_books)),
   );
+
   const [category, setCategory] = useState(
-    Object.values(useSelector(state => state.categories)),
+    Object.values(useSelector(state => state.home.category)),
   );
+
   const [otherCategory, setOtherCategory] = useState(
-    useSelector(state => state.otherCategory),
+    useSelector(state => state.home.books_by_cate),
   );
+
   const [advertise, setAdvertise] = useState(
-    useSelector(state => state.advertise),
+    useSelector(state => state.home.advertise),
   );
 
   const [show, setShow] = useState(false);
@@ -63,22 +67,10 @@ export default function Homepage({navigation, route}) {
 
   const fetch = async () => {
     var body = {type: 1};
-    var popular = await postData('api/getPopulerbooks', body);
-    var newarrivals = await postData('api/getNewarrival', body);
-    var top = await postData('api/getToprated', body);
-    var premium = await postData('api/getPremiumbooks', body);
-    var banner = await postData('api/getBanner', body);
-    var category = await postData('api/getCategory', body);
-    var othercategory = await postData('api/getBooksbycat', body);
+    var data = await postData('api/getHome', body);
     setRefreshing(false);
 
-    dispatch({type: 'SET_POPULAR', payload: popular.data});
-    dispatch({type: 'SET_NEWARRIVAL', payload: newarrivals.data});
-    dispatch({type: 'SET_TOPRATED', payload: top.data});
-    dispatch({type: 'SET_PREMIUM', payload: premium.data});
-    dispatch({type: 'SET_BANNER', payload: banner.data});
-    dispatch({type: 'SET_CATEGORY', payload: category.data});
-    dispatch({type: 'SET_OTHERCATEGORY', payload: othercategory});
+    dispatch({type: 'SET_HOME', payload: data});
   };
 
   const onRefresh = async () => {
@@ -86,8 +78,9 @@ export default function Homepage({navigation, route}) {
     fetch();
   };
 
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+
 
   // useEffect(() => {
   //   const backAction = () => {
@@ -153,7 +146,7 @@ export default function Homepage({navigation, route}) {
           style={[
             styles.imageText,
             {
-              color: useColorScheme() === 'dark' ? '#fff' : '#000',
+              color: textColor,
               paddingTop: 5,
             },
           ]}>
@@ -165,7 +158,7 @@ export default function Homepage({navigation, route}) {
 
   const DisplayOtherCategory = ({item, index, categoryname}) => {
     return (
-      <View style={{display: 'flex', flexDirection: 'column'}}>
+      <View style={{display: 'flex', flexDirection: 'column'}} key={index}>
         <Divider />
         <View
           style={{
@@ -173,15 +166,23 @@ export default function Homepage({navigation, route}) {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-          <Text
-            style={[
-              styles.categoryTitle,
-              {
-                color: useColorScheme() === 'dark' ? '#fff' : '#000',
-              },
-            ]}>
-            {categoryname.bookcategory}
-          </Text>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: categoryname,
+                category: category[index],
+              })
+            }>
+            <Text
+              style={[
+                styles.categoryTitle,
+                {
+                  color: textColor,
+                },
+              ]}>
+              {categoryname.bookcategory}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('CategoryPage', {
@@ -197,22 +198,7 @@ export default function Homepage({navigation, route}) {
         <View style={styles.categoryImage}>
           <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
             {otherCategory[index].map((item, index) => {
-              return (
-                <SkeletonContent
-                  containerStyle={{flex: 1}}
-                  isLoading={show}
-                  boneColor={backgroundColor}
-                  highlightColor="#333333"
-                  layout={[
-                    {
-                      key: '1',
-                      width: width,
-                      height: 140,
-                    },
-                  ]}>
-                  <DisplayItem item={item} key={index} />
-                </SkeletonContent>
-              );
+              return <DisplayItem item={item} key={index} />;
             })}
           </ScrollView>
         </View>
@@ -233,6 +219,10 @@ export default function Homepage({navigation, route}) {
             navigation.navigate('InfoPage', {
               state: item.id,
               category: item.bookcategoryid,
+              new_arrival: data,
+              top_rated: topRated,
+              populars_books: popularBooks,
+              premium_books: premiumBooks,
             })
           }
           style={[styles.image]}
@@ -261,13 +251,13 @@ export default function Homepage({navigation, route}) {
             style={{paddingRight: 1}}
             name="account-voice"
             size={15}
-            color={useColorScheme() === 'dark' ? '#fff' : '#000'}
+            color={textColor}
           />
           <TextTicker
             style={[
               styles.imageText,
               {
-                color: useColorScheme() === 'dark' ? '#fff' : '#000',
+                color: textColor,
               },
             ]}
             duration={10000}
@@ -284,7 +274,7 @@ export default function Homepage({navigation, route}) {
             style={{paddingRight: 3}}
             name="remove-red-eye"
             size={15}
-            color={useColorScheme() === 'dark' ? '#fff' : '#000'}
+            color={textColor}
           />
           <View
             style={{
@@ -298,7 +288,7 @@ export default function Homepage({navigation, route}) {
                 // width: width * 0.55,
                 fontSize: 12,
                 overflow: 'hidden',
-                color: useColorScheme() === 'dark' ? '#fff' : '#000',
+                color: textColor,
               }}>
               {item.viewcount !== null ? item.viewcount : 0}
             </Text>
@@ -353,8 +343,8 @@ export default function Homepage({navigation, route}) {
               style={[
                 styles.categoryTitle,
                 {
-                  color: useColorScheme() === 'dark' ? '#fff' : '#000',
-                  paddingBottom: 4
+                  color: textColor,
+                  paddingBottom: 4,
                 },
               ]}>
               Books Category
@@ -388,22 +378,36 @@ export default function Homepage({navigation, route}) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text
-                style={[
-                  styles.categoryTitle,
-                  {
-                    color: useColorScheme() === 'dark' ? '#fff' : '#000',
-                  },
-                ]}>
-                New Arrivals !
-              </Text>
-              <TouchableOpacity 
-              onPress={() => navigation.navigate('CategoryPage', {item: {
-                "id": "0",
-                "bookcategory": "New Arrivals",
-                "catphoto": "custom_img.jpg"
-              }})}
-              >
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'New Arrivals',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    {
+                      color: textColor,
+                    },
+                  ]}>
+                  New Arrivals !
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'New Arrivals',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
                 <Text
                   style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
                   View All
@@ -429,22 +433,36 @@ export default function Homepage({navigation, route}) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text
-                style={[
-                  styles.categoryTitle,
-                  {
-                    color: useColorScheme() === 'dark' ? '#fff' : '#000',
-                  },
-                ]}>
-                Top Rated
-              </Text>
               <TouchableOpacity
-              onPress={() => navigation.navigate('CategoryPage', {item: {
-                "id": "0",
-                "bookcategory": "Top Rated",
-                "catphoto": "custom_img.jpg"
-              }})}
-              >
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'New Arrivals',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    {
+                      color: textColor,
+                    },
+                  ]}>
+                  Top Rated
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'Top Rated',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
                 <Text
                   style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
                   View All
@@ -467,22 +485,36 @@ export default function Homepage({navigation, route}) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text
-                style={[
-                  styles.categoryTitle,
-                  {
-                    color: useColorScheme() === 'dark' ? '#fff' : '#000',
-                  },
-                ]}>
-                Popular Books
-              </Text>
-              <TouchableOpacity 
-              onPress={() => navigation.navigate('CategoryPage', {item: {
-                "id": "0",
-                "bookcategory": "Popular Books",
-                "catphoto": "custom_img.jpg"
-              }})}
-              >
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'New Arrivals',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    {
+                      color: textColor,
+                    },
+                  ]}>
+                  Popular Books
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'Popular Books',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
                 <Text
                   style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
                   View All
@@ -505,22 +537,36 @@ export default function Homepage({navigation, route}) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text
-                style={[
-                  styles.categoryTitle,
-                  {
-                    color: useColorScheme() === 'dark' ? '#fff' : '#000',
-                  },
-                ]}>
-                Premium
-              </Text>
               <TouchableOpacity
-              onPress={() => navigation.navigate('CategoryPage', {item: {
-                "id": "0",
-                "bookcategory": "Premium",
-                "catphoto": "custom_img.jpg"
-              }})} 
-              >
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'New Arrivals',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    {
+                      color: textColor,
+                    },
+                  ]}>
+                  Premium
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('CategoryPage', {
+                    item: {
+                      id: '0',
+                      bookcategory: 'Premium',
+                      catphoto: 'custom_img.jpg',
+                    },
+                  })
+                }>
                 <Text
                   style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
                   View All
@@ -537,22 +583,23 @@ export default function Homepage({navigation, route}) {
                 keyExtractor={item => item.id}
               />
             </View>
-            </View>
-            <Tile
-              imageSrc={{
-                uri: `https://booksinvoice.com/admin/${advertise[0].url}`,
-              }}
-              title={`${advertise[0].title}`}
-              titleStyle={{fontSize: 15}}
-              featured
-              caption="Buy Subscription Plans"
-              captionStyle={{fontSize: 20,fontWeight:'800'}}
-              height={height * 0.2}
-              activeOpacity={1}
-              width={width}
-              containerStyle={{marginVertical:10}}
-            />
-            <View style={{paddingLeft:20}}>
+          </View>
+          <Tile
+            onPress={() => navigation.navigate('Subscriptions')}
+            imageSrc={{
+              uri: `https://booksinvoice.com/admin/${advertise[0].url}`,
+            }}
+            title={`${advertise[0].title}`}
+            titleStyle={{fontSize: 15}}
+            featured
+            caption="Buy Subscription Plans"
+            captionStyle={{fontSize: 20, fontWeight: '800'}}
+            height={height * 0.2}
+            activeOpacity={1}
+            width={width}
+            containerStyle={{marginVertical: 10}}
+          />
+          <View style={{paddingLeft: 20}}>
             <FlatList
               data={otherCategory}
               renderItem={({item, index}) => (
@@ -563,10 +610,10 @@ export default function Homepage({navigation, route}) {
                 />
               )}
             />
-            </View>
+          </View>
         </View>
       </ScrollView>
-      <BottomSheet navigation={navigation} />
+      {/* <BottomSheet navigation={navigation} /> */}
     </View>
   );
 }
@@ -593,7 +640,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Calibri',
     paddingTop: 6,
-    paddingBottom:15
+    paddingBottom: 15,
   },
   categoryImage: {
     height: height * 0.24,

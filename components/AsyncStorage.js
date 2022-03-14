@@ -34,7 +34,7 @@ export async function getSyncData(key) {
       // console.log('Async Data :', value);
       return userData;
     } else {
-      console.log('No Data Found..');
+      console.log('No AsyncStorage Data Found..');
       return null;
     }
   } catch (e) {

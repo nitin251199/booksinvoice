@@ -8,12 +8,16 @@ import {
   Image,
   ScrollView,
 } from 'react-native';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const AboutUs = ({navigation}) => {
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
   

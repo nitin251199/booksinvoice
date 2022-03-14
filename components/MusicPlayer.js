@@ -11,6 +11,9 @@ import {
   Animated,
   Modal,
   Pressable,
+  ImageBackground,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 
 import TrackPlayer, {
@@ -25,9 +28,12 @@ import TrackPlayer, {
 import Slider from '@react-native-community/slider';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {ServerURL} from './FetchApi';
-import {useColorScheme} from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {postData, ServerURL} from './FetchApi';
 import {checkSyncData, getSyncData} from './AsyncStorage';
+import {ThemeContext} from './ThemeContext';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import {TextInput} from 'react-native-gesture-handler';
 
 const {width, height} = Dimensions.get('window');
 
@@ -42,7 +48,7 @@ const togglePlayBack = async playBackState => {
   }
 };
 
-const MusicPlayer = ({route,navigation}) => {
+const MusicPlayer = ({route, navigation}) => {
   const playBackState = usePlaybackState();
   const progress = useProgress();
   //   custom states
@@ -53,13 +59,24 @@ const MusicPlayer = ({route,navigation}) => {
   const [trackArtwork, setTrackArtwork] = useState();
   const [tracks, setTracks] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [user, setUser] = useState('Login');
+  const [user, setUser] = useState('Login & Buy');
+  const [userData, setUserData] = useState({id: '', usertype: ''});
+  const [status, setStatus] = useState(true);
+  const [speed, setSpeed] = useState(1);
+  const [isFavourite, setIsFavourite] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
   // custom referecnces
   const scrollX = useRef(new Animated.Value(0)).current;
   const songSlider = useRef(null);
+  const refRBSheet = useRef(null);
 
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#191414' : '#FFF';
+  const {theme} = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#191414' : '#FFF';
 
   const setupPlayer = async () => {
     try {
@@ -187,12 +204,47 @@ const MusicPlayer = ({route,navigation}) => {
     TrackPlayer.play();
   };
 
+  const checkLogin = async () => {
+    var key = await checkSyncData();
+
+    if (key[0] !== 'isLogin') {
+      var userData = await getSyncData(key[0]).then(async res => {
+        checkFavourite(res);
+        var body = {
+          type: 1,
+          user_id: res.id,
+          user_type: res.usertype.toLowerCase(),
+        };
+        var result = await postData('api/getSubscription', body);
+        if (result.msg === 'Subscribed') {
+          setStatus(false);
+        }
+        var {id, usertype} = res;
+        setUserData({id, usertype});
+      });
+    }
+  };
+
+  const skipForward = async () => {
+    await TrackPlayer.seekTo(progress.position + 10);
+  };
+
+  const skipBackward = async () => {
+    await TrackPlayer.seekTo(progress.position - 10);
+  };
+
+  useEffect(() => {
+    checkLogin();
+  }, []);
+
   const getSectionDone = async () => {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
-    if (currentTrack != null) {
-      if (Math.floor(progress.position) == temp[currentTrack].duration) {
-        await TrackPlayer.stop();
-        setModalVisible(!modalVisible);
+    if (status) {
+      const currentTrack = await TrackPlayer.getCurrentTrack();
+      if (currentTrack != null) {
+        if (Math.floor(progress.position) >= tracks[currentTrack].duration) {
+          await TrackPlayer.stop();
+          setModalVisible(true);
+        }
       }
     }
   };
@@ -206,7 +258,7 @@ const MusicPlayer = ({route,navigation}) => {
         onShow={async () => {
           var key = await checkSyncData();
 
-          if (key) {
+          if (key[0] !== 'isLogin') {
             setUser('Buy Subscription');
           }
         }}
@@ -219,11 +271,13 @@ const MusicPlayer = ({route,navigation}) => {
               Please Buy Subscription to listen further !
             </Text>
             <Pressable
-              style={[
-                style.button,
-                {backgroundColor: '#ff9000'},
-              ]}
-              onPress={() => user === 'Login' ? navigation.navigate('Login') : navigation.navigate('Subscriptions')}>
+              style={[style.button, {backgroundColor: '#ff9000'}]}
+              onPress={() => {
+                user === 'Login & Buy'
+                  ? navigation.navigate('Login')
+                  : navigation.navigate('Subscriptions');
+                setModalVisible(false);
+              }}>
               <Text style={[style.textStyle, {color: textColor}]}>{user}</Text>
             </Pressable>
           </View>
@@ -236,18 +290,186 @@ const MusicPlayer = ({route,navigation}) => {
     getSectionDone();
   }, [progress.position]);
 
+  const postComment = async() => {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    var body = { "type":1 , "c_name": name, "c_email": email, "c_msg": commentText, "books_id": tracks[currentTrack].id}
+    var result = await postData('api/getAddcomment', body);
+    if(result.msg === 'added')
+    {
+      ToastAndroid.show('Comment Added Successfully', ToastAndroid.SHORT);
+      refRBSheet.current.close()
+    }
+    else
+    {
+      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+      refRBSheet.current.close()
+    }
+    
+  }
+
+  const commentBottomSheet = () => {
+    return (
+      <RBSheet
+        ref={refRBSheet}
+        closeOnDragDown={true}
+        closeOnPressMask={true}
+        customStyles={{
+          wrapper: {
+            backgroundColor: 'transparent',
+          },
+          draggableIcon: {
+            backgroundColor: textColor,
+          },
+          container: {
+            backgroundColor: backgroundColor,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          },
+        }}
+        height={height * 0.6}>
+        <View>
+          <Text style={{color: textColor, margin: 10,marginHorizontal: 20,fontWeight:'800',fontSize:22}}>
+            Write A review
+          </Text>
+          <Text style={{color: textColor, marginHorizontal: 20, fontSize: 14}}>
+            We will not publish your email address. Required fields are marked*
+          </Text>
+          <View style={{marginTop: 20, marginHorizontal: 20}}>
+            <Text style={{color: textColor, fontSize: 14}}>Comment</Text>
+            <TextInput
+              onChangeText={(text)=>setCommentText(text)}
+              style={{
+                borderWidth: 1,
+                borderRadius: 5,
+                marginVertical: 10,
+                borderColor: textColor,
+                color: textColor,
+                paddingHorizontal:10
+              }}
+              multiline
+              numberOfLines={3}
+              placeholder="Write your comment here"
+              placeholderTextColor="#999"
+            />
+            <View style={{flexDirection: 'row',}}>
+              <View style={{flexDirection: 'column',width:'50%'}}>
+                <Text style={{color: textColor, fontSize: 14}}>Name*</Text>
+                <TextInput
+                  onChangeText={(text)=>setName(text)}
+                  placeholder='Name'
+                  placeholderTextColor="#999"
+                  style={{
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    marginVertical: 10,
+                    marginRight: 10,
+                    borderColor: textColor,
+                    color: textColor,
+                    paddingHorizontal:10
+                  }}
+                />
+              </View>
+              <View style={{flexDirection: 'column',width:'50%'}}>
+                <Text style={{color: textColor, fontSize: 14}}>Email*</Text>
+                <TextInput
+                  onChangeText={(text)=>setEmail(text)}
+                  placeholder='Email'
+                  placeholderTextColor="#999"
+                  style={{
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    marginVertical: 10,
+                    borderColor: textColor,
+                    color: textColor,
+                    paddingHorizontal:10
+                  }}
+                />
+              </View>
+            </View>
+           <TouchableOpacity onPress={()=>postComment()}>
+           <View style={{backgroundColor:'#ff9000',justifyContent:'center',alignItems:'center',padding:20,marginVertical:10,borderRadius:5}}>
+              <Text style={{color: '#FFF',fontWeight:'bold',fontSize:18}}>Post Comment</Text>
+            </View>
+           </TouchableOpacity>
+          </View>
+        </View>
+      </RBSheet>
+    );
+  };
+
   const renderSongs = ({item, index}) => {
     return (
-      <Animated.View style={style.mainWrapper}>
-        <View style={[style.imageWrapper, style.elevation]}>
-          <Image
-            //   source={item.artwork}
-            source={{uri: trackArtwork}}
-            style={style.musicImage}
-          />
-        </View>
-      </Animated.View>
+      <ImageBackground
+        resizeMode="cover"
+        source={require('../../images/musicbg.jpg')}
+        imageStyle={{opacity: 0.4}}
+        // style={{marginTop:20}}
+        style={style.mainWrapper}>
+        <Animated.View>
+          <View style={[style.imageWrapper, style.elevation]}>
+            <Image
+              //   source={item.artwork}
+              source={{uri: trackArtwork}}
+              style={style.musicImage}
+            />
+          </View>
+        </Animated.View>
+      </ImageBackground>
     );
+  };
+
+  const handleTrackSpeed = async () => {
+    var speed = await TrackPlayer.getRate();
+    if (speed == 1) {
+      await TrackPlayer.setRate(1.5);
+      setSpeed(1.5);
+    } else if (speed == 1.5) {
+      TrackPlayer.setRate(2);
+      setSpeed(2);
+    } else if (speed == 2) {
+      TrackPlayer.setRate(0.5);
+      setSpeed(0.5);
+    } else if (speed == 0.5) {
+      TrackPlayer.setRate(1);
+      setSpeed(1);
+    }
+  };
+
+  const checkFavourite = async res => {
+    var body = {
+      type: '1',
+      user_id: res.id,
+      user_type: res.usertype,
+      books_id: route.params.state.id,
+    };
+    var result = await postData('api/getFavouritebook', body);
+    if (result.msg === 'Success') {
+      setIsFavourite(true);
+    }
+  };
+
+  const addFavourite = async () => {
+    if (userData.id !== '') {
+      var body = {
+        type: '1',
+        user_id: userData.id,
+        user_type: userData.usertype,
+        books_id: route.params.state.id,
+      };
+      var result = await postData('api/getFavouriteadd', body);
+      if (result.msg === 'Added') {
+        setIsFavourite(true);
+        ToastAndroid.show('Added To Favourites !', ToastAndroid.SHORT);
+      } else if (result.msg === 'Deleted') {
+        setIsFavourite(false);
+        ToastAndroid.show('Removed From Favourites !', ToastAndroid.SHORT);
+      }
+    } else {
+      ToastAndroid.show(
+        'Please Log in to add favourites !',
+        ToastAndroid.SHORT,
+      );
+    }
   };
 
   return (
@@ -255,9 +477,10 @@ const MusicPlayer = ({route,navigation}) => {
       style={[
         style.container,
         {
-          backgroundColor: useColorScheme() == 'dark' ? '#212121' : '#fff',
+          backgroundColor: backgroundColor,
         },
       ]}>
+      {commentBottomSheet()}
       {/* music player section */}
       <View style={style.mainContainer}>
         {/* Image */}
@@ -269,6 +492,7 @@ const MusicPlayer = ({route,navigation}) => {
           keyExtractor={(item, index) => index}
           horizontal
           pagingEnabled
+          ListEmptyComponent={() => <ActivityIndicator size="large" />}
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={Animated.event(
@@ -337,6 +561,9 @@ const MusicPlayer = ({route,navigation}) => {
 
         {/* music control */}
         <View style={style.musicControlsContainer}>
+          <TouchableOpacity onPress={skipBackward}>
+            <MaterialIcons name="replay-10" size={25} color="#ff9000" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={skipToPrevious}>
             <Ionicons name="play-skip-back-outline" size={35} color="#ff9000" />
           </TouchableOpacity>
@@ -358,14 +585,21 @@ const MusicPlayer = ({route,navigation}) => {
               color="#ff9000"
             />
           </TouchableOpacity>
+          <TouchableOpacity onPress={skipForward}>
+            <MaterialIcons name="forward-10" size={25} color="#ff9000" />
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* bottom section */}
       <View style={style.bottomSection}>
         <View style={style.bottomIconContainer}>
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="heart-outline" size={30} color="#888888" />
+          <TouchableOpacity onPress={() => addFavourite()}>
+            {isFavourite ? (
+              <Ionicons name="heart-sharp" size={30} color="red" />
+            ) : (
+              <Ionicons name="heart-outline" size={30} color="#888888" />
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity onPress={changeRepeatMode}>
@@ -376,12 +610,30 @@ const MusicPlayer = ({route,navigation}) => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="share-outline" size={30} color="#888888" />
+          <TouchableOpacity onPress={() => refRBSheet.current.open()}>
+            <MaterialCommunityIcons
+              name="comment-text-outline"
+              size={30}
+              color="#888888"
+            />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => {}}>
-            <Ionicons name="ellipsis-horizontal" size={30} color="#888888" />
+          <TouchableOpacity onPress={() => handleTrackSpeed()}>
+            <MaterialCommunityIcons
+              name="speedometer"
+              size={30}
+              color="#888888"
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                textAlign: 'center',
+                marginTop: -12,
+                fontWeight: '800',
+                color: '#888888',
+              }}>
+              {speed}x
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -420,13 +672,14 @@ const style = StyleSheet.create({
     width: width,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 25,
+    marginTop: 30,
   },
 
   imageWrapper: {
     width: 300,
     height: 340,
     marginBottom: 25,
+    marginTop: 30,
   },
   musicImage: {
     width: '100%',
@@ -452,6 +705,7 @@ const style = StyleSheet.create({
   songTitle: {
     fontSize: 18,
     fontWeight: '600',
+    // paddingTop:20
   },
 
   songArtist: {
@@ -479,7 +733,8 @@ const style = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 15,
-    width: '60%',
+    marginBottom: 15,
+    width: '80%',
   },
   centeredView: {
     flex: 1,
@@ -504,7 +759,7 @@ const style = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     elevation: 2,
-    width:width*0.7
+    width: width * 0.7,
   },
   buttonOpen: {
     backgroundColor: '#F194FF',

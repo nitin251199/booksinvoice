@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { useColorScheme, View } from 'react-native'
 import WebView from 'react-native-webview'
 import { postData } from './FetchApi'
+import { ThemeContext } from './ThemeContext'
 
 export const PrivacyPolicy = () => {
 
-    const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-    const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+    const { theme } = React.useContext(ThemeContext);
+
+    const textColor = theme === 'dark' ? '#FFF' : '#191414';
+    const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
     const [text,setText] = useState('')
 

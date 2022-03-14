@@ -17,6 +17,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import {postData} from './FetchApi';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
@@ -38,8 +39,10 @@ export const Subscriptions = ({navigation}) => {
     packagefor: '',
   });
 
-  const textColor = useColorScheme() === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = useColorScheme() === 'dark' ? '#212121' : '#FFF';
+  const { theme } = React.useContext(ThemeContext);
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const fetchAllSubscriptions = async () => {
     var body = {type: 1};
@@ -102,23 +105,23 @@ export const Subscriptions = ({navigation}) => {
             padding: 15,
             borderColor:
               selected.id === item.id
-                ? useColorScheme() === 'dark'
+                ? theme === 'dark'
                   ? 'red'
                   : '#000'
-                : useColorScheme() === 'dark'
+                : theme === 'dark'
                 ? '#212121'
                 : '#FFF',
             borderWidth: 1,
             borderRadius: 10,
           }}>
-          <Text style={{width: width * 0.4}}>{item.packagename}</Text>
-          <Text>
+          <Text style={{width: width * 0.4, color: textColor}}>{item.packagename}</Text>
+          <Text style={{color: textColor}}>
             {item.currency}{' '}
             {item.packageprice == ''
               ? item.packagepricedoller
               : item.packageprice}
           </Text>
-          <Text>{item.packagedays}</Text>
+          <Text style={{color: textColor}}>{item.packagedays}</Text>
         </View>
       </TouchableWithoutFeedback>
     );
@@ -158,7 +161,7 @@ export const Subscriptions = ({navigation}) => {
                 style={{
                   fontSize: 24,
                   fontWeight: '800',
-                  color: textColor,
+                  color: '#FFF',
                   textAlign: 'center',
                   alignItems: 'center',
                 }}>
@@ -171,7 +174,7 @@ export const Subscriptions = ({navigation}) => {
                 color="gold"
               />
             </View>
-            <Text style={{textAlign: 'center', color: textColor}}>
+            <Text style={{textAlign: 'center', color: '#FFF'}}>
               Get the most of Booksinvoice
             </Text>
           </Card>

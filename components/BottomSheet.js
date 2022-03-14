@@ -1,158 +1,109 @@
-import React, {useRef} from 'react';
+import React from 'react';
 import {
   View,
-  Button,
   StyleSheet,
   Dimensions,
   TouchableOpacity,
   useColorScheme,
+  Animated,
+  Text
 } from 'react-native';
-import {ListItem} from 'react-native-elements';
-import RBSheet from 'react-native-raw-bottom-sheet';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { checkSyncData } from './AsyncStorage';
+import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
-export default function BottomSheet(props, navigation) {
+export default function BottomSheet({ state, descriptors, navigation, position }) {
+  const { theme } = React.useContext(ThemeContext);
 
-  const bottomBackground = useColorScheme() === 'dark' ? '#000' : '#fff';
-  const bottomColor = useColorScheme() === 'dark' ? '#fff' : '#000';
+  const bottomBackground = theme === 'dark' ? '#000' : '#fff';
+  const bottomColor = theme === 'dark' ? '#fff' : '#000';
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
-  const refRBSheet = useRef();
+
   return (
     <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-      }}>
-      <RBSheet
-        ref={refRBSheet}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        customStyles={{
-          wrapper: {
-            backgroundColor: 'transparent',
-          },
-          draggableIcon: {
-            backgroundColor: bottomColor,
-          },
-          container: {
-            backgroundColor: bottomBackground,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          },
-        }}
-        height={height * 0.5}>
-        <View
-          style={{
-            height: height * 0.5,
-            // backgroundColor: '#ff9000',
-            paddingVertical: 15,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          }}>
-          <ListItem
-            containerStyle={{backgroundColor: bottomBackground}}
-            onPress={async() => {
-              var key = await checkSyncData();
-
-              if (key) {
-                props.navigation.navigate('EditProfile');
-                refRBSheet.current.close();
-              }
-              else{
-                props.navigation.navigate('Login');
-                refRBSheet.current.close();
-              }
-            }}>
-            <ListItem.Content>
-              <ListItem.Title style={[styles.title,{color:bottomColor}]}>My Profile</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-          <ListItem
-            containerStyle={{backgroundColor: bottomBackground}}
-            onPress={() => {
-              props.navigation.navigate('Subscriptions');
-              refRBSheet.current.close();
-            }}>
-            <ListItem.Content>
-              <ListItem.Title style={[styles.title,{color:bottomColor}]}>
-                Buy Subscription
-              </ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-          <ListItem
-            containerStyle={{backgroundColor: bottomBackground}}
-            onPress={() => refRBSheet.current.close()}>
-            <ListItem.Content>
-              <ListItem.Title style={[styles.title,{color:bottomColor}]}>Downloads</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-          <ListItem
-            containerStyle={{backgroundColor: bottomBackground}}
-            onPress={() => refRBSheet.current.close()}>
-            <ListItem.Content>
-              <ListItem.Title style={[styles.title,{color:bottomColor}]}>Favourites</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-          <ListItem
-            containerStyle={{backgroundColor: bottomBackground}}
-            onPress={() => refRBSheet.current.close()}>
-            <ListItem.Content>
-              <ListItem.Title style={[styles.title,{color:bottomColor}]}>Settings</ListItem.Title>
-            </ListItem.Content>
-          </ListItem>
-        </View>
-      </RBSheet>
-      <View
         style={{
           display: 'flex',
-          position: 'absolute',
-          bottom: 0,
           width: width,
-          padding: 15,
-          backgroundColor: 'white',
-          justifyContent: 'center',
+          padding: 8,
           alignItems: 'center',
           elevation: 15,
           backgroundColor: bottomBackground,
         }}>
         <View
           style={{
-            width: width * 0.8,
+            width: width ,
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'space-evenly',
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-          <TouchableOpacity onPress={() => {
-              props.navigation.navigate('Homepage');
-              refRBSheet.current.close();
-            }}>
-            <MaterialIcons name="home" size={30} color={bottomColor} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <MaterialCommunityIcons name="repeat" size={30} color={bottomColor} />
-          </TouchableOpacity>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const label =
+          options.tabBarLabel !== undefined
+            ? options.tabBarLabel
+            : options.title !== undefined
+            ? options.title
+            : route.name;
+
+        const isFocused = state.index === index;
+
+        const icon = () => {
+          if (options.tabBarLabel == 'Home') {
+            return <MaterialIcons name="home" size={25} color={isFocused ? '#ff9000' : textColor} />;
+          }
+      
+          if (options.tabBarLabel == 'Search') {
+            return <MaterialIcons name="search" size={25} color={isFocused ? '#ff9000' : textColor} />;
+          }
+      
+          if (options.tabBarLabel == 'Subscriptions') {
+            return <FontAwesome5 name="crown" size={18} color={isFocused ? '#ff9000' : textColor} />;
+          }
+
+          if (options.tabBarLabel == 'Profile') {
+            return <FontAwesome5 name="user-alt" size={17} color={isFocused ? '#ff9000' : textColor} />;
+          }
+        };
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            // The `merge: true` option makes sure that the params inside the tab screen are preserved
+            navigation.navigate({ name: route.name, merge: true });
+          }
+        };
+
+        const inputRange = state.routes.map((_, i) => i);
+        const opacity = position.interpolate({
+          inputRange,
+          outputRange: inputRange.map(i => (i === index ? 1 : 0)),
+        });
+
+        return (
           <TouchableOpacity
-            onPress={() => {
-              props.navigation.navigate('Subscriptions');
-              refRBSheet.current.close();
-            }}>
-            <FontAwesome5 name="crown" size={22} color={bottomColor} />
+            onPress={onPress}
+            // style={{ marginHorizontal:20 }}
+          >
+            <Animated.View  style={{ backgroundColor: isFocused ? '#ff900020' : 'transparent' , flexDirection:'row',alignItems: 'center',paddingHorizontal:10, borderRadius:50,paddingVertical:5, }}>
+              {/* {label} */}
+              {icon()}
+              {isFocused ? <Text style={{color: isFocused ? '#ff9000' : '#FFF',padding:5, fontWeight:'600'}}>{label}</Text> : null}
+            </Animated.View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => refRBSheet.current.open()}>
-            <Ionicons name="ellipsis-horizontal" size={30} color={bottomColor} />
-          </TouchableOpacity>
-        </View>
-      </View>
+        );
+      })}
     </View>
+      </View>
   );
 }
 
