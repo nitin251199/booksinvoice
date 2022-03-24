@@ -2,7 +2,6 @@ import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {Login} from './admin/Login';
 import Test from './admin/test';
 import Homepage from './Homepage';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import BottomSheet from './BottomSheet';
 import InfoPage from './InfoPage';
 import MusicPlayer from './MusicPlayer';
@@ -25,19 +24,31 @@ import {checkSyncData, getSyncData} from './AsyncStorage';
 import {FavouriteBooks} from './FavouriteBooks';
 import {Settings} from './Settings';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Dimensions, View } from 'react-native';
+import { UserSubscriptions } from './UserSubscriptions';
+import { PaymentScreen } from './PaymentScreen';
+import { PaymentSummary } from './PaymentSummary';
 
 export default function RootNavigator() {
   // const Stack = createNativeStackNavigator();
 
   const Stack = createStackNavigator();
   const Tab = createMaterialTopTabNavigator();
-  const [swipeEnabled, setSwipeEnabled] = useState(true);
+
+  const { width, height } = Dimensions.get("window")
 
   var dispatch = useDispatch();
 
   function MyTabs() {
     return (
+      <View style={{
+        width:width,
+        height:height*1.05,
+    }}>
       <Tab.Navigator
+        screenOptions={{
+          swipeEnabled: false,
+        }}
         initialRouteName="Homepage"
         tabBarPosition="bottom"
         tabBar={props => <BottomSheet {...props} />}>
@@ -62,6 +73,7 @@ export default function RootNavigator() {
           options={{tabBarLabel: 'Profile', lazy: true}}
         />
       </Tab.Navigator>
+      </View>
     );
   }
 
@@ -79,10 +91,27 @@ export default function RootNavigator() {
 
   function SubscriptionComponent() {
     return (
-      <Stack.Navigator mode="modal">
+      <Stack.Navigator screenOptions={{
+        presentation: "modal"
+      }}>
         <Stack.Screen
           name="Subscription"
           component={Subscriptions}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="UserSubscriptions"
+          component={UserSubscriptions}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentScreen"
+          component={PaymentScreen}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentSummary"
+          component={PaymentSummary}
           options={{header: AppHeader}}
         />
       </Stack.Navigator>
@@ -103,7 +132,9 @@ export default function RootNavigator() {
     var isLogin = useSelector(state => state.isLogin);
 
     return (
-      <Stack.Navigator mode="modal">
+      <Stack.Navigator screenOptions={{
+        presentation: "modal"
+      }}>
         {isLogin ? (
           <Stack.Screen
             name="Profile"
@@ -133,7 +164,9 @@ export default function RootNavigator() {
 
   function SearchComponent() {
     return (
-      <Stack.Navigator mode="modal">
+      <Stack.Navigator screenOptions={{
+        presentation: "modal"
+      }}>
         <Stack.Screen
           name="Search"
           component={Search}
@@ -145,7 +178,9 @@ export default function RootNavigator() {
 
   function HomepageComponent() {
     return (
-      <Stack.Navigator mode="modal">
+      <Stack.Navigator screenOptions={{
+        presentation: "modal"
+      }}>
         <Stack.Screen
           name="Homepage"
           component={Homepage}
@@ -224,7 +259,9 @@ export default function RootNavigator() {
 
   return (
     <Drawer.Navigator
-      mode="modal"
+      screenOptions={{
+        presentation: "modal"
+      }}
       drawerContent={props => <DrawerContent {...props} />}>
       <Drawer.Screen
         name="Home"

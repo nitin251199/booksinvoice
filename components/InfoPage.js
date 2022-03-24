@@ -13,12 +13,13 @@ import {
   ImageBackground,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  ToastAndroid,
 } from 'react-native';
 import {AirbnbRating, Divider} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
-import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
 import {ThemeContext} from './ThemeContext';
@@ -33,16 +34,18 @@ export default function InfoPage({route, navigation}) {
 
   const textColor = theme === 'dark' ? '#FFF' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#FFF';
 
   const [book, setBook] = useState([]);
   const [similar, setSimilar] = useState([]);
-  const [refresh, setRefresh] = useState(false);
+  // const [refresh, setRefresh] = useState(false);
 
   const [newArrivals, setNewArrivals] = useState([]);
   const [topRated, setTopRated] = useState([]);
   const [popularBooks, setPopularBooks] = useState([]);
   const [premiumBooks, setPremiumBooks] = useState([]);
   const [comments, setComments] = useState([]);
+  const [commentModal, setCommentModal] = useState(false);
 
   const fetchBook = async id => {
     var body = {type: '1', books_id: id};
@@ -90,18 +93,57 @@ export default function InfoPage({route, navigation}) {
 
   const renderComments = ({item}) => {
     return (
-      item.review_status === '1' && (
-        <View style={styles.commentContainer}>
-          <View>
-            <Text style={[styles.commentHeader, {color: textColor}]}>
-              {item.comment}
-            </Text>
-          </View>
-          <View>
-            <Text style={[styles.commentFooter, {color: textColor}]}>- {item.name}</Text>
-          </View>
+      <View style={styles.commentContainer}>
+        <View>
+          <Text style={[styles.commentFooter, {color: '#999'}]}>
+            By {item.name} on {item.created_on}
+          </Text>
         </View>
-      )
+        <View>
+          <Text style={[styles.commentHeader, {color: textColor}]}>
+            {item.comment}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  const commentsModal = () => {
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={commentModal}
+        onRequestClose={() => {
+          setCommentModal(false);
+        }}>
+          <View style={styles.centeredView}>
+            <View  style={[
+              {
+                backgroundColor: modelBackgroundColor,
+                padding: 20,
+                borderRadius: 10,
+              },
+            ]}>
+              <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingBottom:20}}>
+              <Text style={[styles.modalText, {color: textColor}]}>
+                Comments
+              </Text>
+              <TouchableOpacity onPress={()=>setCommentModal(false)}>
+              <MaterialCommunityIcons name="close" size={20} color={textColor} />
+              </TouchableOpacity>
+              </View>
+        <FlatList
+          data={comments}
+          // persistentScrollbar
+          // nestedScrollEnabled
+          maxHeight={height * 0.43}
+          renderItem={renderComments}
+          keyExtractor={item => item.id}
+        />
+        </View>
+        </View>
+      </Modal>
     );
   };
 
@@ -274,14 +316,15 @@ export default function InfoPage({route, navigation}) {
           backgroundColor: backgroundColor,
         },
       ]}>
-      <View style={{paddingBottom:50}}>
-        <ScrollView showsVerticalScrollIndicator={false}
-        //  refreshControl={
-        //   <RefreshControl
-        //     refreshing={refresh}
-        //     onRefresh={onRefresh}
-        //   />
-        // } 
+      <View style={{paddingBottom: 50}}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          //  refreshControl={
+          //   <RefreshControl
+          //     refreshing={refresh}
+          //     onRefresh={onRefresh}
+          //   />
+          // }
         >
           <ImageBackground
             resizeMode="cover"
@@ -476,8 +519,7 @@ export default function InfoPage({route, navigation}) {
                   </Text>
                   {showMoreButton ? (
                     <TouchableOpacity onPress={toggleTextShown}>
-                      <Text
-                        style={{color: '#FFD369'}}>
+                      <Text style={{color: '#FFD369'}}>
                         {textShown ? 'Read Less' : 'Read More'}
                       </Text>
                     </TouchableOpacity>
@@ -511,29 +553,29 @@ export default function InfoPage({route, navigation}) {
                 },
               ]}>
               <View style={{flexDirection: 'row'}}>
-                <Text
-                  style={[
-                    styles.text,
-                    {
-                      color: textColor,
-                      fontSize: 16,
-                      width: width * 0.48,
-                      paddingVertical: 5,
-                    },
-                  ]}>
-                  Comments :{' '}
-                </Text>
+                <TouchableOpacity onPress={()=>{
+                  if(comments.length == 0){
+                    ToastAndroid.show('No Comments yet', ToastAndroid.SHORT)
+                  }
+                  else{
+                    setCommentModal(true)
+                  }
+                  }}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                        fontSize: 16,
+                        width: width * 0.48,
+                        paddingVertical: 5,
+                      },
+                    ]}>
+                    Show All Comments...
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <View>
-                <FlatList
-                  data={comments}
-                  persistentScrollbar
-                  nestedScrollEnabled
-                  maxHeight={height * 0.43}
-                  renderItem={renderComments}
-                  keyExtractor={item => item.id}
-                />
-              </View>
+              <View>{commentsModal()}</View>
             </View>
           </View>
 
@@ -564,18 +606,29 @@ export default function InfoPage({route, navigation}) {
                 </View>
               )}
             />
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: textColor,
-                  paddingVertical: 20,
-                  paddingHorizontal: 0,
-                  fontSize: 16,
-                },
-              ]}>
-              New Arrivals
-            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('CategoryPage', {
+                  item: {
+                    id: '0',
+                    bookcategory: 'New Arrivals',
+                    catphoto: 'custom_img.jpg',
+                  },
+                })
+              }>
+              <Text
+                style={[
+                  styles.imageText,
+                  {
+                    color: textColor,
+                    paddingVertical: 20,
+                    paddingHorizontal: 0,
+                    fontSize: 16,
+                  },
+                ]}>
+                New Arrivals
+              </Text>
+            </TouchableOpacity>
             <FlatList
               data={newArrivals}
               renderItem={({item, index}) => (
@@ -590,18 +643,29 @@ export default function InfoPage({route, navigation}) {
                 </View>
               )}
             />
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: textColor,
-                  paddingVertical: 20,
-                  paddingHorizontal: 0,
-                  fontSize: 16,
-                },
-              ]}>
-              Top Rated
-            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('CategoryPage', {
+                  item: {
+                    id: '0',
+                    bookcategory: 'Top Rated',
+                    catphoto: 'custom_img.jpg',
+                  },
+                })
+              }>
+              <Text
+                style={[
+                  styles.imageText,
+                  {
+                    color: textColor,
+                    paddingVertical: 20,
+                    paddingHorizontal: 0,
+                    fontSize: 16,
+                  },
+                ]}>
+                Top Rated
+              </Text>
+            </TouchableOpacity>
             <FlatList
               data={topRated}
               renderItem={({item, index}) => (
@@ -616,18 +680,29 @@ export default function InfoPage({route, navigation}) {
                 </View>
               )}
             />
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: textColor,
-                  paddingVertical: 20,
-                  paddingHorizontal: 0,
-                  fontSize: 16,
-                },
-              ]}>
-              Popular Books
-            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('CategoryPage', {
+                  item: {
+                    id: '0',
+                    bookcategory: 'Popular Books',
+                    catphoto: 'custom_img.jpg',
+                  },
+                })
+              }>
+              <Text
+                style={[
+                  styles.imageText,
+                  {
+                    color: textColor,
+                    paddingVertical: 20,
+                    paddingHorizontal: 0,
+                    fontSize: 16,
+                  },
+                ]}>
+                Popular Books
+              </Text>
+            </TouchableOpacity>
             <FlatList
               data={popularBooks}
               renderItem={({item, index}) => (
@@ -642,18 +717,29 @@ export default function InfoPage({route, navigation}) {
                 </View>
               )}
             />
-            <Text
-              style={[
-                styles.imageText,
-                {
-                  color: textColor,
-                  paddingVertical: 20,
-                  paddingHorizontal: 0,
-                  fontSize: 16,
-                },
-              ]}>
-              Premium Books
-            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('CategoryPage', {
+                  item: {
+                    id: '0',
+                    bookcategory: 'Premium',
+                    catphoto: 'custom_img.jpg',
+                  },
+                })
+              }>
+              <Text
+                style={[
+                  styles.imageText,
+                  {
+                    color: textColor,
+                    paddingVertical: 20,
+                    paddingHorizontal: 0,
+                    fontSize: 16,
+                  },
+                ]}>
+                Premium Books
+              </Text>
+            </TouchableOpacity>
             <FlatList
               data={premiumBooks}
               renderItem={({item, index}) => (
@@ -673,33 +759,33 @@ export default function InfoPage({route, navigation}) {
       </View>
       {/* <BottomSheet navigation={navigation} /> */}
       <View style={styles.btnContainer}>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('MusicPlayer', {state: book, data: similar})
-              }>
-              <View
-                style={[
-                  styles.btn,
-                  {
-                    width: width * 0.62,
-                    marginRight: 10,
-                  },
-                ]}>
-                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-                  PLAY
-                </Text>
-                <MaterialCommunityIcons name="play" size={30} color="#fff" />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={onShare}>
-              <View style={styles.btn}>
-                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-                  SHARE
-                </Text>
-                <MaterialCommunityIcons name="share" size={30} color="#fff" />
-              </View>
-            </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('MusicPlayer', {state: book, data: similar})
+          }>
+          <View
+            style={[
+              styles.btn,
+              {
+                width: width * 0.62,
+                marginRight: 10,
+              },
+            ]}>
+            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+              PLAY
+            </Text>
+            <MaterialCommunityIcons name="play" size={30} color="#fff" />
           </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onShare}>
+          <View style={styles.btn}>
+            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+              SHARE
+            </Text>
+            <MaterialCommunityIcons name="share" size={30} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -830,19 +916,28 @@ const styles = StyleSheet.create({
   },
   commentContainer: {
     // height: 70,
-    width: width * 0.9,
+    width: width * 0.8,
     paddingTop: 10,
-    flexDirection:'row',
-    alignItems:'center',
-    justifyContent:'space-between',
+    flexDirection: 'column',
+    // alignItems:'center',
+    // justifyContent:'space-between',
   },
   commentHeader: {
     fontSize: 14,
-    width: width*0.5,
+    // width: width * 0.5,
   },
   commentFooter: {
     fontSize: 10,
-    textAlign: 'right',
+    // textAlign: 'right',
     paddingRight: 10,
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalText : {
+    fontSize: 20,
+    fontWeight: '800'
+  }
 });

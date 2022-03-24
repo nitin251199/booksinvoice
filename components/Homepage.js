@@ -18,6 +18,7 @@ import SkeletonContent from 'react-native-skeleton-content-nonexpo';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import { ThemeContext } from './ThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -81,19 +82,19 @@ export default function Homepage({navigation, route}) {
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
-
-  // useEffect(() => {
-  //   const backAction = () => {
-  //     BackHandler.exitApp()
-  //   };
-
-  //   const backHandler = BackHandler.addEventListener(
-  //     "hardwareBackPress",
-  //     backAction
-  //   );
-
-  //   return () => backHandler.remove();
-  // }, []);
+  useFocusEffect(
+      React.useCallback(() => {
+        const onBackPress =() => {
+          BackHandler.exitApp()
+            return true;
+        };
+  
+        BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  
+        return () =>
+          BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      }, [])
+    );
 
   const DisplayBanner = ({item}) => {
     return (
@@ -190,7 +191,7 @@ export default function Homepage({navigation, route}) {
                 category: category[index],
               })
             }>
-            <Text style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
+            <Text style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
               View All
             </Text>
           </TouchableOpacity>
@@ -409,7 +410,7 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
+                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -438,7 +439,7 @@ export default function Homepage({navigation, route}) {
                   navigation.navigate('CategoryPage', {
                     item: {
                       id: '0',
-                      bookcategory: 'New Arrivals',
+                      bookcategory: 'Top Rated',
                       catphoto: 'custom_img.jpg',
                     },
                   })
@@ -464,7 +465,7 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
+                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -490,7 +491,7 @@ export default function Homepage({navigation, route}) {
                   navigation.navigate('CategoryPage', {
                     item: {
                       id: '0',
-                      bookcategory: 'New Arrivals',
+                      bookcategory: 'Popular Books',
                       catphoto: 'custom_img.jpg',
                     },
                   })
@@ -516,7 +517,7 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
+                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -542,7 +543,7 @@ export default function Homepage({navigation, route}) {
                   navigation.navigate('CategoryPage', {
                     item: {
                       id: '0',
-                      bookcategory: 'New Arrivals',
+                      bookcategory: 'Premium',
                       catphoto: 'custom_img.jpg',
                     },
                   })
@@ -568,7 +569,7 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15}}>
+                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
                   View All
                 </Text>
               </TouchableOpacity>

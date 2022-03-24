@@ -547,7 +547,7 @@ export const EditProfile = ({navigation}) => {
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>navigation.navigate('UserSubscriptions')}>
           <ListItem
             containerStyle={[
               styles.listContainer,

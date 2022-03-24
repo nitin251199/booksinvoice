@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  ToastAndroid,
   useColorScheme,
   View,
 } from 'react-native';
@@ -31,6 +32,7 @@ export const DrawerContent = ({navigation}) => {
 
   const [category, setCategory] = React.useState([]);
   const [expanded, setExpanded] = React.useState(false);
+  const [languageExpanded, setLanguageExpanded] = React.useState(false);
   const [lexpanded, setLExpanded] = React.useState(false);
   const [userData, setUserData] = React.useState([]);
 
@@ -85,7 +87,7 @@ export const DrawerContent = ({navigation}) => {
   };
 
   return (
-    <View
+    <ScrollView
       style={[
         styles.container,
         {
@@ -123,11 +125,100 @@ export const DrawerContent = ({navigation}) => {
           {userData.user_name}
         </Text>
       </View>
+      
+      <ListItem
+        onPress={() => {
+          if (userData.length !== 0) {
+          navigation.navigate('EditProfile')
+          navigation.closeDrawer();
+          }
+          else {
+            navigation.navigate('Login')
+            navigation.closeDrawer();
+          }
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <FontAwesome5 name="user-alt" size={20} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Log In</Text>
+          </ListItem.Title>
+          <ListItem.Subtitle style={{fontSize:12,color: '#999'}}>
+            <Text>Listen Best Audiobooks</Text>
+            </ListItem.Subtitle>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        onPress={() => {navigation.navigate('Settings')
+        navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialIcons name="settings" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Settings</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+      onPress={() => {
+        console.log('userData',userData);
+        if (userData) {
+        navigation.navigate('FavouriteBooks')
+        navigation.closeDrawer();
+        }
+        else {
+          ToastAndroid.show('Please Login First', ToastAndroid.SHORT);
+        }
+      }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialIcons name="queue-music" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>My Playlist</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        onPress={() => {
+          navigation.navigate('Subscriptions');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <MaterialCommunityIcons name="crown" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Buy Subscription</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        // onPress={() => {
+        //   navigation.navigate('AboutUs');
+        //   navigation.closeDrawer();
+        // }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <Icon name="file-download" type="materialicons" color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Downloads</Text>
+          </ListItem.Title>
+          <ListItem.Subtitle style={{fontSize:12,color: '#999'}}>
+            <Text>Listen Favorite Audiobooks offline</Text>
+            </ListItem.Subtitle>
+        </ListItem.Content>
+      </ListItem>
+
       <ListItem.Accordion
         containerStyle={{backgroundColor: backgroundColor}}
         content={
           <>
-            <ListItem.Content>
+          
+          <Icon name="category" type="materialicons" color={textColor} />
+            <ListItem.Content style={{paddingLeft:30}}>
               <ListItem.Title
                 style={[
                   styles.text,
@@ -155,113 +246,72 @@ export const DrawerContent = ({navigation}) => {
         />
       </ListItem.Accordion>
 
-      <ListItem
+      <ListItem.Accordion
+        containerStyle={{backgroundColor: backgroundColor}}
+        content={
+          <>
+          <Icon name="language" type="materialicons" color={textColor} />
+            <ListItem.Content style={{paddingLeft:30}}>
+              <ListItem.Title
+                style={[
+                  styles.text,
+                  {
+                    color: textColor,
+                    fontWeight: '700'
+                  },
+                ]}>
+                Languages
+              </ListItem.Title>
+            </ListItem.Content>
+          </>
+        }
+        isExpanded={languageExpanded}
         onPress={() => {
-          if (userData.length !== 0) {
-          navigation.navigate('EditProfile')
-          }
-          else {
-            navigation.navigate('Login')
-          }
-        navigation.closeDrawer();}}
-        containerStyle={{backgroundColor: backgroundColor}}>
-          <FontAwesome5 name="user-alt" size={20} color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>Profile</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-
-      <ListItem
-        onPress={() => {
-          navigation.navigate('Subscriptions');
-          navigation.closeDrawer();
-        }}
-        containerStyle={{backgroundColor: backgroundColor}}>
-           <Icon name="category" type="materialicons" color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>Membership</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-      <ListItem
-        onPress={() => {
-          navigation.navigate('AboutUs');
-          navigation.closeDrawer();
-        }}
-        containerStyle={{backgroundColor: backgroundColor}}>
-           <Icon name="info-outline" type="materialicons" color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>About Us</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-      <ListItem
-        onPress={() => {
-          navigation.navigate('AboutUs');
-          navigation.closeDrawer();
-        }}
-        containerStyle={{backgroundColor: backgroundColor}}>
-           <Icon name="questioncircle" type="antdesign" color={textColor} size={22}/>
-        <ListItem.Content style={{paddingLeft:20}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor,}]}>Help</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-      <ListItem
-        onPress={() => {
-          navigation.navigate('JoinUs');
-          navigation.closeDrawer();
-        }}
-        containerStyle={{backgroundColor: backgroundColor}}>
-           <Icon name="free-breakfast" type="materialicons" color={textColor} size={22}/>
-        <ListItem.Content style={{paddingLeft:20}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor,}]}>Join Us</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-
-      <ListItem
-        onPress={() => {navigation.navigate('FAQ')
-        navigation.closeDrawer();}}
-        containerStyle={{backgroundColor: backgroundColor}}>
-          <MaterialCommunityIcons name="frequently-asked-questions" size={23} color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>FAQ</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-
-      <ListItem
-        onPress={() => {navigation.navigate('Disclaimer')
-        navigation.closeDrawer();}}
-        containerStyle={{backgroundColor: backgroundColor}}>
-          <MaterialCommunityIcons name="exclamation-thick" size={23} color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>Disclaimer</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-
-      <ListItem
-        onPress={() => {navigation.navigate('Settings')
-        navigation.closeDrawer();}}
-        containerStyle={{backgroundColor: backgroundColor}}>
-          <MaterialIcons name="settings" size={23} color={textColor} />
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>Settings</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-
+          setLanguageExpanded(!languageExpanded);
+        }}>
+        <ListItem
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          containerStyle={{backgroundColor: backgroundColor}}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title
+              style={{
+                fontSize: 12,
+                color: textColor2,
+              }}>
+              Hindi
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+        <ListItem
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          containerStyle={{backgroundColor: backgroundColor}}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title
+              style={{
+                fontSize: 12,
+                color: textColor2,
+              }}>
+              English
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+        <ListItem
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          containerStyle={{backgroundColor: backgroundColor}}
+          bottomDivider>
+          <ListItem.Content>
+            <ListItem.Title
+              style={{
+                fontSize: 12,
+                color: textColor2,
+              }}>
+              Marathi
+            </ListItem.Title>
+          </ListItem.Content>
+        </ListItem>
+      </ListItem.Accordion>
 
       <ListItem.Accordion
         containerStyle={{backgroundColor: backgroundColor}}
@@ -298,11 +348,101 @@ export const DrawerContent = ({navigation}) => {
           </ListItem.Title>
         </ListItem.Content>
       </ListItem>
-
+      <ListItem
+        onPress={() => {navigation.navigate('Disclaimer')
+        navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor2}]}>Disclaimer</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
       
       </ListItem.Accordion>
+
+
+      <ListItem
+        onPress={() => {
+          navigation.navigate('AboutUs');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+           <Icon name="info-outline" type="materialicons" color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>About Us</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+
+      <ListItem
+        onPress={() => {navigation.navigate('FAQ')
+        navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialCommunityIcons name="frequently-asked-questions" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>FAQ</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        // onPress={() => {navigation.navigate('FAQ')
+        // navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialIcons name="support-agent" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Support</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        // onPress={() => {navigation.navigate('FAQ')
+        // navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialIcons name="star-rate" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Rate us on Play Store</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        // onPress={() => {navigation.navigate('FAQ')
+        // navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialCommunityIcons name="share-variant" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>Share App</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
       
-    </View>
+      <ListItem
+        // onPress={() => {navigation.navigate('FAQ')
+        // navigation.closeDrawer();}}
+        containerStyle={{backgroundColor: backgroundColor}}>
+          <MaterialCommunityIcons name="robot-happy" size={23} color={textColor} />
+        <ListItem.Content style={{paddingLeft:15}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>App Version V1.1</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      
+
+
+      
+      
+    </ScrollView>
   );
 };
 

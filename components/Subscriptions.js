@@ -9,12 +9,14 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import {Button, Card} from 'react-native-elements';
+import { TextInput } from 'react-native-gesture-handler';
 import SkeletonContent from 'react-native-skeleton-content-nonexpo';
 import TextTicker from 'react-native-text-ticker';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import {postData} from './FetchApi';
 import { ThemeContext } from './ThemeContext';
@@ -28,6 +30,8 @@ export const Subscriptions = ({navigation}) => {
   const [dataInternationalInd, setDataInternationalInd] = React.useState([]);
   const [show, setShow] = React.useState(false);
   const [status, setStatus] = React.useState(0);
+  const [showModal, setShowModal] = React.useState(false);
+  const [copies, setCopies] = React.useState(1);
 
   const [selected, setSelected] = React.useState({
     id: '',
@@ -43,6 +47,7 @@ export const Subscriptions = ({navigation}) => {
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
   const fetchAllSubscriptions = async () => {
     var body = {type: 1};
@@ -93,6 +98,64 @@ export const Subscriptions = ({navigation}) => {
       packagefor,
     });
   };
+
+  const handleBuy = () => {
+    if(status === 2){
+      setShowModal(true)
+    }
+    else {
+      navigation.navigate('PaymentSummary', { selected, copies });
+    }   
+  }
+
+  const handleProceed = () => {
+    setShowModal(false)
+    navigation.navigate('PaymentSummary', { selected, copies });
+  }
+
+  const copiesModal = () => {
+    return(
+      <Modal
+      animationType="slide"
+        transparent={true}
+        visible={showModal}
+        onRequestClose={() => {
+          setShowModal(false);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={[
+              {
+                backgroundColor: modelBackgroundColor,
+                padding: 20,
+                borderRadius: 10,
+              },
+            ]}>
+            <Text style={{fontSize:20, fontWeight:'bold',color: textColor,margin:10}}>
+              {selected.packagename}
+            </Text>
+            <Text style={{fontSize:14, fontWeight:'400', color:textColor,margin:20}}>
+              No. of Days {selected.packagedays}
+            </Text>
+            <TextInput
+              value={copies}
+              onChangeText={text => setCopies(text)}
+              style={{borderWidth:1,borderColor: textColor, borderRadius: 10,paddingLeft:10}}
+              placeholder="No. of copies"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+            />
+            <TouchableOpacity onPress={()=>handleProceed()}>
+            <View style={{marginVertical:10,padding:15, borderRadius:10,backgroundColor:'#ff9000'}}>
+              <Text style={{textAlign:'center',fontWeight:'800',color:'#FFF'}}>Proceed to pay</Text>
+            </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+      </Modal>
+    )
+  }
 
   const DisplayData = ({item}) => {
     return (
@@ -822,6 +885,8 @@ export const Subscriptions = ({navigation}) => {
           </View>
           <View>
             <Button
+              disabled={selected.id !== '' ? false : true}
+              onPress={()=>handleBuy()}
               title="Buy Now"
               titleStyle={{fontWeight: 'bold', fontSize: 18}}
               buttonStyle={{
@@ -839,6 +904,7 @@ export const Subscriptions = ({navigation}) => {
           </View>
         </View>
       </View>
+      {copiesModal()}
     </View>
   );
 };
@@ -848,4 +914,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });

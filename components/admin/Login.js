@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   SafeAreaView,
   Text,
@@ -8,10 +8,9 @@ import {
   Dimensions,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   ToastAndroid,
+  Alert,
 } from 'react-native';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {Button, ButtonGroup} from 'react-native-elements';
@@ -19,7 +18,12 @@ import {postData} from '../FetchApi';
 import {useDispatch} from 'react-redux';
 import {storeDatasync} from '../AsyncStorage';
 import PhoneInput from 'react-native-phone-number-input';
-import { ThemeContext } from '../ThemeContext';
+import {ThemeContext} from '../ThemeContext';
+import DeviceCountry, {
+  TYPE_ANY,
+  TYPE_TELEPHONY,
+  TYPE_CONFIGURATION,
+} from 'react-native-device-country';
 
 const {width, height} = Dimensions.get('window');
 
@@ -35,11 +39,44 @@ export const Login = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [country, setCountry] = useState('');
 
-  const { theme } = React.useContext(ThemeContext);
+  const {theme} = React.useContext(ThemeContext);
 
   const textColor = theme === 'dark' ? '#fff' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  
+
+  const getLocation = () => {
+    DeviceCountry.getCountryCode(TYPE_TELEPHONY)
+  .then((result) => {
+    // console.log(result.code.toUpperCase());
+    // {"code": "BY", "type": "telephony"}
+    setCountry(result.code.toUpperCase());
+  })
+  .catch((e) => {
+    console.log(e);
+  });
+  }
+
+  useEffect(() => {
+    getLocation()
+  }, [])
+
+  const createAlert = () =>
+    Alert.alert(
+      "Your Precious Information is Safe With Us",
+      "Continue, if you agree to the T&C and Privacy Policy.",
+      [
+        {
+          text: "Cancel",
+          // onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "Proceed", onPress: () =>validateOTP() }
+      ]
+    );
+  
 
   const otpLogin = () => {
     return (
@@ -77,30 +114,11 @@ export const Login = ({navigation}) => {
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
             }}>
-            <View
-              style={[
-                // styles.input,
-                {
-                  borderColor: textColor,
-                },
-              ]}>
-              {/* <AntDesign
-                style={{marginHorizontal: 10}}
-                name="user"
-                size={30}
-                color={textColor}
-              /> */}
-              {/* <TextInput
-                value={mobileNo}
-                style={{width: '90%'}}
-                placeholder="Mobile Number"
-                placeholderTextColor={textColor}
-                onChangeText={text => setMobileNo(text)}
-              /> */}
+            <View>
               <PhoneInput
                 ref={phoneInput}
                 defaultValue={mobileNo}
-                defaultCode="IN"
+                defaultCode={country}
                 layout="first"
                 textContainerStyle={{
                   borderRadius: 10,
@@ -112,12 +130,13 @@ export const Login = ({navigation}) => {
                   borderColor: textColor,
                   borderRadius: 10,
                   alignItems: 'center',
+                  width: '90%',
                 }}
                 placeholder="Mobile Number"
                 onChangeFormattedText={text => {
                   setMobileNo(text);
                 }}
-                withDarkTheme={useColorScheme() === 'dark' ? true : false}
+                withDarkTheme={theme === 'dark' ? true : false}
                 withShadow
                 autoFocus
               />
@@ -131,11 +150,11 @@ export const Login = ({navigation}) => {
                       borderColor: textColor,
                     },
                   ]}>
-                  <AntDesign
+                  <MaterialCommunityIcons
                     style={{marginHorizontal: 10}}
                     name="key"
-                    size={30}
-                    color={textColor}
+                    size={25}
+                    color="#ff9000"
                   />
                   <TextInput
                     autoFocus
@@ -145,7 +164,7 @@ export const Login = ({navigation}) => {
                     onChangeText={text => setOtp(text)}
                   />
                 </View>
-                <TouchableOpacity onPress={() => validateOTP()}>
+                <TouchableOpacity onPress={() => createAlert()}>
                   <View
                     style={[
                       styles.btn,
@@ -234,7 +253,7 @@ export const Login = ({navigation}) => {
         ToastAndroid.show('Something Went Wrong!', ToastAndroid.LONG);
       }
     } else {
-      alert(phoneInput.current?.isValidNumber());
+      ToastAndroid.show('Please enter a valid number!', ToastAndroid.LONG);
     }
   };
 
@@ -277,10 +296,13 @@ export const Login = ({navigation}) => {
           style={[
             styles.text,
             {
-              color: textColor,
+              color: '#ff9000',
             },
           ]}>
-          Login
+          BooksInVoice
+        </Text>
+        <Text style={[styles.subText, {color: '#ff9000'}]}>
+          World's first online audio library
         </Text>
       </View>
       <ButtonGroup
@@ -310,12 +332,12 @@ export const Login = ({navigation}) => {
             style={{marginHorizontal: 10}}
             name="email"
             size={25}
-            color={textColor}
+            color="#ff9000"
           />
           <TextInput
-            style={{width: '80%'}}
+            style={{width: '80%', color: textColor}}
             placeholder="E-mail"
-            placeholderTextColor={textColor}
+            placeholderTextColor="#999"
             onChangeText={text => setEmail(text)}
           />
         </View>
@@ -330,13 +352,13 @@ export const Login = ({navigation}) => {
             style={{marginHorizontal: 10}}
             name="key"
             size={25}
-            color={textColor}
+            color="#ff9000"
           />
           <TextInput
-            style={{width: '70%'}}
+            style={{width: '70%', color: textColor}}
             secureTextEntry={!showPass}
             placeholder="Password"
-            placeholderTextColor={textColor}
+            placeholderTextColor="#999"
             onChangeText={text => setPassword(text)}
           />
           <MaterialCommunityIcons
@@ -362,8 +384,8 @@ export const Login = ({navigation}) => {
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          width: width * 0.82,
-          paddingBottom: 20,
+          width: width * 0.85,
+          paddingBottom: 0,
         }}>
         <Text
           onPress={() => refRBSheet.current.open()}
@@ -392,8 +414,11 @@ export const Login = ({navigation}) => {
         <TouchableOpacity>
           <MaterialCommunityIcons name="facebook" size={50} color="#4267B2" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <MaterialCommunityIcons name="google" size={50} color="#DB4437" />
+        <TouchableOpacity style={{justifyContent: 'center'}}>
+          <Image
+            source={require('../../images/google.png')}
+            style={{width: 40, height: 40, resizeMode: 'contain'}}
+          />
         </TouchableOpacity>
       </View>
       {otpLogin()}
@@ -410,15 +435,15 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     height: height * 0.15,
     width: width * 0.5,
-    borderRadius: 10,
-    margin: 10,
+    // borderRadius: 10,
+    margin: 20,
   },
   textContainer: {
     width: width * 0.8,
     justifyContent: 'center',
   },
   text: {
-    fontSize: 28,
+    fontSize: 34,
     textAlign: 'center',
     fontWeight: '800',
   },
@@ -426,25 +451,32 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   input: {
-    borderWidth: 1,
-    width: width * 0.8,
+    // borderWidth: 1,
+    width: width * 0.9,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 10,
     margin: 10,
+    backgroundColor: '#99999930',
   },
   btn: {
     backgroundColor: '#ff9000',
-    width: width * 0.8,
+    width: width * 0.9,
     padding: 15,
     alignItems: 'center',
     borderRadius: 10,
-    marginVertical: 15,
+    marginVertical: 10,
   },
   btnText: {
     fontWeight: '700',
     fontSize: 20,
     color: '#000',
+  },
+  subText: {
+    textAlign: 'center',
+    fontSize: 14,
+    textTransform: 'uppercase',
+    marginTop: 5,
   },
 });

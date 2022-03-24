@@ -15,11 +15,9 @@ import {
 import {AirbnbRating, Divider, FAB} from 'react-native-elements';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MI from 'react-native-vector-icons/MaterialIcons';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
-import BottomSheet from './BottomSheet';
 import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
@@ -70,7 +68,7 @@ export const CategoryPage = ({navigation, route}) => {
                 fontSize: 17,
                 color: textColor,
                 fontWeight: '700',
-                paddingVertical: 5,
+                paddingBottom: 5,
               }}
               duration={10000}
               loop
@@ -83,6 +81,69 @@ export const CategoryPage = ({navigation, route}) => {
             <Text style={{color: textColor}}>{item.bookauthor}</Text>
             <Text style={{color: textColor}}>{item.bookcategory}</Text>
             <Text style={{color: textColor}}>Narrator: {item.narrator}</Text>
+            <Text style={{color: textColor}}>Views: {item.viewcount}</Text>
+            {item.premiumtype === 'Premium' ? (
+              <>
+                <View style={{flexDirection:'row'}}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                      },
+                    ]}>
+                    Premium Type :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    {item.premiumtype}
+                  </Text>
+                </View>
+                <View style={{flexDirection:'row'}}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                      },
+                    ]}>
+                    Validity :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    {item.validity} days
+                  </Text>
+                </View>
+                <View style={{flexDirection:'row'}}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                      },
+                    ]}>
+                    Price :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    ₹ {item.price}
+                  </Text>
+                </View>
+                <View style={{flexDirection:'row'}}>
+                  <Text
+                    style={[
+                      styles.text,
+                      {
+                        color: textColor,
+                      },
+                    ]}>
+                    Doller Price :{' '}
+                  </Text>
+                  <Text style={[styles.text, {color: textColor}]}>
+                    $ {item.dollerprice}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <></>
+            )}
             <AirbnbRating
               starContainerStyle={{marginLeft: -160}}
               count={5}
@@ -279,7 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   image: {
-    height: height * 0.15,
+    height: height * 0.17,
     width: width * 0.24,
     marginRight: 20,
     resizeMode: 'stretch',

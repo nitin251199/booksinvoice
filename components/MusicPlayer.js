@@ -14,6 +14,7 @@ import {
   ImageBackground,
   ToastAndroid,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 
 import TrackPlayer, {
@@ -34,6 +35,7 @@ import {checkSyncData, getSyncData} from './AsyncStorage';
 import {ThemeContext} from './ThemeContext';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {TextInput} from 'react-native-gesture-handler';
+import {Slider as SpeedSlider} from 'react-native-elements';
 
 const {width, height} = Dimensions.get('window');
 
@@ -67,6 +69,7 @@ const MusicPlayer = ({route, navigation}) => {
   const [commentText, setCommentText] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [speedModalVisible, setSpeedModalVisible] = useState(false);
 
   // custom referecnces
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -76,20 +79,21 @@ const MusicPlayer = ({route, navigation}) => {
   const {theme} = React.useContext(ThemeContext);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = theme === 'dark' ? '#191414' : '#FFF';
+  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
   const setupPlayer = async () => {
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
-        // capabilities: [
-        //   Capability.Play,
-        //   Capability.Pause,
-        //   Capability.SkipToNext,
-        //   Capability.SkipToPrevious,
-        //   Capability.Stop,
-        // ],
-        // compactCapabilities: [Capability.Play, Capability.Pause],
+        capabilities: [
+          Capability.Play,
+          Capability.Pause,
+          // Capability.SkipToNext,
+          // Capability.SkipToPrevious,
+          Capability.Stop,
+        ],
+        compactCapabilities: [Capability.Play, Capability.Pause],
         stopWithApp: true,
       });
       await TrackPlayer.add(temp);
@@ -186,7 +190,7 @@ const MusicPlayer = ({route, navigation}) => {
 
     return () => {
       scrollX.removeAllListeners();
-      TrackPlayer.stop();
+      // TrackPlayer.stop();
     };
   }, []);
 
@@ -266,7 +270,8 @@ const MusicPlayer = ({route, navigation}) => {
           setModalVisible(!modalVisible);
         }}>
         <View style={style.centeredView}>
-          <View style={[style.modalView, {backgroundColor: backgroundColor}]}>
+          <View
+            style={[style.modalView, {backgroundColor: modelBackgroundColor}]}>
             <Text style={[style.modalText, {color: textColor}]}>
               Please Buy Subscription to listen further !
             </Text>
@@ -290,22 +295,43 @@ const MusicPlayer = ({route, navigation}) => {
     getSectionDone();
   }, [progress.position]);
 
-  const postComment = async() => {
+  // const closePlayer = () => {
+  //   refMiniRBSheet.current.close()
+  //   console.log('close', refMiniRBSheet);
+  // }
+
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     const onBackPress =() => {
+  //       // closePlayer()
+  //         return true;
+  //     };
+
+  //     BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+  //     return () =>
+  //       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+  //   }, [progress.position])
+  // );
+
+  const postComment = async () => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
-    var body = { "type":1 , "c_name": name, "c_email": email, "c_msg": commentText, "books_id": tracks[currentTrack].id}
+    var body = {
+      type: 1,
+      c_name: name,
+      c_email: email,
+      c_msg: commentText,
+      books_id: tracks[currentTrack].id,
+    };
     var result = await postData('api/getAddcomment', body);
-    if(result.msg === 'added')
-    {
+    if (result.msg === 'added') {
       ToastAndroid.show('Comment Added Successfully', ToastAndroid.SHORT);
-      refRBSheet.current.close()
-    }
-    else
-    {
+      refRBSheet.current.close();
+    } else {
       ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
-      refRBSheet.current.close()
+      refRBSheet.current.close();
     }
-    
-  }
+  };
 
   const commentBottomSheet = () => {
     return (
@@ -328,7 +354,14 @@ const MusicPlayer = ({route, navigation}) => {
         }}
         height={height * 0.6}>
         <View>
-          <Text style={{color: textColor, margin: 10,marginHorizontal: 20,fontWeight:'800',fontSize:22}}>
+          <Text
+            style={{
+              color: textColor,
+              margin: 10,
+              marginHorizontal: 20,
+              fontWeight: '800',
+              fontSize: 22,
+            }}>
             Write A review
           </Text>
           <Text style={{color: textColor, marginHorizontal: 20, fontSize: 14}}>
@@ -337,26 +370,26 @@ const MusicPlayer = ({route, navigation}) => {
           <View style={{marginTop: 20, marginHorizontal: 20}}>
             <Text style={{color: textColor, fontSize: 14}}>Comment</Text>
             <TextInput
-              onChangeText={(text)=>setCommentText(text)}
+              onChangeText={text => setCommentText(text)}
               style={{
                 borderWidth: 1,
                 borderRadius: 5,
                 marginVertical: 10,
                 borderColor: textColor,
                 color: textColor,
-                paddingHorizontal:10
+                paddingHorizontal: 10,
               }}
               multiline
               numberOfLines={3}
               placeholder="Write your comment here"
               placeholderTextColor="#999"
             />
-            <View style={{flexDirection: 'row',}}>
-              <View style={{flexDirection: 'column',width:'50%'}}>
+            <View style={{flexDirection: 'row'}}>
+              <View style={{flexDirection: 'column', width: '50%'}}>
                 <Text style={{color: textColor, fontSize: 14}}>Name*</Text>
                 <TextInput
-                  onChangeText={(text)=>setName(text)}
-                  placeholder='Name'
+                  onChangeText={text => setName(text)}
+                  placeholder="Name"
                   placeholderTextColor="#999"
                   style={{
                     borderWidth: 1,
@@ -365,15 +398,15 @@ const MusicPlayer = ({route, navigation}) => {
                     marginRight: 10,
                     borderColor: textColor,
                     color: textColor,
-                    paddingHorizontal:10
+                    paddingHorizontal: 10,
                   }}
                 />
               </View>
-              <View style={{flexDirection: 'column',width:'50%'}}>
+              <View style={{flexDirection: 'column', width: '50%'}}>
                 <Text style={{color: textColor, fontSize: 14}}>Email*</Text>
                 <TextInput
-                  onChangeText={(text)=>setEmail(text)}
-                  placeholder='Email'
+                  onChangeText={text => setEmail(text)}
+                  placeholder="Email"
                   placeholderTextColor="#999"
                   style={{
                     borderWidth: 1,
@@ -381,16 +414,26 @@ const MusicPlayer = ({route, navigation}) => {
                     marginVertical: 10,
                     borderColor: textColor,
                     color: textColor,
-                    paddingHorizontal:10
+                    paddingHorizontal: 10,
                   }}
                 />
               </View>
             </View>
-           <TouchableOpacity onPress={()=>postComment()}>
-           <View style={{backgroundColor:'#ff9000',justifyContent:'center',alignItems:'center',padding:20,marginVertical:10,borderRadius:5}}>
-              <Text style={{color: '#FFF',fontWeight:'bold',fontSize:18}}>Post Comment</Text>
-            </View>
-           </TouchableOpacity>
+            <TouchableOpacity onPress={() => postComment()}>
+              <View
+                style={{
+                  backgroundColor: '#ff9000',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: 20,
+                  marginVertical: 10,
+                  borderRadius: 5,
+                }}>
+                <Text style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
+                  Post Comment
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </RBSheet>
@@ -419,20 +462,173 @@ const MusicPlayer = ({route, navigation}) => {
   };
 
   const handleTrackSpeed = async () => {
-    var speed = await TrackPlayer.getRate();
-    if (speed == 1) {
-      await TrackPlayer.setRate(1.5);
-      setSpeed(1.5);
-    } else if (speed == 1.5) {
-      TrackPlayer.setRate(2);
-      setSpeed(2);
-    } else if (speed == 2) {
-      TrackPlayer.setRate(0.5);
-      setSpeed(0.5);
-    } else if (speed == 0.5) {
-      TrackPlayer.setRate(1);
-      setSpeed(1);
-    }
+    await TrackPlayer.setRate(speed);
+    setSpeedModalVisible(false);
+  };
+
+  const speedModal = () => {
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={speedModalVisible}
+        onRequestClose={() => {
+          setSpeedModalVisible(false);
+        }}>
+        <View style={style.centeredView}>
+          <View
+            style={[
+              {
+                backgroundColor: modelBackgroundColor,
+                padding: 20,
+                borderRadius: 10,
+              },
+            ]}>
+            <Text
+              style={[
+                {
+                  color: textColor,
+                  padding: 10,
+                  fontSize: 20,
+                  fontWeight: '600',
+                  marginBottom: 20,
+                },
+              ]}>
+              Set Speed
+            </Text>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 22,
+                color: textColor,
+                fontWeight: '800',
+                padding: 10,
+              }}>
+              {speed}x
+            </Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '300',
+                  padding: 10,
+                  color: textColor,
+                }}>
+                0.5
+              </Text>
+              <View style={{width: 150}}>
+                <SpeedSlider
+                  value={speed*10}
+                  onValueChange={value => setSpeed(value/10)}
+                  maximumValue={35}
+                  minimumValue={5}
+                  step={1}
+                  allowTouchTrack
+                  trackStyle={{height: 2, backgroundColor: '#999'}}
+                  thumbStyle={{
+                    height: 20,
+                    width: 20,
+                    backgroundColor: '#ff9000',
+                  }}
+                />
+              </View>
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '300',
+                  padding: 10,
+                  color: textColor,
+                }}>
+                3.5
+              </Text>
+            </View>
+            <View style={{flexDirection: 'row'}}>
+              <TouchableOpacity onPress={()=>setSpeed(1)}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 50,
+                    backgroundColor: speed === 1 ? '#ff9000' : '#99999950',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    margin: 20,
+                  }}>
+                  <Text style={{color: textColor}}>1x</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={()=>setSpeed(2)}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 50,
+                    backgroundColor: speed === 2 ? '#ff9000' : '#99999950',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    margin: 20,
+                  }}>
+                  <Text style={{color: textColor}}>2x</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={()=>setSpeed(3)}>
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 50,
+                    backgroundColor: speed === 3 ? '#ff9000' : '#99999950',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    margin: 20,
+                  }}>
+                  <Text style={{color: textColor}}>3x</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                padding: 20,
+              }}>
+              <TouchableOpacity onPress={() => setSpeedModalVisible(false)}>
+                <View
+                  style={{
+                    backgroundColor: 'transparent',
+                    padding: 10,
+                    borderRadius: 2,
+                  }}>
+                  <Text
+                    style={{fontSize: 18, fontWeight: '500', color: textColor}}>
+                    Cancel
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleTrackSpeed()}>
+                <View
+                  style={{
+                    backgroundColor: '#ff9000',
+                    paddingVertical: 10,
+                    borderRadius: 3,
+                    paddingHorizontal: 40,
+                  }}>
+                  <Text
+                    style={{fontSize: 18, fontWeight: '500', color: textColor}}>
+                    OK
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   const checkFavourite = async res => {
@@ -562,7 +758,7 @@ const MusicPlayer = ({route, navigation}) => {
         {/* music control */}
         <View style={style.musicControlsContainer}>
           <TouchableOpacity onPress={skipBackward}>
-            <MaterialIcons name="replay-10" size={25} color="#ff9000" />
+            <MaterialIcons name="replay-10" size={30} color="#ff9000" />
           </TouchableOpacity>
           <TouchableOpacity onPress={skipToPrevious}>
             <Ionicons name="play-skip-back-outline" size={35} color="#ff9000" />
@@ -586,10 +782,12 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={skipForward}>
-            <MaterialIcons name="forward-10" size={25} color="#ff9000" />
+            <MaterialIcons name="forward-10" size={30} color="#ff9000" />
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* <MiniPlayer ref={refMiniRBSheet} /> */}
 
       {/* bottom section */}
       <View style={style.bottomSection}>
@@ -610,6 +808,10 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity>
 
+          <TouchableOpacity>
+            <MaterialCommunityIcons name="download" size={30} color="#888888" />
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => refRBSheet.current.open()}>
             <MaterialCommunityIcons
               name="comment-text-outline"
@@ -618,7 +820,7 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => handleTrackSpeed()}>
+          <TouchableOpacity onPress={() => setSpeedModalVisible(true)}>
             <MaterialCommunityIcons
               name="speedometer"
               size={30}
@@ -638,6 +840,7 @@ const MusicPlayer = ({route, navigation}) => {
         </View>
       </View>
       {buySubscriptionModel()}
+      {speedModal()}
     </SafeAreaView>
   );
 };
@@ -760,12 +963,6 @@ const style = StyleSheet.create({
     padding: 10,
     elevation: 2,
     width: width * 0.7,
-  },
-  buttonOpen: {
-    backgroundColor: '#F194FF',
-  },
-  buttonClose: {
-    backgroundColor: '#2196F3',
   },
   textStyle: {
     color: 'white',

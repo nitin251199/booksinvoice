@@ -1,34 +1,51 @@
 import {Picker} from '@react-native-picker/picker';
 import React, {useState} from 'react';
-import {StyleSheet, Switch, Text, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Switch, Text, View} from 'react-native';
 import { ThemeContext } from './ThemeContext';
 
 
 export const Settings = () => {
     
     const { theme, toggleTheme, darkMode } = React.useContext(ThemeContext);
+    const [loading, setLoading ] = React.useState(false)
 
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   const textColor  = theme === 'dark' ? '#FFF' : '#191414';
+  const menuColor = theme === 'dark' ? '#000' : '#99999950'
 
+  // const switchMode = async() => {
+  //   setLoading(true)
+  //   // setLoading(false)
+  // }
+
+  // const switchLoader = async() =>{
+  //   await toggleTheme()
+  //       setLoading(false)
+  // }
+//
   return (
     <View style={[styles.container,{backgroundColor: backgroundColor}]}>
       <Text style={[styles.title,{color: textColor}]}>Settings</Text>
       <View style={{paddingVertical: 10}}>
         <Text style={[styles.itemText,{color: textColor}]}>Theme</Text>
-        <View style={[styles.menuitem,{backgroundColor: backgroundColor}]}>
+        <View style={[styles.menuitem,{backgroundColor: menuColor}]}>
           <Text style={[styles.itemText,{color: textColor}]}>Dark Mode</Text>
+          <View style={{flexDirection:'row',justifyContent:'center'}}>
+            <ActivityIndicator animating={loading}/>
           <Switch
+            thumbColor="#ff9000"
+            trackColor={{ false: "#999", true: "#bf6d01" }}
             value={darkMode}
             onValueChange={val => {
-                toggleTheme();
+              toggleTheme()
             }}
           />
+          </View>
         </View>
       </View>
       <View>
         <Text style={[styles.itemText,{color: textColor}]}>Music & Playback</Text>
-        <View style={[styles.menuitem,{backgroundColor: backgroundColor}]}>
+        <View style={[styles.menuitem,{backgroundColor: menuColor}]}>
           <View>
             <Text style={[styles.itemText,{color: textColor}]}>Streaming Quality</Text>
             <Text style={{fontSize: 12,color: textColor}}>Higher quality uses more data</Text>
@@ -51,7 +68,7 @@ export const Settings = () => {
         <View
           style={[
             styles.menuitem,
-            {flexDirection: 'column', paddingVertical: 25,backgroundColor: backgroundColor},
+            {flexDirection: 'column', paddingVertical: 25,backgroundColor: menuColor},
           ]}>
           <View style={styles.menu}>
             <View>
