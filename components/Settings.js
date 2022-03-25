@@ -8,6 +8,7 @@ export const Settings = () => {
     
     const { theme, toggleTheme, darkMode } = React.useContext(ThemeContext);
     const [loading, setLoading ] = React.useState(false)
+    const [quality, setQuality ] = React.useState('')
 
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   const textColor  = theme === 'dark' ? '#FFF' : '#191414';
@@ -52,9 +53,9 @@ export const Settings = () => {
           </View>
           <Picker
             mode="dropdown"
-            selectedValue={'high'}
+            selectedValue={quality}
             onValueChange={(itemValue, itemIndex) => {
-              console.log(itemValue);
+              setQuality(itemValue);
             }}
             style={{width: 113, fontSize: 12,color: textColor}}>
             <Picker.Item label="High" value="high" />

@@ -3,13 +3,12 @@ import {
   Image,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
   Dimensions,
   ScrollView,
   TouchableWithoutFeedback,
-  ActivityIndicator,
   Modal,
+  ToastAndroid,
   TouchableOpacity,
 } from 'react-native';
 import {Button, Card} from 'react-native-elements';
@@ -32,6 +31,7 @@ export const Subscriptions = ({navigation}) => {
   const [status, setStatus] = React.useState(0);
   const [showModal, setShowModal] = React.useState(false);
   const [copies, setCopies] = React.useState(1);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const [selected, setSelected] = React.useState({
     id: '',
@@ -61,17 +61,20 @@ export const Subscriptions = ({navigation}) => {
 
   const checkSession = async () => {
     var key = await checkSyncData();
-    if (key) {
+    if (key[0]) {
       var userData = await getSyncData(key[0]);
-      console.log('userData', userData.usertype);
       if(userData.usertype == 'Individual'){
+        setIsLoggedIn(true);
         setStatus(1)
       }
       if(userData.usertype == 'Organisation'){
+        setIsLoggedIn(true);
         setStatus(2)
       }
     }
   }
+
+  // console.log('navigation',navigation.getState());
 
   useEffect(function () {
     fetchAllSubscriptions();
@@ -100,17 +103,27 @@ export const Subscriptions = ({navigation}) => {
   };
 
   const handleBuy = () => {
-    if(status === 2){
-      setShowModal(true)
+    if(isLoggedIn){
+      if(status === 2){
+        setShowModal(true)
+      }
+      else {
+        navigation.navigate('PaymentSummary', { selected, copies });
+      } 
     }
-    else {
-      navigation.navigate('PaymentSummary', { selected, copies });
-    }   
+    else{
+      ToastAndroid.show('Please Login First', ToastAndroid.SHORT);
+    }  
   }
 
   const handleProceed = () => {
-    setShowModal(false)
+    if(isLoggedIn){
+      setShowModal(false)
     navigation.navigate('PaymentSummary', { selected, copies });
+    }
+    else{
+      ToastAndroid.show('Please Login First', ToastAndroid.SHORT);
+    }
   }
 
   const copiesModal = () => {

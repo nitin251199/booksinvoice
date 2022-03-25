@@ -19,11 +19,15 @@ import {useDispatch} from 'react-redux';
 import {storeDatasync} from '../AsyncStorage';
 import PhoneInput from 'react-native-phone-number-input';
 import {ThemeContext} from '../ThemeContext';
-import DeviceCountry, {
-  TYPE_ANY,
-  TYPE_TELEPHONY,
-  TYPE_CONFIGURATION,
-} from 'react-native-device-country';
+import DeviceCountry, {TYPE_TELEPHONY} from 'react-native-device-country';
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
+import { LoginManager } from 'react-native-fbsdk-next';
+
+
 
 const {width, height} = Dimensions.get('window');
 
@@ -40,43 +44,117 @@ export const Login = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [country, setCountry] = useState('');
+  const [user, setUser] = useState({});
 
   const {theme} = React.useContext(ThemeContext);
 
   const textColor = theme === 'dark' ? '#fff' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
-  
+
+  useEffect(()=> {
+    GoogleSignin.configure({
+      webClientId: "859136797500-dtfr00t9fjke7cs1am6db1nq69puqhu5.apps.googleusercontent.com",
+      offlineAccess: true,
+      forceCodeForRefreshToken: true,
+    });
+    isSignedIn()
+  },[])
+
+  const googleSignIn = async() => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log('userInfo', userInfo);
+      setUser(userInfo);
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+        console.log(error.code)
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log(error.code)
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log(error.code)
+        // play services not available or outdated
+      } else {
+        console.log("some other error",error)
+        // some other error happened
+      }
+    }
+  }
+
+  const isSignedIn = async () => {
+    const isSignedIn = await GoogleSignin.isSignedIn ()
+    if (!!isSignedIn) {
+      getCurrentUserInfo()
+    }else {
+      console.log ('Please Login')
+  }
+}
+
+const getCurrentUserInfo = async () => {
+  try {
+    const userInfo = await GoogleSignin.signInSilently();
+     console. log ('edit_', user);
+    setUser(userInfo);
+  }catch (error) {
+   if (error.code){
+      alert('User has not signed in yest');
+       console. log ('User has not signed in yet');
+      statusCodes.SIGN_IN_REQUIRED
+    } 
+    else {
+      alert ("Something went wrong.");
+      console. log ("Something went wrong.");
+    }
+  }
+};
+
+const fbLogin = async () => {
+    LoginManager.logInWithPermissions(["public_profile", "email"]).then(
+    function (result) {
+    if (result.isCancelled) {
+    alert("Login Cancelled " + JSON.stringify(result))
+    } else {
+    alert("Login success with  permisssions: " + result.grantedPermissions.toString());
+    alert("Login Success " + result.toString());
+    }
+    },
+    function (error) {
+    alert("Login failed with error: " + error);
+    }
+    )
+}
 
   const getLocation = () => {
     DeviceCountry.getCountryCode(TYPE_TELEPHONY)
-  .then((result) => {
-    // console.log(result.code.toUpperCase());
-    // {"code": "BY", "type": "telephony"}
-    setCountry(result.code.toUpperCase());
-  })
-  .catch((e) => {
-    console.log(e);
-  });
-  }
+      .then(result => {
+        // console.log(result.code.toUpperCase());
+        // {"code": "BY", "type": "telephony"}
+        setCountry(result.code.toUpperCase());
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  };
 
   useEffect(() => {
-    getLocation()
-  }, [])
+    getLocation();
+  }, []);
 
   const createAlert = () =>
     Alert.alert(
-      "Your Precious Information is Safe With Us",
-      "Continue, if you agree to the T&C and Privacy Policy.",
+      'Your Precious Information is Safe With Us',
+      'Continue, if you agree to the T&C and Privacy Policy.',
       [
         {
-          text: "Cancel",
+          text: 'Cancel',
           // onPress: () => console.log("Cancel Pressed"),
-          style: "cancel"
+          style: 'cancel',
         },
-        { text: "Proceed", onPress: () =>validateOTP() }
-      ]
+        {text: 'Proceed', onPress: () => validateOTP()},
+      ],
     );
-  
 
   const otpLogin = () => {
     return (
@@ -280,6 +358,8 @@ export const Login = ({navigation}) => {
     }
   };
 
+  
+
   return (
     <SafeAreaView
       style={[
@@ -394,7 +474,7 @@ export const Login = ({navigation}) => {
             fontWeight: '500',
             color: textColor,
           }}>
-          Login with OTP
+          Sign Up/Login with OTP
         </Text>
         <Text
           style={{
@@ -411,10 +491,10 @@ export const Login = ({navigation}) => {
           justifyContent: 'space-between',
           width: width * 0.3,
         }}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>fbLogin()}>
           <MaterialCommunityIcons name="facebook" size={50} color="#4267B2" />
         </TouchableOpacity>
-        <TouchableOpacity style={{justifyContent: 'center'}}>
+        <TouchableOpacity onPress={()=>googleSignIn()} style={{justifyContent: 'center'}}>
           <Image
             source={require('../../images/google.png')}
             style={{width: 40, height: 40, resizeMode: 'contain'}}

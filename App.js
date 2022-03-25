@@ -9,6 +9,7 @@ import {
 import {createStore} from 'redux';
 import {Provider} from 'react-redux';
 import RootReducer from './components/RootReducer';
+import { Provider as PaperProvider } from 'react-native-paper';
 import RootNavigator from './components/RootNavigator';
 import {ThemeProvider} from './components/ThemeContext';
 
@@ -26,7 +27,9 @@ const App = () => {
     <Provider store={store}>
       <NavigationContainer>
         <ThemeProvider>
+        <PaperProvider>
           <RootNavigator />
+        </PaperProvider>
         </ThemeProvider>
       </NavigationContainer>
     </Provider>

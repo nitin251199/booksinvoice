@@ -46,9 +46,9 @@ export default function RootNavigator() {
         height:height*1.05,
     }}>
       <Tab.Navigator
-        screenOptions={{
-          swipeEnabled: false,
-        }}
+        // screenOptions={{
+        //   swipeEnabled: false,
+        // }}
         initialRouteName="Homepage"
         tabBarPosition="bottom"
         tabBar={props => <BottomSheet {...props} />}>

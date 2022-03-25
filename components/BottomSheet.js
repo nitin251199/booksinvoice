@@ -18,9 +18,7 @@ export default function BottomSheet({ state, descriptors, navigation, position }
   const { theme } = React.useContext(ThemeContext);
 
   const bottomBackground = theme === 'dark' ? '#000' : '#fff';
-  const bottomColor = theme === 'dark' ? '#fff' : '#000';
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
-  const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
 
   return (

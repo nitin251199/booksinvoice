@@ -7,10 +7,9 @@ import {
   StyleSheet,
   Text,
   ToastAndroid,
-  useColorScheme,
   View,
 } from 'react-native';
-import {Avatar, ListItem, Icon} from 'react-native-elements';
+import {Avatar, ListItem, Icon, Divider} from 'react-native-elements';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
@@ -18,6 +17,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useDrawerStatus } from '@react-navigation/drawer';
 import { ThemeContext } from './ThemeContext';
+import { List } from 'react-native-paper';
 
 const {width, height} = Dimensions.get('window');
 
@@ -27,7 +27,6 @@ export const DrawerContent = ({navigation}) => {
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
-  const textColor2 = theme === 'dark' ? '#ff9000' : '#191414';
   const isDrawerOpen = useDrawerStatus() === 'open';
 
   const [category, setCategory] = React.useState([]);
@@ -67,27 +66,24 @@ export const DrawerContent = ({navigation}) => {
   const DisplayCategory = ({item, index}) => {
     return (
       <View style={{paddingVertical: 0}}>
-        <ListItem
+        <List.Item
+          title={item.bookcategory}
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
           onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          containerStyle={{backgroundColor: backgroundColor}}
+          style={{backgroundColor: backgroundColor}}
           key={index}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title
-              style={{
-                fontSize: 12,
-                color: textColor2,
-              }}>
-              {item.bookcategory}
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
+          >
+        </List.Item>
       </View>
     );
   };
 
   return (
     <ScrollView
+      persistentScrollbar
       style={[
         styles.container,
         {
@@ -212,27 +208,13 @@ export const DrawerContent = ({navigation}) => {
         </ListItem.Content>
       </ListItem>
 
-      <ListItem.Accordion
-        containerStyle={{backgroundColor: backgroundColor}}
-        content={
-          <>
-          
-          <Icon name="category" type="materialicons" color={textColor} />
-            <ListItem.Content style={{paddingLeft:30}}>
-              <ListItem.Title
-                style={[
-                  styles.text,
-                  {
-                    color: textColor,
-                    fontWeight: '700'
-                  },
-                ]}>
-                Categories
-              </ListItem.Title>
-            </ListItem.Content>
-          </>
-        }
-        isExpanded={expanded}
+      <List.Accordion
+        title="Categories"
+        left={props => <Icon name="category" type="materialicons" color={textColor} style={{paddingLeft:9}}/>}
+        right={props => <Icon name="keyboard-arrow-down" type="materialicons" color={textColor} />}
+        expanded={expanded}
+        titleStyle={{color: textColor,paddingLeft:20, fontWeight:'700',fontSize:14}}
+        style={{backgroundColor: backgroundColor}}
         onPress={() => {
           setExpanded(!expanded);
         }}>
@@ -244,122 +226,99 @@ export const DrawerContent = ({navigation}) => {
           renderItem={({item}) => <DisplayCategory item={item} />}
           keyExtractor={item => item.id}
         />
-      </ListItem.Accordion>
+      </List.Accordion>
 
-      <ListItem.Accordion
-        containerStyle={{backgroundColor: backgroundColor}}
-        content={
-          <>
-          <Icon name="language" type="materialicons" color={textColor} />
-            <ListItem.Content style={{paddingLeft:30}}>
-              <ListItem.Title
-                style={[
-                  styles.text,
-                  {
-                    color: textColor,
-                    fontWeight: '700'
-                  },
-                ]}>
-                Languages
-              </ListItem.Title>
-            </ListItem.Content>
-          </>
-        }
-        isExpanded={languageExpanded}
+
+      <List.Accordion
+        title="Languages"
+        left={props => <Icon name="language" type="materialicons" color={textColor} style={{paddingLeft:9}}/>}
+        right={props => <Icon name="keyboard-arrow-down" type="materialicons" color={textColor} />}
+        expanded={languageExpanded}
+        titleStyle={{color: textColor,paddingLeft:20, fontWeight:'700',fontSize:14}}
+        style={{backgroundColor: backgroundColor}}
         onPress={() => {
           setLanguageExpanded(!languageExpanded);
         }}>
-        <ListItem
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          containerStyle={{backgroundColor: backgroundColor}}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title
-              style={{
-                fontSize: 12,
-                color: textColor2,
-              }}>
-              Hindi
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
-        <ListItem
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          containerStyle={{backgroundColor: backgroundColor}}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title
-              style={{
-                fontSize: 12,
-                color: textColor2,
-              }}>
-              English
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
-        <ListItem
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          containerStyle={{backgroundColor: backgroundColor}}
-          bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title
-              style={{
-                fontSize: 12,
-                color: textColor2,
-              }}>
-              Marathi
-            </ListItem.Title>
-          </ListItem.Content>
-        </ListItem>
-      </ListItem.Accordion>
 
-      <ListItem.Accordion
-        containerStyle={{backgroundColor: backgroundColor}}
-        content={
-          <>
-          <Icon name="privacy-tip" type="materialicons" color={textColor} size={22}/>
-            <ListItem.Content style={{paddingLeft:35}}>
-              <ListItem.Title
-                style={[
-                  styles.text,
-                  {
-                    color: textColor,
-                    fontWeight: '700'
-                  },
-                ]}>
-                Legal
-              </ListItem.Title>
-            </ListItem.Content>
-          </>
-        }
-        isExpanded={lexpanded}
+        <List.Item
+          title='Hindi'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+        <List.Item
+          title='English'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+        <List.Item
+          title='Marathi'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+
+      </List.Accordion>
+
+      <List.Accordion
+        title="Legal"
+        left={props => <Icon name="privacy-tip" type="materialicons" color={textColor} style={{paddingLeft:9}}/>}
+        right={props => <Icon name="keyboard-arrow-down" type="materialicons" color={textColor} />}
+        expanded={lexpanded}
+        titleStyle={{color: textColor,paddingLeft:20, fontWeight:'700',fontSize:14}}
+        style={{backgroundColor: backgroundColor}}
         onPress={() => {
           setLExpanded(!lexpanded)
         }}>
-        <ListItem
-        onPress={() => {navigation.navigate('PrivacyPolicy')
+
+        <List.Item
+          title='Privacy Policy'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          onPress={() => {navigation.navigate('PrivacyPolicy')
         navigation.closeDrawer();}}
-       containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor2}]}>
-              Privacy Policy
-            </Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-      <ListItem
-        onPress={() => {navigation.navigate('Disclaimer')
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+        <List.Item
+          title='Disclaimer'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          onPress={() => {navigation.navigate('Disclaimer')
         navigation.closeDrawer();}}
-        containerStyle={{backgroundColor: backgroundColor}}>
-        <ListItem.Content style={{paddingLeft:15}}>
-          <ListItem.Title>
-            <Text style={[styles.text, {color: textColor2}]}>Disclaimer</Text>
-          </ListItem.Title>
-        </ListItem.Content>
-      </ListItem>
-      
-      </ListItem.Accordion>
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+        <List.Item
+          title='Terms & Conditions'
+          titleStyle={{
+            fontSize: 12,
+                color: '#ff9000',
+          }}
+          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          style={{backgroundColor: backgroundColor}}
+          >
+        </List.Item>
+
+      </List.Accordion>
+
 
 
       <ListItem

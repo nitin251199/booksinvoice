@@ -33,7 +33,7 @@ export const PaymentSummary = ({route, navigation}) => {
   const discount = 0;
   const subtotal = selected.packageprice || selected.packagepricedoller * copies;
   const gst = (subtotal * 0.18).toFixed(2);
-  const total = parseFloat(subtotal) + parseFloat(gst);
+  const total = (parseFloat(subtotal) + parseFloat(gst)).toFixed(2)
   var phone = ''
   var pinCode = ''
   var address = ''
@@ -50,18 +50,22 @@ export const PaymentSummary = ({route, navigation}) => {
         await fetchUserData(res).then(async result => {
             var body = {
                 type: '1',
+                user_type: res.usertype,
+                packgesid: selected.id,
                 user_id: res.id,
                 price: total,
-                forccavenu: selected.currency,
+                forccavenu: selected.currency === '$' ? 'USD': 'INR',
                 name: res.user_name,
                 address: address,
                 postalcode: pinCode,
                 usermobile: phone,
                 email: res.useremail,
+                copies: copies,
                 coupons: coupon,
               };
               var result = await postData('api/getPaymentlink', body)
               setPaymentDetails(result.data)
+              console.log('paymentDetails', body);
         })
       });
     }

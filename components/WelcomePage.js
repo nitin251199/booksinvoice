@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Text,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { postData } from './FetchApi';
 
@@ -39,7 +40,7 @@ export const WelcomePage = ({navigation}) => {
   },[show])
 
   return (
-    <View style={[styles.container, {backgroundColor: '#e30047'}]}>
+    <SafeAreaView style={[styles.container, {backgroundColor: '#e30047'}]}>
       <Image
         style={{width: 150, height: 150, borderRadius: 0,marginTop:100,marginBottom:40}}
         source={require('../images/logo.jpg')}
@@ -54,7 +55,7 @@ export const WelcomePage = ({navigation}) => {
 	        loop
 	      />
         {/* <ActivityIndicator style={{padding:20}} size="large" /> */}
-    </View>
+    </SafeAreaView>
   );
 };
 
