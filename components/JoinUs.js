@@ -2,10 +2,8 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  useColorScheme,
   Text,
   Dimensions,
-  Image,
   ScrollView,
 } from 'react-native';
 import { ThemeContext } from './ThemeContext';

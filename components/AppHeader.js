@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
     width: width * 0.75,
   },
   btn : {
+    width:'100%',
     backgroundColor: '#e30047',
     paddingVertical: 3,
     paddingHorizontal: 7,
@@ -110,5 +111,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 10,
     textTransform: 'uppercase',
+    textAlign:'center'
   }
 });

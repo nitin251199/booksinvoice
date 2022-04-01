@@ -1,6 +1,5 @@
-import React, {useEffect, useLayoutEffect, useState} from 'react';
-import {Login} from './admin/Login';
-import Test from './admin/test';
+import React, { useLayoutEffect, } from 'react';
+import {Login} from './Login';
 import Homepage from './Homepage';
 import BottomSheet from './BottomSheet';
 import InfoPage from './InfoPage';
@@ -10,17 +9,16 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import {DrawerContent} from './DrawerContent';
 import {AboutUs} from './AboutUs';
 import {FAQ} from './FAQ';
-import {Disclaimer} from './Disclaimer';
 import {useDispatch, useSelector} from 'react-redux';
 import {WelcomePage} from './WelcomePage';
 import {CategoryPage} from './CategoryPage';
 import {AppHeader} from './AppHeader';
 import {EditProfile} from './EditProfile';
-import {PrivacyPolicy} from './PrivacyPolicy';
+import {Legal} from './Legal';
 import {JoinUs} from './JoinUs';
 import {Search} from './Search';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import {checkSyncData, getSyncData} from './AsyncStorage';
+import { getSyncData} from './AsyncStorage';
 import {FavouriteBooks} from './FavouriteBooks';
 import {Settings} from './Settings';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -28,9 +26,9 @@ import { Dimensions, View } from 'react-native';
 import { UserSubscriptions } from './UserSubscriptions';
 import { PaymentScreen } from './PaymentScreen';
 import { PaymentSummary } from './PaymentSummary';
+import { Download } from './Download';
 
 export default function RootNavigator() {
-  // const Stack = createNativeStackNavigator();
 
   const Stack = createStackNavigator();
   const Tab = createMaterialTopTabNavigator();
@@ -65,7 +63,7 @@ export default function RootNavigator() {
         <Tab.Screen
           name="Subscriptions"
           component={SubscriptionComponent}
-          options={{tabBarLabel: 'Subscriptions'}}
+          options={{tabBarLabel: 'Subscriptions', lazy: true}}
         />
         <Tab.Screen
           name="EditProfile"
@@ -90,20 +88,27 @@ export default function RootNavigator() {
   }
 
   function SubscriptionComponent() {
+    var isSub = useSelector(state => state.isSubscribed);
+    var isLogin = useSelector(state => state.isLogin);
+
     return (
       <Stack.Navigator screenOptions={{
         presentation: "modal"
       }}>
-        <Stack.Screen
-          name="Subscription"
-          component={Subscriptions}
-          options={{header: AppHeader}}
-        />
-        <Stack.Screen
-          name="UserSubscriptions"
-          component={UserSubscriptions}
-          options={{header: AppHeader}}
-        />
+        {isSub && isLogin  ? (
+          <Stack.Screen
+            name="UserSubscriptions"
+            component={UserSubscriptions}
+            options={{header: AppHeader}}
+          />
+        ) : (
+          <Stack.Screen
+            name="Subscriptions"
+            component={Subscriptions}
+            options={{header: AppHeader}}
+          />
+        )}
+        
         <Stack.Screen
           name="PaymentScreen"
           component={PaymentScreen}
@@ -121,11 +126,16 @@ export default function RootNavigator() {
   const check = async () => {
     var isLogin = await getSyncData('isLogin');
     dispatch({type: 'SET_LOGIN', payload: isLogin});
-    // return isLogin;
+  };
+
+  const checkSub = async () => {
+    var isSub = await getSyncData('isSubscribed');
+    dispatch({type: 'SET_SUB', payload: isSub});
   };
 
   useLayoutEffect(() => {
     check();
+    checkSub();
   }, []);
 
   const ProfileComponent = () => {
@@ -217,13 +227,13 @@ export default function RootNavigator() {
           options={{header: AppHeader}}
         />
         <Stack.Screen
-          name="Disclaimer"
-          component={Disclaimer}
+          name="CategoryPage"
+          component={CategoryPage}
           options={{header: AppHeader}}
         />
         <Stack.Screen
-          name="CategoryPage"
-          component={CategoryPage}
+          name="FavouriteBooks"
+          component={FavouriteBooks}
           options={{header: AppHeader}}
         />
         <Stack.Screen
@@ -232,8 +242,8 @@ export default function RootNavigator() {
           options={{header: AppHeader}}
         />
         <Stack.Screen
-          name="PrivacyPolicy"
-          component={PrivacyPolicy}
+          name="Legal"
+          component={Legal}
           options={{header: AppHeader}}
         />
         <Stack.Screen
@@ -249,6 +259,21 @@ export default function RootNavigator() {
         <Stack.Screen
           name="Settings"
           component={Settings}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="Download"
+          component={Download}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentScreen"
+          component={PaymentScreen}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentSummary"
+          component={PaymentSummary}
           options={{header: AppHeader}}
         />
       </Stack.Navigator>

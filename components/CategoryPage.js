@@ -9,11 +9,9 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  useColorScheme,
   View,
 } from 'react-native';
-import {AirbnbRating, Divider, FAB} from 'react-native-elements';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {AirbnbRating, Divider} from 'react-native-elements';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
@@ -304,10 +302,10 @@ export const CategoryPage = ({navigation, route}) => {
             <FlatList
               data={books}
               renderItem={displayBooks}
-              keyExtractor={item => item.id}
+              keyExtractor={(item,index) => index.toString()}
               ListFooterComponent={renderLoader}
               onEndReached={() => loadMore(route.params.item.id)}
-              onEndReachedThreshold={0.1}
+              onEndReachedThreshold={0.3}
             />
           </View>
         </ScrollView>

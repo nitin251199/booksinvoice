@@ -1,10 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {Picker} from '@react-native-picker/picker';
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
-  useColorScheme,
   View,
   Dimensions,
   TouchableOpacity,
@@ -19,9 +18,8 @@ import {
   Card,
   Divider,
   ListItem,
-  Overlay,
 } from 'react-native-elements';
-import {useDispatch, useSelector} from 'react-redux';
+import {useDispatch} from 'react-redux';
 import {checkSyncData, getSyncData, removeDatasync, storeDatasync} from './AsyncStorage';
 import {postData} from './FetchApi';
 import { ThemeContext } from './ThemeContext';
@@ -55,6 +53,15 @@ export const EditProfile = ({navigation}) => {
 
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
+
+  const signOut = async () => {
+    try {
+      await GoogleSignin.signOut();
+      // this.setState({ user: null }); // Remember to remove the user from your app's state as well
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const fetchProfile = async () => {
     var key = await checkSyncData();
@@ -445,9 +452,12 @@ export const EditProfile = ({navigation}) => {
 
   const handleLogout = async () => {
     setShow(true);
+    signOut()
     await removeDatasync(userData.id);
     dispatch({type: 'SET_LOGIN', payload: false});
     storeDatasync('isLogin', false);
+    dispatch({type: 'SET_SUB', payload: false});
+    storeDatasync('isSubscribed', false);
     navigation.navigate('Homepage');
     // dispatch({type: 'REMOVE_USER', payload: userData.id});
     setShow(false);

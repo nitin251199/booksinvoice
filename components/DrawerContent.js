@@ -9,9 +9,9 @@ import {
   ToastAndroid,
   View,
 } from 'react-native';
-import {Avatar, ListItem, Icon, Divider} from 'react-native-elements';
+import { ListItem, Icon} from 'react-native-elements';
 import { checkSyncData, getSyncData } from './AsyncStorage';
-import {postData, ServerURL} from './FetchApi';
+import {postData} from './FetchApi';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -159,7 +159,6 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
       onPress={() => {
-        console.log('userData',userData);
         if (userData) {
         navigation.navigate('FavouriteBooks')
         navigation.closeDrawer();
@@ -193,7 +192,7 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         // onPress={() => {
-        //   navigation.navigate('AboutUs');
+        //   navigation.navigate('Download');
         //   navigation.closeDrawer();
         // }}
         containerStyle={{backgroundColor: backgroundColor}}>
@@ -290,7 +289,7 @@ export const DrawerContent = ({navigation}) => {
             fontSize: 12,
                 color: '#ff9000',
           }}
-          onPress={() => {navigation.navigate('PrivacyPolicy')
+          onPress={() => {navigation.navigate('Legal', {page: "PrivacyPolicy"})
         navigation.closeDrawer();}}
           style={{backgroundColor: backgroundColor}}
           >
@@ -301,7 +300,7 @@ export const DrawerContent = ({navigation}) => {
             fontSize: 12,
                 color: '#ff9000',
           }}
-          onPress={() => {navigation.navigate('Disclaimer')
+          onPress={() => {navigation.navigate('Legal', {page: "Disclaimer"})
         navigation.closeDrawer();}}
           style={{backgroundColor: backgroundColor}}
           >
@@ -312,7 +311,8 @@ export const DrawerContent = ({navigation}) => {
             fontSize: 12,
                 color: '#ff9000',
           }}
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
+          onPress={() => {navigation.navigate('Legal', {page: "TermAndConditions"})
+        navigation.closeDrawer();}}
           style={{backgroundColor: backgroundColor}}
           >
         </List.Item>

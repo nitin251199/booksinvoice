@@ -1,37 +1,41 @@
 {
   "project_info": {
-    "project_number": "397981957812",
-    "project_id": "booksinvoice-12a85",
-    "storage_bucket": "booksinvoice-12a85.appspot.com"
+    "project_number": "410965554876",
+    "project_id": "booksinvoiceapp",
+    "storage_bucket": "booksinvoiceapp.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:397981957812:android:3656366a22201769b4e1e1",
+        "mobilesdk_app_id": "1:410965554876:android:ab3d6fe70a2cb930b742b9",
         "android_client_info": {
           "package_name": "com.booksinvoice"
         }
       },
       "oauth_client": [
         {
-          "client_id": "859136797500-dtfr00t9fjke7cs1am6db1nq69puqhu5.apps.googleusercontent.com",
+          "client_id": "410965554876-0eq9mnbrkdto0qkk52qhc85ek0tq478u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.booksinvoice",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "b0926d7de4260551738d4f19e20a4c87987d148f"
           }
+        },
+        {
+          "client_id": "410965554876-ch8hsnb43ud3amvr0toq0om7374vag70.apps.googleusercontent.com",
+          "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyB6QVle6zizsP6e0P9xsHJPo5ApNpevVas"
+          "current_key": "AIzaSyAojsP79Kt48hQAIGGg_dEPwFujg0gc0no"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "859136797500-dtfr00t9fjke7cs1am6db1nq69puqhu5.apps.googleusercontent.com",
+              "client_id": "410965554876-ch8hsnb43ud3amvr0toq0om7374vag70.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

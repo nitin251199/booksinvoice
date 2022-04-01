@@ -6,12 +6,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useColorScheme,
   View,
   Image,
   ActivityIndicator,
 } from 'react-native';
-import {AirbnbRating, Divider, Icon, Input} from 'react-native-elements';
+import {AirbnbRating, Divider, Icon } from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import {postData, ServerURL} from './FetchApi';
 import { ThemeContext } from './ThemeContext';

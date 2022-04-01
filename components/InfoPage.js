@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   Text,
-  useColorScheme,
   Image,
   Dimensions,
   TouchableOpacity,
@@ -12,11 +11,10 @@ import {
   FlatList,
   ImageBackground,
   ActivityIndicator,
-  RefreshControl,
   Modal,
   ToastAndroid,
 } from 'react-native';
-import {AirbnbRating, Divider} from 'react-native-elements';
+import {AirbnbRating} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -46,11 +44,14 @@ export default function InfoPage({route, navigation}) {
   const [premiumBooks, setPremiumBooks] = useState([]);
   const [comments, setComments] = useState([]);
   const [commentModal, setCommentModal] = useState(false);
-
+  const [chapters, setChapters] = useState([]);
+  const [show, setShow] = useState(false);
+ 
   const fetchBook = async id => {
     var body = {type: '1', books_id: id};
     var result = await postData('api/getBooksid', body);
     setBook(result.data[0]);
+    setChapters(result.chapters)
   };
 
   const fetchSimilarBooks = async id => {
@@ -316,7 +317,7 @@ export default function InfoPage({route, navigation}) {
           backgroundColor: backgroundColor,
         },
       ]}>
-      <View style={{paddingBottom: 50}}>
+      <View>
         <ScrollView
           showsVerticalScrollIndicator={false}
           //  refreshControl={
@@ -579,6 +580,38 @@ export default function InfoPage({route, navigation}) {
             </View>
           </View>
 
+          <View style={styles.btnContainer}>
+        <TouchableOpacity
+          onPress={() =>
+           { 
+             navigation.navigate('MusicPlayer', {state: book, chapters: chapters})
+            // setShow(true)
+          }
+          }>
+          <View
+            style={[
+              styles.btn,
+              {
+                width: width * 0.62,
+                marginRight: 10,
+              },
+            ]}>
+            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+              PLAY
+            </Text>
+            <MaterialCommunityIcons name="play" size={30} color="#fff" />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onShare}>
+          <View style={styles.btn}>
+            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+              SHARE
+            </Text>
+            <MaterialCommunityIcons name="share" size={30} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      </View>
+
           <View style={{paddingBottom: 10, paddingLeft: 20}}>
             <Text
               style={[
@@ -758,34 +791,7 @@ export default function InfoPage({route, navigation}) {
         </ScrollView>
       </View>
       {/* <BottomSheet navigation={navigation} /> */}
-      <View style={styles.btnContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('MusicPlayer', {state: book, data: similar})
-          }>
-          <View
-            style={[
-              styles.btn,
-              {
-                width: width * 0.62,
-                marginRight: 10,
-              },
-            ]}>
-            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-              PLAY
-            </Text>
-            <MaterialCommunityIcons name="play" size={30} color="#fff" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onShare}>
-          <View style={styles.btn}>
-            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-              SHARE
-            </Text>
-            <MaterialCommunityIcons name="share" size={30} color="#fff" />
-          </View>
-        </TouchableOpacity>
-      </View>
+      {/* <MiniPlayer show={show} /> */}
     </View>
   );
 }
@@ -851,8 +857,6 @@ const styles = StyleSheet.create({
   btnContainer: {
     width: width,
     paddingHorizontal: 10,
-    position: 'absolute',
-    bottom: 0,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',

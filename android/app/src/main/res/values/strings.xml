@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Booksinvoice</string>
-    <string name="facebook_app_id">448058436138841</string>
+    <string name="facebook_app_id">2136889163132782</string>
+    <string name="fb_login_protocol_scheme">fb2136889163132782</string>
+    <string name="facebook_client_token">1fa39d34f9482332b536a50dcbeb8574</string>
 </resources>

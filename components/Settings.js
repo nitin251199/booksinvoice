@@ -1,5 +1,5 @@
 import {Picker} from '@react-native-picker/picker';
-import React, {useState} from 'react';
+import React from 'react';
 import {ActivityIndicator, StyleSheet, Switch, Text, View} from 'react-native';
 import { ThemeContext } from './ThemeContext';
 

@@ -1,10 +1,8 @@
 import 'react-native-gesture-handler';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {LogBox} from 'react-native';
 import {
-  NavigationContainer,
-  DefaultTheme,
-  DarkTheme,
+  NavigationContainer
 } from '@react-navigation/native';
 import {createStore} from 'redux';
 import {Provider} from 'react-redux';

@@ -1,11 +1,13 @@
-import { NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
-import { BackHandler } from 'react-native';
+import { BackHandler, StyleSheet, ToastAndroid } from 'react-native';
 import WebView from 'react-native-webview';
+import { useDispatch } from 'react-redux';
 
 export const PaymentScreen = ({route,navigation}) => {
   const paymentDetails = route.params.paymentDetails;
 
+  
   let urlEncodedData = '',
   urlEncodedDataPairs = [],
   key;
@@ -16,10 +18,11 @@ for (key in paymentDetails) {
 }
 urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
 
+
 useFocusEffect(
   React.useCallback(() => {
     const onBackPress =() => {
-      navigation.navigate('Subscriptions');
+      navigation.jumpTo('Subscriptions');
         return false;
     };
 
@@ -30,22 +33,15 @@ useFocusEffect(
   }, [])
 );
 
-  // var formData = new FormData();
-  // formData.append('amount', paymentDetails.amount);
-  // formData.append('billing_address', paymentDetails.billing_address);
-  // formData.append('billing_email', paymentDetails.billing_email);
-  // formData.append('billing_name', paymentDetails.billing_name);
-  // formData.append('billing_tel', paymentDetails.billing_tel);
-  // formData.append('billing_zip', paymentDetails.billing_zip);
-  // formData.append('cancel_url', paymentDetails.cancel_url);
-  // formData.append('currency', paymentDetails.currency);
-  // formData.append('customer_identifier', paymentDetails.customer_identifier);
-  // formData.append('language', paymentDetails.language);
-  // formData.append('merchant_id', paymentDetails.merchant_id);
-  // formData.append('order_id', paymentDetails.order_id);
-  // formData.append('promo_code', paymentDetails.promo_code);
-  // formData.append('redirect_url', paymentDetails.redirect_url);
-  // formData.append('tid', paymentDetails.tid);
+function onMessage(data) {
+  navigation.popToTop();
+  ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
+  if(data==='success')
+  {
+    useDispatch().dispatch({type:'SET_SUB',payload:true});
+    storeDatasync('isSubscribed', true);
+  }
+}
 
   return (
     <WebView
@@ -56,6 +52,16 @@ useFocusEffect(
         method: 'POST',
         body: urlEncodedData,
       }}
+      startInLoadingState={true}
+      onMessage={onMessage}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+})

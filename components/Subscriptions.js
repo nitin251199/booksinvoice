@@ -31,7 +31,6 @@ export const Subscriptions = ({navigation}) => {
   const [status, setStatus] = React.useState(0);
   const [showModal, setShowModal] = React.useState(false);
   const [copies, setCopies] = React.useState(1);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const [selected, setSelected] = React.useState({
     id: '',
@@ -64,17 +63,14 @@ export const Subscriptions = ({navigation}) => {
     if (key[0]) {
       var userData = await getSyncData(key[0]);
       if(userData.usertype == 'Individual'){
-        setIsLoggedIn(true);
         setStatus(1)
       }
       if(userData.usertype == 'Organisation'){
-        setIsLoggedIn(true);
         setStatus(2)
       }
     }
   }
 
-  // console.log('navigation',navigation.getState());
 
   useEffect(function () {
     fetchAllSubscriptions();
@@ -102,8 +98,9 @@ export const Subscriptions = ({navigation}) => {
     });
   };
 
-  const handleBuy = () => {
-    if(isLoggedIn){
+  const handleBuy = async() => {
+    var isLogin = await getSyncData('isLogin');
+    if(isLogin){
       if(status === 2){
         setShowModal(true)
       }
@@ -116,8 +113,9 @@ export const Subscriptions = ({navigation}) => {
     }  
   }
 
-  const handleProceed = () => {
-    if(isLoggedIn){
+  const handleProceed = async() => {
+    var isLogin = await getSyncData('isLogin');
+    if(isLogin){
       setShowModal(false)
     navigation.navigate('PaymentSummary', { selected, copies });
     }
@@ -901,7 +899,7 @@ export const Subscriptions = ({navigation}) => {
               disabled={selected.id !== '' ? false : true}
               onPress={()=>handleBuy()}
               title="Buy Now"
-              titleStyle={{fontWeight: 'bold', fontSize: 18}}
+              titleStyle={{fontWeight: 'bold', fontSize: 14}}
               buttonStyle={{
                 borderWidth: 0,
                 borderColor: 'transparent',

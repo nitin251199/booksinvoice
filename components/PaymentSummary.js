@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   Modal,
   ScrollView,
@@ -25,13 +26,14 @@ export const PaymentSummary = ({route, navigation}) => {
 
   const [showModal, setShowModal] = useState(false);
   const [coupon, setCoupon] = useState('');
+  const [loading, setLoading] = useState(true);
   
   const [paymentDetails, setPaymentDetails] = useState([]);
 
   const selected = route.params.selected;
   const copies = route.params.copies;
   const discount = 0;
-  const subtotal = selected.packageprice || selected.packagepricedoller * copies;
+  const subtotal = selected.packageprice * copies || selected.packagepricedoller * copies;
   const gst = (subtotal * 0.18).toFixed(2);
   const total = (parseFloat(subtotal) + parseFloat(gst)).toFixed(2)
   var phone = ''
@@ -65,7 +67,7 @@ export const PaymentSummary = ({route, navigation}) => {
               };
               var result = await postData('api/getPaymentlink', body)
               setPaymentDetails(result.data)
-              console.log('paymentDetails', body);
+              setLoading(false)
         })
       });
     }
@@ -166,8 +168,10 @@ export const PaymentSummary = ({route, navigation}) => {
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+      <ActivityIndicator animating={loading} size={"large"} style={{position: 'absolute',top:0, left: 0, right: 0, bottom: 0}}/>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          
           <Text style={[styles.headerContent, {color: textColor}]}>
             Payment Summary
           </Text>
@@ -221,6 +225,7 @@ export const PaymentSummary = ({route, navigation}) => {
           <Divider />
           <View style={styles.btn}>
             <Button
+              disabled={loading}
                 onPress={()=>handleProceed()}
               title="Proceed to pay"
               buttonStyle={{padding: 10}}
@@ -231,6 +236,7 @@ export const PaymentSummary = ({route, navigation}) => {
               }}
             />
             <Button
+            disabled={loading}
               onPress={() => setShowModal(true)}
               title="Apply Coupon"
               type="outline"

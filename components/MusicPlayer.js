@@ -7,14 +7,12 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
-  FlatList,
   Animated,
   Modal,
   Pressable,
   ImageBackground,
   ToastAndroid,
   ActivityIndicator,
-  BackHandler,
 } from 'react-native';
 
 import TrackPlayer, {
@@ -82,6 +80,37 @@ const MusicPlayer = ({route, navigation}) => {
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
+  
+
+  var temp = [
+    {
+      id: route.params.state.id,
+      url: `${ServerURL}/admin/upload/bookaudio/${route.params.chapters[0].audiofile}`,
+      title: route.params.state.bookname,
+      artist: route.params.state.bookauthor,
+      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+      album: route.params.state.bookcategory,
+      duration: route.params.state.sampleplay_time,
+    },
+  ];
+  
+  const mapTracks = async () => {
+    await route.params.chapters.map((track, index) => {
+     if(index !== 0){
+      temp.push({
+        id: route.params.state.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+        title: track.chaptername,
+        artist: route.params.state.bookauthor,
+        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+        album: route.params.state.bookcategory,
+        duration: route.params.state.sampleplay_time,
+      });
+    }
+    });
+    setTracks(temp);
+  };
+
   const setupPlayer = async () => {
     try {
       await TrackPlayer.setupPlayer();
@@ -101,32 +130,6 @@ const MusicPlayer = ({route, navigation}) => {
     } catch (error) {
       console.log(error);
     }
-  };
-
-  var temp = [
-    {
-      id: route.params.state.id,
-      url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
-      title: route.params.state.bookname,
-      artist: route.params.state.bookauthor,
-      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-      album: route.params.state.bookcategory,
-      duration: route.params.state.sampleplay_time,
-    },
-  ];
-  const mapTracks = async () => {
-    await route.params.data.map((track, index) => {
-      temp.push({
-        id: track.id,
-        url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
-        title: track.bookname,
-        artist: track.bookauthor,
-        artwork: `${ServerURL}/admin/upload/bookcategory/${track.bookcategoryid}/${track.photo}`,
-        album: track.bookcategory,
-        duration: track.sampleplay_time,
-      });
-    });
-    setTracks(temp);
   };
 
   //   changing the track on complete

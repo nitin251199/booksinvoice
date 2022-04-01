@@ -1,14 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {Dimensions, Modal, Pressable, StyleSheet, Text, useColorScheme, View} from 'react-native';
+import React from 'react';
+import {StyleSheet, View} from 'react-native';
 import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
-import TrackPlayer, {useProgress} from 'react-native-track-player';
+import TrackPlayer from 'react-native-track-player';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {postData, ServerURL} from './FetchApi';
+import { useSelector } from 'react-redux';
+import { ServerURL} from './FetchApi';
+import { ThemeContext } from './ThemeContext';
 
 
 export const SamplePlay = ({item, propsStyles}) => {
   const [isPlaying, setIsPlaying] = React.useState(false);
-  // const progress = useProgress();
+  const {setShow} = React.useContext(ThemeContext);
+  var time = 0
+  var s = 0
 
   const setup = async () => {
     try {
@@ -23,14 +27,30 @@ export const SamplePlay = ({item, propsStyles}) => {
         artist: 'Sample',
         duration: item.sampleplay_time,
       });
-      TrackPlayer.play();
+      time = item.sampleplay_time
+      getSectionDone();
+        TrackPlayer.play();
       setIsPlaying(true);
     } catch (error) {
       console.log(error);
     }
   };
 
-  
+  const status = useSelector(state => state.isSubscribed);
+
+  const getSectionDone = async () => {
+    s++;
+   var t = setTimeout(getSectionDone, 1000)
+    if (!status) {
+        if (s >= time) {
+          await TrackPlayer.stop();
+          setIsPlaying(false)
+          // setShow(true)
+          clearTimeout(t)
+      }
+    }
+  };
+
 
   return (
     <View style={propsStyles}>

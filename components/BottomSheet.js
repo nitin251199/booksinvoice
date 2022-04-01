@@ -4,9 +4,8 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  useColorScheme,
   Animated,
-  Text
+  Text,
 } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -19,9 +18,47 @@ export default function BottomSheet({ state, descriptors, navigation, position }
 
   const bottomBackground = theme === 'dark' ? '#000' : '#fff';
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  // const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
+  // const [user, setUser] = React.useState('Login & Buy');
 
 
   return (
+  <>
+  {/* <Modal
+    animationType="slide"
+    transparent={true}
+    visible={show}
+    onShow={async () => {
+      var key = await checkSyncData();
+
+      if (key[0] !== 'isLogin') {
+        setUser('Buy Subscription');
+      }
+    }}
+    onRequestClose={() => {
+      setShow(false)
+    }}
+  >
+    <View style={styles.centeredView}>
+    <View
+            style={[styles.modalView, {backgroundColor: modelBackgroundColor}]}>
+            <Text style={[styles.modalText, {color: textColor}]}>
+              Please Buy Subscription to listen further !
+            </Text>
+            <Pressable
+              style={[styles.button, {backgroundColor: '#ff9000'}]}
+              onPress={() => {
+                user === 'Login & Buy'
+                  ? navigation.navigate('Login')
+                  : navigation.navigate('Subscriptions');
+                setShow(false);
+              }}>
+              <Text style={[styles.textStyle, {color: textColor}]}>{user}</Text>
+            </Pressable>
+          </View>
+    </View>
+  </Modal> */}
+
     <View
         style={{
           display: 'flex',
@@ -102,6 +139,7 @@ export default function BottomSheet({ state, descriptors, navigation, position }
       })}
     </View>
       </View>
+  </>
   );
 }
 
@@ -110,5 +148,39 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     paddingHorizontal: 15,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    margin: 20,
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    width: width * 0.7,
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
   },
 });

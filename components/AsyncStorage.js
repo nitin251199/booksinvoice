@@ -54,7 +54,6 @@ export async function storeDatasync(key, body) {
 export async function removeDatasync(key) {
   try {
     const data = await AsyncStorage.removeItem(`${key}`);
-    console.log({data});
   } catch (e) {
     console.log('Error in removing data');
   }

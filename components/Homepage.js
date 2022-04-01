@@ -1,24 +1,24 @@
-import React, { useState} from 'react';
+import React, {useState} from 'react';
 import {
   FlatList,
   ScrollView,
   Text,
-  RefreshControl,
   BackHandler,
+  ActivityIndicator,
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StyleSheet, View, Dimensions} from 'react-native';
 import {AirbnbRating, Divider, Image, Tile} from 'react-native-elements';
-import { postData, ServerURL} from './FetchApi';
+import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import SkeletonContent from 'react-native-skeleton-content-nonexpo';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
-import { ThemeContext } from './ThemeContext';
-import { useFocusEffect } from '@react-navigation/native';
+import {ThemeContext} from './ThemeContext';
+import {useFocusEffect} from '@react-navigation/native';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -26,40 +26,32 @@ const BannerHeight = 140;
 const {width, height} = Dimensions.get('window');
 
 export default function Homepage({navigation, route}) {
+  const {theme} = React.useContext(ThemeContext);
 
-  const { theme } = React.useContext(ThemeContext);
+  const setdata = useSelector(state => state?.home?.new_arrival) || [];
+  const setbanner = useSelector(state => state?.home?.Banner_image) || [];
+  const settop = useSelector(state => state?.home?.top_rated) || [];
+  const setpopular = useSelector(state => state?.home?.populars_books) || [];
+  const setpremium = useSelector(state => state?.home?.Premium_books) || [];
+  const setcategory = useSelector(state => state?.home?.category) || [];
+  const setother = useSelector(state => state?.home?.books_by_cate) || [];
+  const setad = useSelector(state => state?.home?.advertise) || [];
 
-  const [data, setData] = useState(
-    Object.values(useSelector(state => state.home.new_arrival)),
-  );
+  const [data, setData] = useState(Object.values(setdata));
 
-  const [banner, setBanner] = useState(
-    Object.values(useSelector(state => state.home.Banner_image)),
-  );
+  const [banner, setBanner] = useState(Object.values(setbanner));
 
-  const [topRated, setTopRated] = useState(
-    Object.values(useSelector(state => state.home.top_rated)),
-  );
+  const [topRated, setTopRated] = useState(Object.values(settop));
 
-  const [popularBooks, setPopularBooks] = useState(
-    Object.values(useSelector(state => state.home.populars_books)),
-  );
+  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular));
 
-  const [premiumBooks, setPremiumBooks] = useState(
-    Object.values(useSelector(state => state.home.Premium_books)),
-  );
+  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium));
 
-  const [category, setCategory] = useState(
-    Object.values(useSelector(state => state.home.category)),
-  );
+  const [category, setCategory] = useState(Object.values(setcategory));
 
-  const [otherCategory, setOtherCategory] = useState(
-    useSelector(state => state.home.books_by_cate),
-  );
+  const [otherCategory, setOtherCategory] = useState(setother);
 
-  const [advertise, setAdvertise] = useState(
-    useSelector(state => state.home.advertise),
-  );
+  const [advertise, setAdvertise] = useState(setad);
 
   const [show, setShow] = useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -83,18 +75,18 @@ export default function Homepage({navigation, route}) {
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   useFocusEffect(
-      React.useCallback(() => {
-        const onBackPress =() => {
-          BackHandler.exitApp()
-            return true;
-        };
-  
-        BackHandler.addEventListener('hardwareBackPress', onBackPress);
-  
-        return () =>
-          BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-      }, [])
-    );
+    React.useCallback(() => {
+      const onBackPress = () => {
+        BackHandler.exitApp();
+        return true;
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, []),
+  );
 
   const DisplayBanner = ({item}) => {
     return (
@@ -191,7 +183,13 @@ export default function Homepage({navigation, route}) {
                 category: category[index],
               })
             }>
-            <Text style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '500',
+                paddingRight: 15,
+                color: '#999',
+              }}>
               View All
             </Text>
           </TouchableOpacity>
@@ -305,6 +303,7 @@ export default function Homepage({navigation, route}) {
       </View>
     );
   };
+  
 
   return (
     <View>
@@ -410,7 +409,12 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    paddingRight: 15,
+                    color: '#999',
+                  }}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -421,6 +425,7 @@ export default function Homepage({navigation, route}) {
                   data={data}
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
                   renderItem={({item}) => <DisplayItem item={item} />}
                   keyExtractor={item => item.id}
                 />
@@ -465,7 +470,12 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    paddingRight: 15,
+                    color: '#999',
+                  }}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -475,6 +485,7 @@ export default function Homepage({navigation, route}) {
                 data={topRated}
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -517,7 +528,12 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    paddingRight: 15,
+                    color: '#999',
+                  }}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -527,6 +543,7 @@ export default function Homepage({navigation, route}) {
                 data={popularBooks}
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -569,7 +586,12 @@ export default function Homepage({navigation, route}) {
                   })
                 }>
                 <Text
-                  style={{fontSize: 12, fontWeight: '500', paddingRight: 15, color:'#999'}}>
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '500',
+                    paddingRight: 15,
+                    color: '#999',
+                  }}>
                   View All
                 </Text>
               </TouchableOpacity>
@@ -580,6 +602,7 @@ export default function Homepage({navigation, route}) {
                 data={premiumBooks}
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -588,9 +611,9 @@ export default function Homepage({navigation, route}) {
           <Tile
             onPress={() => navigation.navigate('Subscriptions')}
             imageSrc={{
-              uri: `https://booksinvoice.com/admin/${advertise[0].url}`,
+              uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
             }}
-            title={`${advertise[0].title}`}
+            title={`${advertise[0]?.title}`}
             titleStyle={{fontSize: 15}}
             featured
             caption="Buy Subscription Plans"
@@ -603,6 +626,7 @@ export default function Homepage({navigation, route}) {
           <View style={{paddingLeft: 20}}>
             <FlatList
               data={otherCategory}
+              ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
               renderItem={({item, index}) => (
                 <DisplayOtherCategory
                   item={item}
@@ -614,7 +638,7 @@ export default function Homepage({navigation, route}) {
           </View>
         </View>
       </ScrollView>
-      {/* <BottomSheet navigation={navigation} /> */}
+      {/* <MiniPlayer /> */}
     </View>
   );
 }

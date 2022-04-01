@@ -3,19 +3,15 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  useColorScheme,
   View,
 } from 'react-native';
-import {AirbnbRating, Divider} from 'react-native-elements';
-import TextTicker from 'react-native-text-ticker';
+import { Divider} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
-import {postData, ServerURL} from './FetchApi';
+import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
@@ -40,9 +36,9 @@ export const UserSubscriptions = ({navigation}) => {
     }
   };
 
-  const renderItem = ({item}) => {
+  const renderItem = ({item,index}) => {
     return (
-      <View>
+      <View key={index}>
         <View
           style={{
             display: 'flex',
@@ -52,26 +48,26 @@ export const UserSubscriptions = ({navigation}) => {
             paddingLeft: 20,
           }}>
           <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
-            <TextTicker
+            <Text
               style={{
                 fontSize: 17,
                 color: textColor,
                 fontWeight: '700',
                 paddingVertical: 5,
-              }}
-              duration={10000}
-              loop
-              bounce
-              repeatSpacer={50}
-              marqueeDelay={1000}
-              useNativeDriver>
+              }}>
               {item.packagename}
-            </TextTicker>
+            </Text>
             <Text style={{color: textColor}}>Days: {item.days}</Text>
             <Text style={{color: textColor}}>
               No. of Copies: {item.no_of_copies}
             </Text>
-            <Text style={{color: textColor}}>Order Id: {item.valid_to}</Text>
+            <Text style={{color: textColor}}>
+              Valid From : {item.valid_from}
+            </Text>
+            <Text style={{color: textColor}}>
+              Valid To : {item.valid_to}
+            </Text>
+            <Text style={{color: textColor}}>Order Id: {item.oid}</Text>
           </View>
         </View>
         <Divider />

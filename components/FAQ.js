@@ -2,14 +2,11 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  useColorScheme,
   Text,
   Dimensions,
-  Image,
   ScrollView,
 } from 'react-native';
 import {ListItem} from 'react-native-elements';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
