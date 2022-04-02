@@ -412,7 +412,7 @@ export default function InfoPage({route, navigation}) {
               </Text>
             </View>
 
-            {book.premiumtype === 'Premium' ? (
+            {(book.premiumtype === 'Premium' || book.premiumtype === 'Both') ? (
               <>
                 <View style={[styles.textWrapper, {alignItems: 'center'}]}>
                   <Text

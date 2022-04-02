@@ -1,11 +1,25 @@
 import { useFocusEffect } from '@react-navigation/native';
 import React from 'react';
-import { BackHandler, StyleSheet, ToastAndroid } from 'react-native';
+import { BackHandler, Dimensions, Modal, Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
 import WebView from 'react-native-webview';
 import { useDispatch } from 'react-redux';
+import { storeDatasync } from './AsyncStorage';
+import { ThemeContext } from './ThemeContext';
+
+const {width, height} = Dimensions.get('window');
 
 export const PaymentScreen = ({route,navigation}) => {
+
   const paymentDetails = route.params.paymentDetails;
+
+  const [modalVisible, setModalVisible] = React.useState(false);
+
+  const {theme} = React.useContext(ThemeContext);
+
+  const dispatch = useDispatch()
+
+  const textColor = theme === 'dark' ? '#FFF' : '#191414';
+  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
   
   let urlEncodedData = '',
@@ -19,31 +33,64 @@ for (key in paymentDetails) {
 urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
 
 
-useFocusEffect(
-  React.useCallback(() => {
-    const onBackPress =() => {
-      navigation.jumpTo('Subscriptions');
-        return false;
-    };
+// useFocusEffect(
+//   React.useCallback(() => {
+//     const onBackPress =() => {
+//       navigation.jumpTo('Subscriptions');
+//         return false;
+//     };
 
-    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+//     BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-    return () =>
-      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-  }, [])
-);
+//     return () =>
+//       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+//   }, [])
+// );
 
-function onMessage(data) {
-  navigation.popToTop();
-  ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
-  if(data==='success')
-  {
-    useDispatch().dispatch({type:'SET_SUB',payload:true});
+const onMessage = (data) => {
+  if (data.nativeEvent.data === 'success') {
+    ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
+    setModalVisible(true);
+    dispatch({type:'SET_STATUS',payload:{isLogin: true,isSubscribed:true}});
     storeDatasync('isSubscribed', true);
+  }
+  else if(data.nativeEvent.data==='failure')
+  {
+    ToastAndroid.show('Payment Failed', ToastAndroid.SHORT);
   }
 }
 
+const thanksModal = () => {
   return (
+    <Modal
+        animationType="slide"
+        visible={modalVisible}
+        transparent
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View
+            style={[styles.modalView, {backgroundColor: modelBackgroundColor}]}>
+            <Text style={[styles.modalText, {color: textColor}]}>
+              Thank you for purchasing the subscription
+            </Text>
+            <Pressable
+              style={[styles.button, {backgroundColor: '#ff9000'}]}
+              onPress={() => {
+                navigation.popToTop();
+                setModalVisible(false);
+              }}>
+              <Text style={[styles.textStyle, {color: textColor}]}>Enjoy</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+  )
+}
+
+  return (
+    <>
     <WebView
       javaScriptEnabled
       originWhitelist={['*']}
@@ -55,6 +102,8 @@ function onMessage(data) {
       startInLoadingState={true}
       onMessage={onMessage}
     />
+    {thanksModal()}
+    </>
   );
 };
 
@@ -63,5 +112,40 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  modalView: {
+    margin: 20,
+    borderRadius: 20,
+    height: height*0.3,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    flexDirection:'column',
+    justifyContent:'space-between'
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+    width: width*0.7,
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  modalText: {
+    marginBottom: 15,
+    fontSize: 20,
+    fontWeight:'800',
+    textAlign: 'center',
+  },
 })

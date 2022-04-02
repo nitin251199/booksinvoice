@@ -454,9 +454,11 @@ export const EditProfile = ({navigation}) => {
     setShow(true);
     signOut()
     await removeDatasync(userData.id);
-    dispatch({type: 'SET_LOGIN', payload: false});
     storeDatasync('isLogin', false);
-    dispatch({type: 'SET_SUB', payload: false});
+    dispatch({
+      type: 'SET_STATUS',
+      payload: {isLogin: false, isSubscribed: false},
+    });
     storeDatasync('isSubscribed', false);
     navigation.navigate('Homepage');
     // dispatch({type: 'REMOVE_USER', payload: userData.id});

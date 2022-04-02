@@ -125,17 +125,13 @@ export default function RootNavigator() {
 
   const check = async () => {
     var isLogin = await getSyncData('isLogin');
-    dispatch({type: 'SET_LOGIN', payload: isLogin});
+    var isSub = await getSyncData('isSubscribed');
+    dispatch({type: 'SET_STATUS', payload: {isLogin: isLogin, isSubscribed: isSub}});
   };
 
-  const checkSub = async () => {
-    var isSub = await getSyncData('isSubscribed');
-    dispatch({type: 'SET_SUB', payload: isSub});
-  };
 
   useLayoutEffect(() => {
     check();
-    checkSub();
   }, []);
 
   const ProfileComponent = () => {
@@ -181,6 +177,16 @@ export default function RootNavigator() {
           name="Search"
           component={Search}
           options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="InfoPage"
+          component={InfoPage}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="MusicPlayer"
+          component={MusicPlayer}
+          options={{headerShown: false}}
         />
       </Stack.Navigator>
     );

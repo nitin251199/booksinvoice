@@ -1,6 +1,4 @@
 import React from 'react';
-import TrackPlayer from 'react-native-track-player';
-import { useSelector } from 'react-redux';
 
 export const ThemeContext = React.createContext();
 
@@ -8,7 +6,7 @@ export const ThemeProvider = ({children}) => {
   // theme = light, dark
   const [theme, setTheme] = React.useState('dark');
   const [darkMode, setDarkMode] = React.useState(true);
-  const [show, setShow] = React.useState(false);
+  // const [show, setShow] = React.useState(false);
 
   const toggleTheme = () => {
     if (theme === 'light') {
@@ -20,8 +18,8 @@ export const ThemeProvider = ({children}) => {
     }
   };
 
-  const currentSong = useSelector(state => state.currentSong);
-  const status = useSelector(state => state.isSubscribed);
+  // const currentSong = useSelector(state => state.currentSong);
+  // const status = useSelector(state => state.isSubscribed);
   // const progress = useProgress();
 
   // useTrackPlayerEvents([Event.PlaybackTrackChanged], async event => {
@@ -31,17 +29,17 @@ export const ThemeProvider = ({children}) => {
   //   }
   // });
 
-  const getSectionDone = async() => {
-    if (!status) {
-      const currentTrack = await TrackPlayer.getCurrentTrack();
-      if (currentTrack != null) {
-        if (Math.floor(progress.position) >= currentSong.duration) {
-          // await TrackPlayer.stop();
-          // setModalVisible(true);
-        }
-      }
-    }
-  }
+  // const getSectionDone = async() => {
+  //   if (!status) {
+  //     const currentTrack = await TrackPlayer.getCurrentTrack();
+  //     if (currentTrack != null) {
+  //       if (Math.floor(progress.position) >= currentSong.duration) {
+  //         // await TrackPlayer.stop();
+  //         // setModalVisible(true);
+  //       }
+  //     }
+  //   }
+  // }
 
       // useEffect(()=>{
       //   getSectionDone();
@@ -50,10 +48,10 @@ export const ThemeProvider = ({children}) => {
 
       
 
-  const [song, setSong] = React.useState(null);
+  // const [song, setSong] = React.useState(null);
 
   return (
-    <ThemeContext.Provider value={{theme, toggleTheme, darkMode, song, setSong, show, setShow}}>
+    <ThemeContext.Provider value={{theme, toggleTheme, darkMode}}>
       {children}
     </ThemeContext.Provider>
   );

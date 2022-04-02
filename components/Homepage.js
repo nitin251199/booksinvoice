@@ -14,7 +14,6 @@ import {AirbnbRating, Divider, Image, Tile} from 'react-native-elements';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {TouchableOpacity} from 'react-native-gesture-handler';
-import SkeletonContent from 'react-native-skeleton-content-nonexpo';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import {ThemeContext} from './ThemeContext';
@@ -53,7 +52,6 @@ export default function Homepage({navigation, route}) {
 
   const [advertise, setAdvertise] = useState(setad);
 
-  const [show, setShow] = useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
 
   var dispatch = useDispatch();
@@ -90,18 +88,6 @@ export default function Homepage({navigation, route}) {
 
   const DisplayBanner = ({item}) => {
     return (
-      <SkeletonContent
-        containerStyle={{flex: 1}}
-        isLoading={show}
-        boneColor={backgroundColor}
-        highlightColor="#333333"
-        layout={[
-          {
-            key: '1',
-            width: width,
-            height: 140,
-          },
-        ]}>
         <View key={item.id}>
           <Image
             style={{
@@ -114,7 +100,6 @@ export default function Homepage({navigation, route}) {
             }}
           />
         </View>
-      </SkeletonContent>
     );
   };
 
@@ -419,7 +404,6 @@ export default function Homepage({navigation, route}) {
                 </Text>
               </TouchableOpacity>
             </View>
-            <SkeletonContent containerStyle={{flex: 1}} isLoading={show}>
               <View style={styles.categoryImage}>
                 <FlatList
                   data={data}
@@ -430,7 +414,6 @@ export default function Homepage({navigation, route}) {
                   keyExtractor={item => item.id}
                 />
               </View>
-            </SkeletonContent>
 
             <Divider />
             <View

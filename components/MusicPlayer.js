@@ -13,6 +13,8 @@ import {
   ImageBackground,
   ToastAndroid,
   ActivityIndicator,
+  ScrollView,
+  FlatList,
 } from 'react-native';
 
 import TrackPlayer, {
@@ -34,6 +36,7 @@ import {ThemeContext} from './ThemeContext';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {TextInput} from 'react-native-gesture-handler';
 import {Slider as SpeedSlider} from 'react-native-elements';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const {width, height} = Dimensions.get('window');
 
@@ -91,6 +94,7 @@ const MusicPlayer = ({route, navigation}) => {
       artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
       album: route.params.state.bookcategory,
       duration: route.params.state.sampleplay_time,
+      index: 0
     },
   ];
   
@@ -105,6 +109,7 @@ const MusicPlayer = ({route, navigation}) => {
         artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
         album: route.params.state.bookcategory,
         duration: route.params.state.sampleplay_time,
+        index: index
       });
     }
     });
@@ -671,8 +676,47 @@ const MusicPlayer = ({route, navigation}) => {
     }
   };
 
+  const [selected, setSelected ] = useState({index:0});
+
+  const playChapter = (item,i) => {
+    var { index } = item;
+    setSelected({index});
+    skipTo(i);
+    if (playBackState == State.Paused) {
+     TrackPlayer.play();
+    }
+  }
+
+  const pauseChapter = () => {
+    setSelected({id:''});
+    TrackPlayer.pause();
+  }
+  
+  const showChapters = ({item,index}) => {
+    return(
+      <View style={{flexDirection:'row',padding:10,alignItems:'center'}}>
+        {
+          selected.index === item.index ?
+          <TouchableOpacity onPress={()=>pauseChapter()}>
+            <FontAwesome5 name='pause' color={'#ff9000'} size={22} />
+          </TouchableOpacity>
+          :
+          <TouchableOpacity onPress={()=>playChapter(item,index)}>
+            <FontAwesome5 name='play' color={'#ff9000'} size={22} />
+          </TouchableOpacity>
+        }
+        <Text style={{fontSize:16,color:textColor,marginLeft:15,color:'#ff9000'}}>{item.title}</Text>
+        </View>
+    )
+  }
+
   return (
-    <SafeAreaView
+    <>
+        <ScrollView showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        justifyContent:'center',
+        alignItems:'center'
+      }}
       style={[
         style.container,
         {
@@ -792,8 +836,20 @@ const MusicPlayer = ({route, navigation}) => {
 
       {/* <MiniPlayer ref={refMiniRBSheet} /> */}
 
-      {/* bottom section */}
-      <View style={style.bottomSection}>
+      <View style={{ width: width*0.9, backgroundColor:'#000',padding:15,borderRadius:10}}>
+        <FlatList 
+        data={tracks}
+        nestedScrollEnabled
+        renderItem={showChapters}
+        maxHeight={height * 0.3}
+        keyExtractor={(item, index) => index}
+        />
+      </View>
+      {buySubscriptionModel()}
+      {speedModal()}
+    </ScrollView>
+          {/* bottom section */}
+          <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
         <View style={style.bottomIconContainer}>
           <TouchableOpacity onPress={() => addFavourite()}>
             {isFavourite ? (
@@ -811,9 +867,9 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity onPress={() => refRBSheet.current.open()}>
             <MaterialCommunityIcons
@@ -842,9 +898,7 @@ const MusicPlayer = ({route, navigation}) => {
           </TouchableOpacity>
         </View>
       </View>
-      {buySubscriptionModel()}
-      {speedModal()}
-    </SafeAreaView>
+    </>
   );
 };
 
@@ -853,7 +907,6 @@ export default MusicPlayer;
 const style = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#212121',
   },
   mainContainer: {
     flex: 1,
@@ -861,6 +914,8 @@ const style = StyleSheet.create({
     justifyContent: 'center',
   },
   bottomSection: {
+    // position:'absolute',
+    // bottom:10,
     borderTopColor: '#393E46',
     borderWidth: 1,
     width: width,
@@ -882,8 +937,8 @@ const style = StyleSheet.create({
   },
 
   imageWrapper: {
-    width: 300,
-    height: 340,
+    width: 250,
+    height: 290,
     marginBottom: 25,
     marginTop: 30,
   },

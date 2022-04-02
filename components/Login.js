@@ -24,9 +24,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import {
-  LoginManager,
-} from 'react-native-fbsdk-next';
+import {LoginManager} from 'react-native-fbsdk-next';
 
 const {width, height} = Dimensions.get('window');
 
@@ -88,7 +86,10 @@ export const Login = ({navigation}) => {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
-      dispatch({type: 'SET_SUB', payload: sub});
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: sub},
+      });
       storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
       dispatch({type: 'SET_LOGIN', payload: true});
@@ -298,10 +299,12 @@ export const Login = ({navigation}) => {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
-      dispatch({type: 'SET_SUB', payload: sub});
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: sub},
+      });
       storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
-      dispatch({type: 'SET_LOGIN', payload: true});
       storeDatasync('isLogin', true);
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
@@ -347,10 +350,12 @@ export const Login = ({navigation}) => {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
-      dispatch({type: 'SET_SUB', payload: sub});
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: sub},
+      });
       storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
-      dispatch({type: 'SET_LOGIN', payload: true});
       storeDatasync('isLogin', true);
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {

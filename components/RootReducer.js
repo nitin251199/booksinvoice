@@ -1,8 +1,10 @@
 const initialState = {
   user: {},
   home: {},
-  isLogin: false,
-  isSubscribed: false,
+  status: {
+    isLogin: false,
+    isSubscribed: false
+  },
   currentSong: {},
 };
 
@@ -35,22 +37,14 @@ export default function RootReducer(state = initialState, action) {
           isSubscribed: state.isSubscribed,
           currentSong: state.currentSong,
         };
-    case 'SET_LOGIN':
-      state.isLogin = action.payload
+    case 'SET_STATUS' :
+      state.status = action.payload
       return {
           user: state.user,
           home: state.home,
-          isLogin: state.isLogin,
-          isSubscribed: state.isSubscribed,
+          isLogin: state.status.isLogin,
+          isSubscribed: state.status.isSubscribed,
           currentSong: state.currentSong,
-        };
-      case 'SET_SUB':
-        state.isSubscribed = action.payload
-        return {
-          user: state.user,
-          home: state.home,
-          isLogin: state.isLogin,
-          isSubscribed: state.isSubscribed,
         };
       case 'SET_CURRENT_SONG':
         state.currentSong = action.payload
@@ -65,3 +59,4 @@ export default function RootReducer(state = initialState, action) {
       return state;
   }
 }
+
