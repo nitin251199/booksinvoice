@@ -40,16 +40,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const {width, height} = Dimensions.get('window');
 
-const togglePlayBack = async playBackState => {
-  const currentTrack = await TrackPlayer.getCurrentTrack();
-  if (currentTrack != null) {
-    if (playBackState == State.Paused) {
-      await TrackPlayer.play();
-    } else {
-      await TrackPlayer.pause();
-    }
-  }
-};
+
 
 const MusicPlayer = ({route, navigation}) => {
   const playBackState = usePlaybackState();
@@ -71,6 +62,7 @@ const MusicPlayer = ({route, navigation}) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
+  const [chapter, setChapter ] = useState([]);
 
   // custom referecnces
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -83,24 +75,65 @@ const MusicPlayer = ({route, navigation}) => {
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
-  
+  const togglePlayBack = async playBackState => {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    if (currentTrack != null) {
+      if (playBackState == State.Paused) {
+        await TrackPlayer.play();
+      } else {
+        await TrackPlayer.pause();
+        setSelected({index:''})
+      }
+    }
+  };
 
+  const index = route.params.index
+  const chapters = []
+
+ if(index !== null){
   var temp = [
     {
       id: route.params.state.id,
-      url: `${ServerURL}/admin/upload/bookaudio/${route.params.chapters[0].audiofile}`,
+      url: `${ServerURL}/admin/upload/bookaudio/${route.params.chapters[index].audiofile}`,
+      title: route.params.chapters[index].chaptername,
+      artist: route.params.state.bookauthor,
+      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+      album: route.params.state.bookcategory,
+      duration: route.params.state.sampleplay_time,
+      index: 0
+    }
+  ];
+ }
+ else{
+  var temp = [
+    {
+      id: route.params.state.id,
+      url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
       title: route.params.state.bookname,
       artist: route.params.state.bookauthor,
       artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
       album: route.params.state.bookcategory,
       duration: route.params.state.sampleplay_time,
       index: 0
-    },
+    }
   ];
+ }
+
   
   const mapTracks = async () => {
+    if(index !== null){
+    temp.push({
+      id: route.params.state.id,
+      url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
+      title: route.params.state.bookname,
+      artist: route.params.state.bookauthor,
+      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+      album: route.params.state.bookcategory,
+      duration: route.params.state.sampleplay_time,
+      index: 1
+    })
+  }
     await route.params.chapters.map((track, index) => {
-     if(index !== 0){
       temp.push({
         id: route.params.state.id,
         url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
@@ -109,11 +142,21 @@ const MusicPlayer = ({route, navigation}) => {
         artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
         album: route.params.state.bookcategory,
         duration: route.params.state.sampleplay_time,
-        index: index
+        index: index+1
       });
-    }
+      chapters.push({
+        id: route.params.state.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+        title: track.chaptername,
+        artist: route.params.state.bookauthor,
+        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+        album: route.params.state.bookcategory,
+        duration: route.params.state.sampleplay_time,
+        index: index+1
+      });
     });
     setTracks(temp);
+    setChapter(chapters);
   };
 
   const setupPlayer = async () => {
@@ -681,31 +724,39 @@ const MusicPlayer = ({route, navigation}) => {
   const playChapter = (item,i) => {
     var { index } = item;
     setSelected({index});
-    skipTo(i);
+    skipTo(i+1);
     if (playBackState == State.Paused) {
      TrackPlayer.play();
     }
   }
 
   const pauseChapter = () => {
-    setSelected({id:''});
+    setSelected({index:''});
     TrackPlayer.pause();
   }
   
   const showChapters = ({item,index}) => {
     return(
-      <View style={{flexDirection:'row',padding:10,alignItems:'center'}}>
+      <View style={{flexDirection:'row',padding:10,alignItems:'center',justifyContent:'space-between'}}>
+
+        <View style={{flexDirection:'row',alignItems:'center',width:width*0.8,overflow:'hidden'}}>
+        <Image source={{ 
+          uri: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`
+        }}
+        style={{width:50,height:50,borderRadius:10}}/>
+        
+        <Text style={{fontSize:15,color:textColor,marginLeft:15,fontWeight:'700'}}>{item.title}</Text>
+        </View>
         {
           selected.index === item.index ?
           <TouchableOpacity onPress={()=>pauseChapter()}>
-            <FontAwesome5 name='pause' color={'#ff9000'} size={22} />
+            <FontAwesome5 name='pause' color={'#ff9000'} size={20} />
           </TouchableOpacity>
           :
           <TouchableOpacity onPress={()=>playChapter(item,index)}>
-            <FontAwesome5 name='play' color={'#ff9000'} size={22} />
+            <FontAwesome5 name='play' color={'#ff9000'} size={20} />
           </TouchableOpacity>
         }
-        <Text style={{fontSize:16,color:textColor,marginLeft:15,color:'#ff9000'}}>{item.title}</Text>
         </View>
     )
   }
@@ -715,7 +766,6 @@ const MusicPlayer = ({route, navigation}) => {
         <ScrollView showsVerticalScrollIndicator={false}
       contentContainerStyle={{
         justifyContent:'center',
-        alignItems:'center'
       }}
       style={[
         style.container,
@@ -835,21 +885,8 @@ const MusicPlayer = ({route, navigation}) => {
       </View>
 
       {/* <MiniPlayer ref={refMiniRBSheet} /> */}
-
-      <View style={{ width: width*0.9, backgroundColor:'#000',padding:15,borderRadius:10}}>
-        <FlatList 
-        data={tracks}
-        nestedScrollEnabled
-        renderItem={showChapters}
-        maxHeight={height * 0.3}
-        keyExtractor={(item, index) => index}
-        />
-      </View>
-      {buySubscriptionModel()}
-      {speedModal()}
-    </ScrollView>
-          {/* bottom section */}
-          <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
+       {/* bottom section */}
+       <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
         <View style={style.bottomIconContainer}>
           <TouchableOpacity onPress={() => addFavourite()}>
             {isFavourite ? (
@@ -898,6 +935,23 @@ const MusicPlayer = ({route, navigation}) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {
+        route.params.chapters.length > 1 && <View style={{ width: width, backgroundColor:backgroundColor,padding:15}}>
+        <FlatList 
+        data={chapter}
+        renderItem={showChapters}
+        keyExtractor={(item, index) => index}
+        />
+      </View>
+      }
+
+      
+
+      {buySubscriptionModel()}
+      {speedModal()}
+    </ScrollView>
+         
     </>
   );
 };

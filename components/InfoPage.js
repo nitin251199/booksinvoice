@@ -17,6 +17,7 @@ import {
 import {AirbnbRating} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
@@ -46,12 +47,12 @@ export default function InfoPage({route, navigation}) {
   const [commentModal, setCommentModal] = useState(false);
   const [chapters, setChapters] = useState([]);
   const [show, setShow] = useState(false);
- 
+
   const fetchBook = async id => {
     var body = {type: '1', books_id: id};
     var result = await postData('api/getBooksid', body);
     setBook(result.data[0]);
-    setChapters(result.chapters)
+    setChapters(result.chapters);
   };
 
   const fetchSimilarBooks = async id => {
@@ -118,31 +119,42 @@ export default function InfoPage({route, navigation}) {
         onRequestClose={() => {
           setCommentModal(false);
         }}>
-          <View style={styles.centeredView}>
-            <View  style={[
+        <View style={styles.centeredView}>
+          <View
+            style={[
               {
                 backgroundColor: modelBackgroundColor,
                 padding: 20,
                 borderRadius: 10,
               },
             ]}>
-              <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingBottom:20}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingBottom: 20,
+              }}>
               <Text style={[styles.modalText, {color: textColor}]}>
                 Comments
               </Text>
-              <TouchableOpacity onPress={()=>setCommentModal(false)}>
-              <MaterialCommunityIcons name="close" size={20} color={textColor} />
+              <TouchableOpacity onPress={() => setCommentModal(false)}>
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color={textColor}
+                />
               </TouchableOpacity>
-              </View>
-        <FlatList
-          data={comments}
-          // persistentScrollbar
-          // nestedScrollEnabled
-          maxHeight={height * 0.43}
-          renderItem={renderComments}
-          keyExtractor={item => item.id}
-        />
-        </View>
+            </View>
+            <FlatList
+              data={comments}
+              // persistentScrollbar
+              // nestedScrollEnabled
+              maxHeight={height * 0.43}
+              renderItem={renderComments}
+              keyExtractor={item => item.id}
+            />
+          </View>
         </View>
       </Modal>
     );
@@ -199,6 +211,48 @@ export default function InfoPage({route, navigation}) {
   useEffect(() => {
     setNumLines(textShown ? undefined : 3);
   }, [textShown]);
+
+
+  const showChapters = ({item, index}) => {
+    return (
+      <TouchableOpacity
+      onPress={() => {
+        navigation.navigate('MusicPlayer', {
+          state: book,
+          chapters: chapters,
+          index: index,
+        });
+        // setShow(true)
+      }}
+      >
+        <View
+        style={{
+          flexDirection: 'row',
+          padding: 10,
+          alignItems: 'center',
+        }}>
+        
+          <Image
+            source={{
+              uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
+            }}
+            style={{width: 50, height: 50, borderRadius: 10}}
+          />
+
+          <Text
+            style={{
+              fontSize: 15,
+              color: textColor,
+              marginLeft: 15,
+              fontWeight: '700',
+            }}>
+            {item.chaptername}
+          </Text>
+        
+      </View>
+      </TouchableOpacity>
+    );
+  };
 
   const DisplayItem = ({item}) => {
     return (
@@ -412,7 +466,7 @@ export default function InfoPage({route, navigation}) {
               </Text>
             </View>
 
-            {(book.premiumtype === 'Premium' || book.premiumtype === 'Both') ? (
+            {book.premiumtype === 'Premium' || book.premiumtype === 'Both' ? (
               <>
                 <View style={[styles.textWrapper, {alignItems: 'center'}]}>
                   <Text
@@ -554,13 +608,13 @@ export default function InfoPage({route, navigation}) {
                 },
               ]}>
               <View style={{flexDirection: 'row'}}>
-                <TouchableOpacity onPress={()=>{
-                  if(comments.length == 0){
-                    ToastAndroid.show('No Comments yet', ToastAndroid.SHORT)
-                  }
-                  else{
-                    setCommentModal(true)
-                  }
+                <TouchableOpacity
+                  onPress={() => {
+                    if (comments.length == 0) {
+                      ToastAndroid.show('No Comments yet', ToastAndroid.SHORT);
+                    } else {
+                      setCommentModal(true);
+                    }
                   }}>
                   <Text
                     style={[
@@ -581,36 +635,61 @@ export default function InfoPage({route, navigation}) {
           </View>
 
           <View style={styles.btnContainer}>
-        <TouchableOpacity
-          onPress={() =>
-           { 
-             navigation.navigate('MusicPlayer', {state: book, chapters: chapters})
-            // setShow(true)
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('MusicPlayer', {
+                  state: book,
+                  chapters: chapters,
+                  index: null
+                });
+                // setShow(true)
+              }}>
+              <View
+                style={[
+                  styles.btn,
+                  {
+                    width: width * 0.62,
+                    marginRight: 10,
+                  },
+                ]}>
+                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+                  PLAY
+                </Text>
+                <MaterialCommunityIcons name="play" size={30} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onShare}>
+              <View style={styles.btn}>
+                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+                  SHARE
+                </Text>
+                <MaterialCommunityIcons name="share" size={30} color="#fff" />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {
+            chapters.length > 1 && <View
+            style={{
+              width: width,
+              backgroundColor: backgroundColor,
+              padding: 15,
+              marginBottom:15
+            }}>
+            <Text style={{
+              fontSize: 16,
+              fontWeight: '800',
+              color: textColor,
+              marginBottom:15,
+              paddingLeft:5
+            }}>Chapters</Text>
+            <FlatList
+              data={chapters}
+              renderItem={showChapters}
+              keyExtractor={(item, index) => index}
+            />
+          </View>
           }
-          }>
-          <View
-            style={[
-              styles.btn,
-              {
-                width: width * 0.62,
-                marginRight: 10,
-              },
-            ]}>
-            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-              PLAY
-            </Text>
-            <MaterialCommunityIcons name="play" size={30} color="#fff" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onShare}>
-          <View style={styles.btn}>
-            <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-              SHARE
-            </Text>
-            <MaterialCommunityIcons name="share" size={30} color="#fff" />
-          </View>
-        </TouchableOpacity>
-      </View>
 
           <View style={{paddingBottom: 10, paddingLeft: 20}}>
             <Text
@@ -940,8 +1019,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalText : {
+  modalText: {
     fontSize: 20,
-    fontWeight: '800'
-  }
+    fontWeight: '800',
+  },
 });
