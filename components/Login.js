@@ -371,36 +371,14 @@ export const Login = ({navigation}) => {
           {otpLogin()}
           <View
             style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              width: width * 0.3,
-            }}>
-            <TouchableOpacity onPress={() => fbLogin()}>
-              <MaterialCommunityIcons
-                name="facebook"
-                size={50}
-                color="#4267B2"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => googleSignIn()}
-              style={{justifyContent: 'center'}}>
-              <Image
-                source={require('../../images/google.png')}
-                style={{width: 40, height: 40, resizeMode: 'contain'}}
-              />
-            </TouchableOpacity>
-          </View>
-          <View
-            style={{
-              width: width * 0.85,
-              marginTop: 30,
+              width: width * 0.90,
+              marginBottom: 20,
               alignItems: 'flex-end',
               flexDirection: 'row',
             }}>
             <Text
               style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
-              See our
+              Continue, if you agree to the
             </Text>
             <TouchableOpacity
               onPress={() =>
@@ -424,11 +402,30 @@ export const Login = ({navigation}) => {
                 Privacy Policy{' '}
               </Text>
             </TouchableOpacity>
-            <Text
-              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
-              for more details
-            </Text>
           </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: width * 0.3,
+            }}>
+            <TouchableOpacity onPress={() => fbLogin()}>
+              <MaterialCommunityIcons
+                name="facebook"
+                size={50}
+                color="#4267B2"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => googleSignIn()}
+              style={{justifyContent: 'center'}}>
+              <Image
+                source={require('../../images/google.png')}
+                style={{width: 40, height: 40, resizeMode: 'contain'}}
+              />
+            </TouchableOpacity>
+          </View>
+          
           <TouchableOpacity onPress={() => setShowSignup(false)}>
             <View style={{width: width * 0.85, marginTop: 10}}>
               <Text
@@ -495,6 +492,40 @@ export const Login = ({navigation}) => {
                 color={textColor}
               />
             </View>
+          </View>
+          <View
+            style={{
+              width: width * 0.90,
+              marginBottom: 0,
+              alignItems: 'flex-end',
+              flexDirection: 'row',
+            }}>
+            <Text
+              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              Continue, if you agree to the
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('Legal', {page: 'TermAndConditions'})
+              }>
+              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+                {' '}
+                T & C{' '}
+              </Text>
+            </TouchableOpacity>
+            <Text
+              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              and
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('Legal', {page: 'PrivacyPolicy'})
+              }>
+              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+                {' '}
+                Privacy Policy{' '}
+              </Text>
+            </TouchableOpacity>
           </View>
           <Button
             onPress={() => handleLogin()}

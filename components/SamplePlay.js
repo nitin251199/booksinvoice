@@ -1,36 +1,34 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {Alert, StyleSheet, View} from 'react-native';
 import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
 import TrackPlayer from 'react-native-track-player';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useSelector } from 'react-redux';
-import { ServerURL} from './FetchApi';
-import { ThemeContext } from './ThemeContext';
+import {useSelector} from 'react-redux';
+import {ServerURL} from './FetchApi';
 
+export const SamplePlay = ({item, propsStyles, id}) => {
+  const [selected, setSelected] = React.useState({id:''});
+  var time = 0;
+  var s = 0;
 
-export const SamplePlay = ({item, propsStyles}) => {
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const {setShow} = React.useContext(ThemeContext);
-  var time = 0
-  var s = 0
-
-  const setup = async () => {
+  const setup = async (i) => {
+    
+    setSelected({id: i.id});
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
         stopWithApp: true,
       });
       await TrackPlayer.add({
-        id: 'sample',
-        url: `${ServerURL}/admin/upload/bookaudio/${item.audiofile}`,
+        id: i.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${i.audiofile}`,
         title: 'Sample',
         artist: 'Sample',
-        duration: item.sampleplay_time,
+        duration: i.sampleplay_time,
       });
-      time = item.sampleplay_time
+      time = i.sampleplay_time;
+      TrackPlayer.play();
       getSectionDone();
-        TrackPlayer.play();
-      setIsPlaying(true);
     } catch (error) {
       console.log(error);
     }
@@ -40,40 +38,46 @@ export const SamplePlay = ({item, propsStyles}) => {
 
   const getSectionDone = async () => {
     s++;
-   var t = setTimeout(getSectionDone, 1000)
+    var t = setTimeout(getSectionDone, 1000);
     if (!status) {
-        if (s >= time) {
-          await TrackPlayer.stop();
-          setIsPlaying(false)
-          // setShow(true)
-          clearTimeout(t)
+      if (s >= time) {
+        await TrackPlayer.stop();
+        setSelected({id: ''});
+        Alert.alert(
+          'Booksinvoice',
+          'Please subscribe to listen further!',
+          [{text: 'OK'}],
+          {cancelable: true},
+        );
+        clearTimeout(t);
       }
     }
   };
 
-
   return (
     <View style={propsStyles}>
-      {isPlaying ? (
+      { selected.id === item.id ? (
         <TouchableWithoutFeedback
           onPress={() => {
             TrackPlayer.stop();
-            setIsPlaying(false);
+            setSelected({id:''});
           }}>
           <View style={styles.sample}>
             <MaterialCommunityIcons name="pause" size={25} color="black" />
           </View>
         </TouchableWithoutFeedback>
-      ) : (
+      )
+      : (
         <TouchableWithoutFeedback
           onPress={() => {
-            setup();
+            setup(item);
           }}>
           <View style={styles.sample}>
             <MaterialCommunityIcons name="play" size={25} color="black" />
           </View>
         </TouchableWithoutFeedback>
-      )}
+      )
+       }
     </View>
   );
 };

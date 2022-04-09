@@ -12,20 +12,21 @@ import {
   View,
 } from 'react-native';
 import {AirbnbRating, Divider} from 'react-native-elements';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
-import { ThemeContext } from './ThemeContext';
+import {ThemeContext} from './ThemeContext';
+import {Picker} from '@react-native-picker/picker';
 
 const {width, height} = Dimensions.get('window');
 
 export const CategoryPage = ({navigation, route}) => {
-
-  const { theme } = React.useContext(ThemeContext);
+  const {theme} = React.useContext(ThemeContext);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+
+  const [filterState, setFilterState] = React.useState('');
 
   const displayBooks = ({item}) => {
     return (
@@ -52,14 +53,14 @@ export const CategoryPage = ({navigation, route}) => {
             />
           </TouchableOpacity>
           <SamplePlay
-          item={item}
-          propsStyles={{
-            position: 'absolute',
-            top: '73%',
-            left: '1%',
-            elevation: 10,
-          }}
-        />
+            item={item}
+            propsStyles={{
+              position: 'absolute',
+              top: '73%',
+              left: '1%',
+              elevation: 10,
+            }}
+          />
           <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
             <TextTicker
               style={{
@@ -82,7 +83,7 @@ export const CategoryPage = ({navigation, route}) => {
             <Text style={{color: textColor}}>Views: {item.viewcount}</Text>
             {item.premiumtype === 'Premium' ? (
               <>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                   <Text
                     style={[
                       styles.text,
@@ -96,7 +97,7 @@ export const CategoryPage = ({navigation, route}) => {
                     {item.premiumtype}
                   </Text>
                 </View>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                   <Text
                     style={[
                       styles.text,
@@ -110,7 +111,7 @@ export const CategoryPage = ({navigation, route}) => {
                     {item.validity} days
                   </Text>
                 </View>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                   <Text
                     style={[
                       styles.text,
@@ -124,7 +125,7 @@ export const CategoryPage = ({navigation, route}) => {
                     ₹ {item.price}
                   </Text>
                 </View>
-                <View style={{flexDirection:'row'}}>
+                <View style={{flexDirection: 'row'}}>
                   <Text
                     style={[
                       styles.text,
@@ -158,6 +159,7 @@ export const CategoryPage = ({navigation, route}) => {
   };
 
   const [books, setBooks] = React.useState([]);
+  const [allBooks, setAllBooks] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [skip, setSkip] = React.useState(0);
 
@@ -169,6 +171,7 @@ export const CategoryPage = ({navigation, route}) => {
         var body = {type: 1, skip: skip};
         var newarrivals = await postData('api/getNewarrival', body);
         setBooks([...books, ...newarrivals.data]);
+        setAllBooks([...books, ...newarrivals.data]);
         setIsLoading(false);
         break;
 
@@ -176,6 +179,7 @@ export const CategoryPage = ({navigation, route}) => {
         var body = {type: 1, skip: skip};
         var top = await postData('api/getToprated', body);
         setBooks([...books, ...top.data]);
+        setAllBooks([...books, ...top.data]);
         setIsLoading(false);
         break;
 
@@ -183,6 +187,7 @@ export const CategoryPage = ({navigation, route}) => {
         var body = {type: 1, skip: skip};
         var popular = await postData('api/getPopulerbooks', body);
         setBooks([...books, ...popular.data]);
+        setAllBooks([...books, ...popular.data]);
         setIsLoading(false);
         break;
 
@@ -190,6 +195,7 @@ export const CategoryPage = ({navigation, route}) => {
         var body = {type: 1, skip: skip};
         var premium = await postData('api/getPremiumbooks', body);
         setBooks([...books, ...premium.data]);
+        setAllBooks([...books, ...premium.data]);
         setIsLoading(false);
         break;
 
@@ -198,6 +204,7 @@ export const CategoryPage = ({navigation, route}) => {
         var result = await postData('api/getBooksbyid', body);
         if (result.msg !== 'Profile Not Available') {
           setBooks([...books, ...result.data]);
+          setAllBooks([...books, ...result.data]);
         }
         setIsLoading(false);
         break;
@@ -221,6 +228,56 @@ export const CategoryPage = ({navigation, route}) => {
   }, [skip]);
 
   var category = route.params.category;
+
+  const filterData = type => {
+    switch (type) {
+      case 'All':
+        setBooks([...allBooks]);
+        break;
+      case 'Non Premium':
+        let filteredData6 = books.filter(item => {
+          return (
+            item.premiumtype === 'Non Premium' ||
+            item.premiumtype === 'BIV' ||
+            item.premiumtype === undefined
+          );
+        });
+        setBooks([...filteredData6]);
+        break;
+      case 'Premium':
+        let filteredData = books.filter(item => {
+          return item.premiumtype === 'Premium' || item.premiumtype === 'Both';
+        });
+        setBooks([...filteredData]);
+        break;
+      case 'By A-Z':
+        let filteredData2 = books.sort((a, b) =>
+          a.bookname.localeCompare(b.bookname),
+        );
+        setBooks([...filteredData2]);
+        break;
+      case 'By Z-A':
+        let filteredData3 = books.sort((a, b) =>
+          b.bookname.localeCompare(a.bookname),
+        );
+        setBooks([...filteredData3]);
+        break;
+      case 'Price Low to High':
+        let filteredData4 = books.sort(function (a, b) {
+          return a.price - b.price;
+        });
+        setBooks([...filteredData4]);
+        break;
+      case 'Price High to Low':
+        let filteredData5 = books.sort(function (a, b) {
+          return b.price - a.price;
+        });
+        setBooks([...filteredData5]);
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <View
@@ -282,27 +339,36 @@ export const CategoryPage = ({navigation, route}) => {
               {route.params.item.bookcategory}
             </Text>
           </View>
-          <View style={{alignItems: 'center'}}>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('MusicPlayer', {
-                  data: books,
-                  state: books[0],
-                })
-              }>
-              <Ionicons
-                name="ios-play-circle"
-                size={75}
-                color="#ff9000"
-                style={{paddingBottom: 10}}
+          <View style={{width: width * 0.9, marginLeft: 25}}>
+            <Text style={{fontSize: 16, color: textColor}}>Filter By</Text>
+            <Picker
+              selectedValue={filterState}
+              style={{borderWidth: 1, marginVertical: 10, color: textColor, borderColor: textColor}}
+              mode="dropdown"
+              onValueChange={(itemValue, itemIndex) => {  
+                filterData(itemValue);
+                setFilterState(itemValue);
+              }}>
+              <Picker.Item label="All" value="All" />
+              <Picker.Item label="Non Premium" value="Non Premium" />
+              <Picker.Item label="Premium" value="Premium" />
+              <Picker.Item label="By A-Z" value="By A-Z" />
+              <Picker.Item label="By Z-A" value="By Z-A" />
+              <Picker.Item
+                label="Price Low to High"
+                value="Price Low to High"
               />
-            </TouchableOpacity>
+              <Picker.Item
+                label="Price High to Low"
+                value="Price High to Low"
+              />
+            </Picker>
           </View>
           <View style={styles.categoryImage}>
             <FlatList
               data={books}
               renderItem={displayBooks}
-              keyExtractor={(item,index) => index.toString()}
+              keyExtractor={(item, index) => index.toString()}
               ListFooterComponent={renderLoader}
               onEndReached={() => loadMore(route.params.item.id)}
               onEndReachedThreshold={0.3}

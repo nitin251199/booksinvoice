@@ -159,11 +159,12 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-          if (userData) {
+          if (userData.length !== 0) {
             navigation.navigate('FavouriteBooks');
             navigation.closeDrawer();
           } else {
-            ToastAndroid.show('Please Login First', ToastAndroid.SHORT);
+            navigation.navigate('Login');
+            navigation.closeDrawer();
           }
         }}
         containerStyle={{backgroundColor: backgroundColor}}>

@@ -236,7 +236,7 @@ export default function InfoPage({route, navigation}) {
             source={{
               uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
             }}
-            style={{width: 50, height: 50, borderRadius: 10}}
+            style={{width: 35, height: 35, borderRadius: 5}}
           />
 
           <Text
@@ -623,7 +623,7 @@ export default function InfoPage({route, navigation}) {
                         color: textColor,
                         fontSize: 16,
                         width: width * 0.48,
-                        paddingVertical: 5,
+                        paddingVertical: 15,
                       },
                     ]}>
                     Show All Comments...

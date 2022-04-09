@@ -743,9 +743,10 @@ const MusicPlayer = ({route, navigation}) => {
         <Image source={{ 
           uri: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`
         }}
-        style={{width:50,height:50,borderRadius:10}}/>
-        
+        style={{width: 35, height: 35, borderRadius: 5}}/>
+        <TouchableOpacity onPress={()=>playChapter(item,index)}>
         <Text style={{fontSize:15,color:textColor,marginLeft:15,fontWeight:'700'}}>{item.title}</Text>
+        </TouchableOpacity>
         </View>
         {
           selected.index === item.index ?

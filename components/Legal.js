@@ -26,6 +26,9 @@ export const Legal = ({route}) => {
     } else if (route.params.page === 'Disclaimer') {
       return 'Disclaimer';
     }
+    else if (route.params.page === 'Faq') {
+      return 'FAQ';
+    }
   };
 
   useEffect(() => {
@@ -39,6 +42,9 @@ export const Legal = ({route}) => {
         originWhitelist={['*']}
         source={{
           html: `<style>
+          font {
+            font-size: 36px!important;
+          }
           .root {
               flex: 1;
               background-color: ${backgroundColor};
@@ -51,6 +57,7 @@ export const Legal = ({route}) => {
           }
           div.text > p > span {
             color: ${textColor}!important;
+            font-size: 36px!important;
             line-height: 1.5em;
           }
           </style>
