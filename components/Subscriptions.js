@@ -116,6 +116,19 @@ export const Subscriptions = ({navigation}) => {
   const handleProceed = async() => {
     var isLogin = await getSyncData('isLogin');
     if(isLogin){
+      if(selected.packagename === 'Limited Special Offer*' || selected.packagename === 'Limited Period Offer'){
+        if(copies < 100)
+        {
+         return ToastAndroid.show('Minimum 100 Copies Required', ToastAndroid.SHORT);
+        }
+      }
+      else 
+      {
+        if(copies < 50)
+        {
+         return ToastAndroid.show('Minimum 50 Copies Required', ToastAndroid.SHORT);
+        }
+      }
       setShowModal(false)
     navigation.navigate('PaymentSummary', { selected, copies });
     }
@@ -151,7 +164,7 @@ export const Subscriptions = ({navigation}) => {
             <TextInput
               value={copies}
               onChangeText={text => setCopies(text)}
-              style={{borderWidth:1,borderColor: textColor, borderRadius: 10,paddingLeft:10}}
+              style={{borderWidth:1,borderColor: textColor, borderRadius: 10,paddingLeft:10, color: textColor}}
               placeholder="No. of copies"
               placeholderTextColor="#999"
               keyboardType="numeric"

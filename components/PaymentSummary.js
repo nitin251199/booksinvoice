@@ -7,12 +7,15 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import {Button, Divider} from 'react-native-elements';
+import { RadioButton } from 'react-native-paper';
 import {checkSyncData, getSyncData} from './AsyncStorage';
-import { postData } from './FetchApi';
+import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
@@ -27,22 +30,61 @@ export const PaymentSummary = ({route, navigation}) => {
   const [showModal, setShowModal] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [loading, setLoading] = useState(true);
-  
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const [paymentDetails, setPaymentDetails] = useState([]);
+  const [value, setValue] = React.useState('Discount Coupons');
+  const [couponStatus, setCouponStatus] = useState(false);
 
   const selected = route.params.selected;
-  const copies = route.params.copies;
-  const discount = 0;
-  const subtotal = selected.packageprice * copies || selected.packagepricedoller * copies;
-  const gst = (subtotal * 0.18).toFixed(2);
-  const total = (parseFloat(subtotal) + parseFloat(gst)).toFixed(2)
-  var phone = ''
-  var pinCode = ''
-  var address = ''
+  var copies = route.params.copies;
+  const [discount, setDiscount] = useState(0);
+  const [subtotal,setSubTotal] = useState(selected.packageprice * copies || selected.packagepricedoller * copies);
+  var gst = (subtotal * 0.18).toFixed(2);
+  const sgst = (subtotal * 0.09).toFixed(2);
+  var total = (parseFloat(subtotal) + parseFloat(gst)).toFixed(2);
+  var phone = '';
+  var pinCode = '';
+  var address = '';
+  var country = '';
+  var state = '';
+  var city = '';
+  var couponid = '';
 
   const handleProceed = () => {
-      navigation.navigate('PaymentScreen', {paymentDetails})
+    navigation.navigate('PaymentScreen', {paymentDetails,total});
   };
+
+  const handleCouponProceed = async() => {
+    setCouponLoading(true);
+    var body = {"coupons": coupon, coupon_type: value}
+    var result = await postData('api/getCoupon', body);
+    if(result.msg === 'Success') {
+      if(result.data[0].coupons_type === 'Promotional Coupons')
+      {
+        setSubTotal(0)
+        // copies = '1';
+        total = 0
+        couponid = result.data[0].id;
+        setCouponStatus(true);
+        return fetchDetails()
+      }
+      let percentage = parseFloat(result.data[0].percentage);
+      let d = subtotal*(percentage/100);
+       d = d.toFixed(2)
+       setDiscount(d)
+        setSubTotal(subtotal - d)
+        gst = ((subtotal - d) * 0.18).toFixed(2);
+        total = (parseFloat(subtotal - d) + parseFloat(gst)).toFixed(2);
+        setCouponStatus(true);
+        fetchDetails()  
+    }
+    else
+    {
+      ToastAndroid.show('Invalid Coupon', ToastAndroid.SHORT);
+      setCouponLoading(false);
+    }
+  }
 
   const fetchDetails = async () => {
     var key = await checkSyncData();
@@ -50,35 +92,39 @@ export const PaymentSummary = ({route, navigation}) => {
     if (key) {
       await getSyncData(key[0]).then(async res => {
         await fetchUserData(res).then(async result => {
-            var body = {
-                type: '1',
-                user_type: res.usertype,
-                packgesid: selected.id,
-                user_id: res.id,
-                price: total,
-                forccavenu: selected.currency === '$' ? 'USD': 'INR',
-                name: res.user_name,
-                address: address,
-                postalcode: pinCode,
-                usermobile: phone,
-                email: res.useremail,
-                copies: copies,
-                coupons: coupon,
-              };
-              var result = await postData('api/getPaymentlink', body)
-              setPaymentDetails(result.data)
-              setLoading(false)
-        })
+          var body = {
+            type: '1',
+            user_type: res.usertype,
+            packgesid: selected.id,
+            user_id: res.id,
+            price: total,
+            forccavenu: selected.currency === '$' ? 'USD' : 'INR',
+            name: res.user_name,
+            address: address,
+            postalcode: pinCode,
+            usermobile: phone,
+            email: res.useremail,
+            copies: copies,
+            coupons: couponid,
+            country: country,
+            state: state,
+            city: city,
+          };
+          var result = await postData('api/getPaymentlink', body);
+          setPaymentDetails(result.data);
+          setLoading(false);
+          setCouponLoading(false)
+          setShowModal(false)
+        });
       });
     }
   };
 
   useEffect(() => {
     fetchDetails();
-  }, [])
-  
+  }, []);
 
-  const fetchUserData = async (res) => {
+  const fetchUserData = async res => {
     if (res.usertype === 'Individual') {
       var body = {
         type: 1,
@@ -86,10 +132,13 @@ export const PaymentSummary = ({route, navigation}) => {
         user_type: 'individual',
       };
       var result = await postData('api/getProfile', body);
-      
-      address = result.data[0].address
-      pinCode = result.data[0].zip_pin
-      phone = result.data[0].telephone
+
+      address = result.data[0].address;
+      pinCode = result.data[0].zip_pin;
+      phone = result.data[0].telephone;
+      country = result.country[0].name;
+      state = result.state[0].name;
+      city = result.city[0].name;
     } else if (res.usertype === 'Organisation') {
       var body = {
         type: 1,
@@ -97,11 +146,18 @@ export const PaymentSummary = ({route, navigation}) => {
         user_type: 'organisation',
       };
       var result = await postData('api/getProfile', body);
-      address = result.data[0].address
-      pinCode = result.data[0].postalcode
-      phone = result.data[0].orgnisationcontact
+      address = result.data[0].address;
+      pinCode = result.data[0].postalcode;
+      phone = result.data[0].orgnisationcontact;
+      country = result.country[0].name;
+      state = result.state[0].name;
+      city = result.city[0].name;
     }
   };
+
+  const handleCoupon = async(value) => {
+    setValue(value);
+  }
 
   const couponModal = () => {
     return (
@@ -128,7 +184,7 @@ export const PaymentSummary = ({route, navigation}) => {
                 color: textColor,
                 margin: 10,
               }}>
-              Enter the coupon code
+              Enter Coupon Code
             </Text>
             <TextInput
               value={coupon}
@@ -138,11 +194,30 @@ export const PaymentSummary = ({route, navigation}) => {
                 borderColor: textColor,
                 borderRadius: 10,
                 paddingLeft: 10,
+                color: textColor,
               }}
               placeholder="Coupon Code"
               placeholderTextColor="#999"
             />
-            <TouchableOpacity onPress={() => handleProceed()}>
+            <View style={{marginVertical:10}}>
+            <RadioButton.Group
+              onValueChange={newValue => handleCoupon(newValue)}
+              value={value}>
+                <TouchableWithoutFeedback onPress={()=>setValue('Discount Coupons')}>
+              <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+                <Text style={{color: textColor}}>Discount Coupon</Text>
+                <RadioButton color='#ff9000' uncheckedColor={textColor} value="Discount Coupons" />
+              </View>
+                </TouchableWithoutFeedback>
+                <TouchableWithoutFeedback onPress={()=>setValue('Promotional Coupons')}>
+              <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+                <Text style={{color: textColor}}>Promotional Coupon</Text>
+                <RadioButton color='#ff9000' uncheckedColor={textColor} value="Promotional Coupons" />
+              </View>
+                </TouchableWithoutFeedback>
+            </RadioButton.Group>
+            </View>
+            <TouchableOpacity onPress={() => handleCouponProceed()}>
               <View
                 style={{
                   marginVertical: 10,
@@ -156,7 +231,7 @@ export const PaymentSummary = ({route, navigation}) => {
                     fontWeight: '800',
                     color: '#FFF',
                   }}>
-                  Apply Coupon
+                  { couponLoading ? <ActivityIndicator color={'#000'}/> : 'Apply Coupon'}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -168,10 +243,13 @@ export const PaymentSummary = ({route, navigation}) => {
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
-      <ActivityIndicator animating={loading} size={"large"} style={{position: 'absolute',top:0, left: 0, right: 0, bottom: 0}}/>
+      <ActivityIndicator
+        animating={loading}
+        size={'large'}
+        style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          
           <Text style={[styles.headerContent, {color: textColor}]}>
             Payment Summary
           </Text>
@@ -184,7 +262,9 @@ export const PaymentSummary = ({route, navigation}) => {
           }}>
           <View style={styles.item}>
             <Text style={[styles.text, {color: textColor}]}>Package Price</Text>
-            <Text style={{color: 'gray'}}>{selected.packageprice || selected.packagepricedoller}</Text>
+            <Text style={{color: 'gray'}}>
+              {selected.packageprice || selected.packagepricedoller}
+            </Text>
           </View>
           <Divider />
           <View style={styles.item}>
@@ -193,7 +273,7 @@ export const PaymentSummary = ({route, navigation}) => {
           </View>
           <Divider />
           <View style={styles.item}>
-            <Text style={[styles.text, {color: textColor}]}>Mo. of Copies</Text>
+            <Text style={[styles.text, {color: textColor}]}>No. of Users</Text>
             <Text style={{color: 'gray'}}>{copies}</Text>
           </View>
           <Divider />
@@ -209,16 +289,33 @@ export const PaymentSummary = ({route, navigation}) => {
             <Text style={{color: 'gray'}}>{subtotal}</Text>
           </View>
           <Divider />
-          <View style={styles.item}>
-            <Text style={[styles.text, {color: textColor}]}>
-              IGST Tax( 18% )
-            </Text>
-            <Text style={{color: 'gray'}}>{gst}</Text>
-          </View>
+          {selected.currency === '$' ? (
+            <View style={styles.item}>
+              <Text style={[styles.text, {color: textColor}]}>
+                IGST Tax (18%)
+              </Text>
+              <Text style={{color: 'gray'}}>{gst}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.item}>
+                <Text style={[styles.text, {color: textColor}]}>
+                  SGST Tax (9%)
+                </Text>
+                <Text style={{color: 'gray'}}>{sgst}</Text>
+              </View>
+              <View style={styles.item}>
+                <Text style={[styles.text, {color: textColor}]}>
+                  CGST Tax (9%)
+                </Text>
+                <Text style={{color: 'gray'}}>{sgst}</Text>
+              </View>
+            </>
+          )}
           <Divider />
           <View style={styles.item}>
             <Text style={[styles.text, {color: textColor}]}>
-              Total Price(Including All Taxes )
+              Total Price (Including All Taxes)
             </Text>
             <Text style={{color: 'gray'}}>{total}</Text>
           </View>
@@ -226,7 +323,7 @@ export const PaymentSummary = ({route, navigation}) => {
           <View style={styles.btn}>
             <Button
               disabled={loading}
-                onPress={()=>handleProceed()}
+              onPress={() => handleProceed()}
               title="Proceed to pay"
               buttonStyle={{padding: 10}}
               containerStyle={{
@@ -236,12 +333,14 @@ export const PaymentSummary = ({route, navigation}) => {
               }}
             />
             <Button
-            disabled={loading}
+              disabled={couponStatus}
               onPress={() => setShowModal(true)}
-              title="Apply Coupon"
+              title={couponStatus ? 'Coupon Applied' : 'Apply Coupon'}
               type="outline"
               titleStyle={{color: 'red'}}
               buttonStyle={{borderColor: 'red', padding: 10}}
+              disabledStyle={{borderColor: 'green', padding: 10}}
+              disabledTitleStyle={{color: 'green'}}
               containerStyle={{width: width * 0.4, marginTop: 20}}
             />
           </View>

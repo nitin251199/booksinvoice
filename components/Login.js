@@ -69,6 +69,7 @@ export const Login = ({navigation}) => {
         // play services not available or outdated
       } else {
         // some other error happened
+        console.log('error', error);
       }
     }
     setLoading1(false);
@@ -377,27 +378,27 @@ export const Login = ({navigation}) => {
               flexDirection: 'row',
             }}>
             <Text
-              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              style={{color: textColor,  textAlign: 'left'}}>
               Continue, if you agree to the
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'TermAndConditions'})
               }>
-              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+              <Text style={{ color: '#ff9000', }}>
                 {' '}
                 T & C{' '}
               </Text>
             </TouchableOpacity>
             <Text
-              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              style={{color: textColor,textAlign: 'left'}}>
               and
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'PrivacyPolicy'})
               }>
-              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+              <Text style={{ color: '#ff9000'}}>
                 {' '}
                 Privacy Policy{' '}
               </Text>
@@ -501,27 +502,27 @@ export const Login = ({navigation}) => {
               flexDirection: 'row',
             }}>
             <Text
-              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              style={{color: textColor,textAlign: 'left'}}>
               Continue, if you agree to the
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'TermAndConditions'})
               }>
-              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+              <Text style={{ color: '#ff9000'}}>
                 {' '}
                 T & C{' '}
               </Text>
             </TouchableOpacity>
             <Text
-              style={{color: textColor, fontWeight: '700', textAlign: 'left'}}>
+              style={{color: textColor, textAlign: 'left'}}>
               and
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'PrivacyPolicy'})
               }>
-              <Text style={{fontSize: 16, color: '#ff9000', fontWeight: '800'}}>
+              <Text style={{ color: '#ff9000'}}>
                 {' '}
                 Privacy Policy{' '}
               </Text>
@@ -596,6 +597,9 @@ export const Login = ({navigation}) => {
         <Image source={require('../../images/logo.jpg')} style={styles.logo} />
       </View>
       <View style={styles.textContainer}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Homepage')}
+        >
         <Text
           style={[
             styles.text,
@@ -605,6 +609,7 @@ export const Login = ({navigation}) => {
           ]}>
           BooksInVoice
         </Text>
+        </TouchableOpacity>
         <Text style={[styles.subText, {color: '#ff9000'}]}>
           World's first online audio library
         </Text>

@@ -1,19 +1,32 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, StyleSheet, Text, View} from 'react-native';
+import {Alert, Dimensions, StyleSheet, Text, View} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import {Header as HeaderRNE, Icon} from 'react-native-elements';
+import {checkSyncData, getSyncData} from './AsyncStorage';
+import {postData} from './FetchApi';
 
 const {width, height} = Dimensions.get('window');
 
 export const AppHeader = ({navigation}) => {
-  const [show, setShow] = useState(false);
+  // const [userData, setUserData] = useState([]);
 
-  useEffect(() => {
-    setShow(false);
-    return () => {
-      setShow(false);
-    };
-  }, []);
+ 
+  // useEffect(()=>{
+  //   setTimeout(() => {
+  //     Alert.alert(
+  //       'Please Update your profile',
+  //       'To activate 15 days trial period',
+  //       [
+  //         {
+  //           text: 'Ask me later',
+  //           // onPress: () => console.log("Cancel Pressed"),
+  //           style: 'cancel',
+  //         },
+  //         {text: 'Proceed', onPress: () => navigation.navigate('EditProfile')},
+  //       ],
+  //     );
+  //   }, 3000);
+  // },[])
 
   return (
     <HeaderRNE
@@ -33,19 +46,19 @@ export const AppHeader = ({navigation}) => {
           <TouchableOpacity
             onPress={() => navigation.openDrawer()}
             style={{marginLeft: 10, marginTop: 0}}>
-            <Icon type="feather" name="menu" color="white" size={27}/>
+            <Icon type="feather" name="menu" color="white" size={27} />
           </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Homepage')}
+          >
           <Text style={styles.heading}>Booksinvoice</Text>
+          </TouchableOpacity>
         </View>
       }
       rightComponent={
-        <TouchableOpacity onPress={() => navigation.navigate('Subscriptions')}>
-          <View
-            style={styles.btn}>
-            <Text
-              style={styles.btnText}>
-              Subscribe
-            </Text>
+        <TouchableOpacity onPress={() => navigation.push('Subscriptions')}>
+          <View style={styles.btn}>
+            <Text style={styles.btnText}>Subscribe</Text>
           </View>
         </TouchableOpacity>
       }
@@ -97,8 +110,8 @@ const styles = StyleSheet.create({
     color: 'black',
     width: width * 0.75,
   },
-  btn : {
-    width:'100%',
+  btn: {
+    width: '100%',
     backgroundColor: '#e30047',
     paddingVertical: 3,
     paddingHorizontal: 7,
@@ -106,11 +119,11 @@ const styles = StyleSheet.create({
     marginRight: 5,
     marginTop: 5,
   },
-  btnText : {
+  btnText: {
     color: '#FFF',
     fontWeight: '700',
     fontSize: 10,
     textTransform: 'uppercase',
-    textAlign:'center'
-  }
+    textAlign: 'center',
+  },
 });

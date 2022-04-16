@@ -95,7 +95,7 @@ const thanksModal = () => {
       javaScriptEnabled
       originWhitelist={['*']}
       source={{
-        uri: 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/',
+        uri: route.params.total == 0 ? 'https://booksinvoice.com/Cart/getRedirectToPromotion/' : 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/',
         method: 'POST',
         body: urlEncodedData,
       }}

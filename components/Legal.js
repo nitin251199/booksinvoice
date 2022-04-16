@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import { View} from 'react-native';
+import {View} from 'react-native';
 import WebView from 'react-native-webview';
 import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
@@ -25,9 +25,10 @@ export const Legal = ({route}) => {
       return 'Terms and Conditions';
     } else if (route.params.page === 'Disclaimer') {
       return 'Disclaimer';
-    }
-    else if (route.params.page === 'Faq') {
+    } else if (route.params.page === 'Faq') {
       return 'FAQ';
+    } else if (route.params.page === 'Support') {
+      return 'Support';
     }
   };
 
@@ -44,6 +45,7 @@ export const Legal = ({route}) => {
           html: `<style>
           font {
             font-size: 36px!important;
+            color: ${textColor}!important;
           }
           .root {
               flex: 1;
@@ -60,10 +62,21 @@ export const Legal = ({route}) => {
             font-size: 36px!important;
             line-height: 1.5em;
           }
+          div.text > span {
+            color: ${textColor}!important;
+            font-size: 36px!important;
+            line-height: 1.5em;
+          }
+          div.text >  div > span {
+            color: ${textColor}!important;
+            font-size: 36px!important;
+            line-height: 1.5em;
+          }
           </style>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
           <div class="root">
           <h1 class="heading">${pagename()}</h1>
-          <div class="text">${text}</div>
+          <div class="text clrwhite">${text}</div>
           </div>`,
         }}
       />

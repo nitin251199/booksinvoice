@@ -14,6 +14,7 @@ import {
 import {AirbnbRating, Divider} from 'react-native-elements';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SamplePlay} from './SamplePlay';
 import {ThemeContext} from './ThemeContext';
 import {Picker} from '@react-native-picker/picker';
@@ -53,6 +54,7 @@ export const CategoryPage = ({navigation, route}) => {
             />
           </TouchableOpacity>
           <SamplePlay
+          navigation={navigation}
             item={item}
             propsStyles={{
               position: 'absolute',
@@ -63,6 +65,12 @@ export const CategoryPage = ({navigation, route}) => {
           />
           <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
             <TextTicker
+            onPress={() =>
+              navigation.navigate('InfoPage', {
+                state: item.id,
+                category: item.bookcategoryid,
+              })
+            }
               style={{
                 fontSize: 17,
                 color: textColor,
@@ -339,11 +347,11 @@ export const CategoryPage = ({navigation, route}) => {
               {route.params.item.bookcategory}
             </Text>
           </View>
-          <View style={{width: width * 0.9, marginLeft: 25}}>
-            <Text style={{fontSize: 16, color: textColor}}>Filter By</Text>
+          <View style={{width: width * 0.9, marginLeft: 25,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+            <MaterialCommunityIcons name='filter' color={textColor} size={25}/>
             <Picker
               selectedValue={filterState}
-              style={{borderWidth: 1, marginVertical: 10, color: textColor, borderColor: textColor}}
+              style={{borderWidth: 1, color: textColor, borderColor: textColor, width:width*0.8}}
               mode="dropdown"
               onValueChange={(itemValue, itemIndex) => {  
                 filterData(itemValue);

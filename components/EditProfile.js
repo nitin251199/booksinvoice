@@ -50,6 +50,7 @@ export const EditProfile = ({navigation}) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [show, setShow] = useState(false);
+  const [showText, setShowText] = useState(false);
 
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
@@ -90,7 +91,7 @@ export const EditProfile = ({navigation}) => {
       setCityName(result.city[0].name);
       setPhone(result.data[0].telephone);
       setEmail(result.data[0].email);
-      // setCurrentPassword(result.data[0].password)
+      blinkingText(result.data[0])
     } else if (userData.usertype === 'Organisation') {
       var body = {
         type: 1,
@@ -111,6 +112,13 @@ export const EditProfile = ({navigation}) => {
       // setCurrentPassword(result.data[0].password);
     }
   };
+
+  const blinkingText = (result) => {
+    setShowText(true);
+    setTimeout(() => {
+      setShowText(false);
+    }, 1000);
+  }
 
   const fetchAllCountry = async () => {
     var body = {type: 1};
@@ -506,6 +514,9 @@ export const EditProfile = ({navigation}) => {
             <Text style={[styles.usertype, {color: textColor}]}>
               {userData.usertype}
             </Text>
+          <Text style={{color: 'red',fontSize:9}}>
+          Update your profile & Activate Free Trial Without Adding Any Debit or Credit Card</Text>
+
           </View>
         </View>
       </Card>
@@ -520,6 +531,7 @@ export const EditProfile = ({navigation}) => {
             <ListItem.Title
               style={{fontSize: 18, fontWeight: '800', color: textColor}}>
               Update Profile
+              
             </ListItem.Title>
             <ListItem.Subtitle
               style={{fontSize: 12, fontWeight: '300', color: textColor}}>

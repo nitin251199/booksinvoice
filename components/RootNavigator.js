@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, } from 'react';
+import React, { useEffect, useLayoutEffect, } from 'react';
 import {Login} from './Login';
 import Homepage from './Homepage';
 import BottomSheet from './BottomSheet';
@@ -27,6 +27,10 @@ import { UserSubscriptions } from './UserSubscriptions';
 import { PaymentScreen } from './PaymentScreen';
 import { PaymentSummary } from './PaymentSummary';
 import { Download } from './Download';
+import { notificationListener, requestUserPermission } from './NotificationServices';
+import { useNavigation } from '@react-navigation/native';
+import { Comment } from './Comment';
+import { Cart } from './Cart';
 
 export default function RootNavigator() {
 
@@ -36,6 +40,12 @@ export default function RootNavigator() {
   const { width, height } = Dimensions.get("window")
 
   var dispatch = useDispatch();
+  const navigation = useNavigation();
+
+  useEffect(()=>{
+    requestUserPermission();
+    notificationListener(navigation);
+  },[])
 
   function MyTabs() {
     return (
@@ -64,6 +74,11 @@ export default function RootNavigator() {
           name="Subscriptions"
           component={SubscriptionComponent}
           options={{tabBarLabel: 'Subscriptions', lazy: true}}
+        />
+        <Tab.Screen
+          name="CartComponent"
+          component={CartComponent}
+          options={{tabBarLabel: 'Cart'}}
         />
         <Tab.Screen
           name="EditProfile"
@@ -108,7 +123,6 @@ export default function RootNavigator() {
             options={{header: AppHeader}}
           />
         )}
-        
         <Stack.Screen
           name="PaymentScreen"
           component={PaymentScreen}
@@ -164,6 +178,11 @@ export default function RootNavigator() {
           component={InfoPage}
           options={{header: AppHeader}}
         />
+        <Stack.Screen
+            name="Subscriptions"
+            component={Subscriptions}
+            options={{header: AppHeader}}
+          />
       </Stack.Navigator>
     );
   };
@@ -188,6 +207,40 @@ export default function RootNavigator() {
           component={MusicPlayer}
           options={{headerShown: false}}
         />
+        <Stack.Screen
+            name="Subscriptions"
+            component={Subscriptions}
+            options={{header: AppHeader}}
+          />
+          <Stack.Screen
+          name="Comment"
+          component={Comment}
+          options={{headerShown: false}}
+        />
+      </Stack.Navigator>
+    );
+  }
+
+  function CartComponent() {
+    return (
+      <Stack.Navigator screenOptions={{
+        presentation: "modal"
+      }}>
+        <Stack.Screen
+          name="Cart"
+          component={Cart}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentScreen"
+          component={PaymentScreen}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="PaymentSummary"
+          component={PaymentSummary}
+          options={{header: AppHeader}}
+        />  
       </Stack.Navigator>
     );
   }
@@ -205,7 +258,7 @@ export default function RootNavigator() {
         <Stack.Screen
           name="Login"
           component={Login}
-          options={{headerShown: false}}
+          options={{header: AppHeader}}
         />
         <Stack.Screen
           name="InfoPage"
@@ -281,6 +334,11 @@ export default function RootNavigator() {
           name="PaymentSummary"
           component={PaymentSummary}
           options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="Comment"
+          component={Comment}
+          options={{headerShown: false}}
         />
       </Stack.Navigator>
     );

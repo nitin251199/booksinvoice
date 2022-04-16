@@ -46,15 +46,15 @@ export const DrawerContent = ({navigation}) => {
 
   useEffect(() => {
     checkLogin();
-    setExpanded(false)
-    setLanguageExpanded(false)
-    setLExpanded(false)
+    setExpanded(false);
+    setLanguageExpanded(false);
+    setLExpanded(false);
   }, [isDrawerOpen]);
 
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key) {
+    if (key[0]) {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
     } else {
@@ -117,13 +117,13 @@ export const DrawerContent = ({navigation}) => {
               fontSize: 22,
             },
           ]}>
-          {userData.user_name}
+          {userData?.user_name}
         </Text>
       </View>
 
       <ListItem
         onPress={() => {
-          if (userData.length !== 0) {
+          if (userData) {
             navigation.navigate('EditProfile');
             navigation.closeDrawer();
           } else {
@@ -135,7 +135,9 @@ export const DrawerContent = ({navigation}) => {
         <FontAwesome5 name="user-alt" size={20} color={textColor} />
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
-            <Text style={[styles.text, {color: textColor}]}>Log In</Text>
+            <Text style={[styles.text, {color: textColor}]}>
+              {userData ? 'Dashboard' : 'Log In'}
+            </Text>
           </ListItem.Title>
           <ListItem.Subtitle style={{fontSize: 12, color: '#999'}}>
             <Text>Listen Best Audiobooks</Text>
@@ -159,7 +161,7 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-          if (userData.length !== 0) {
+          if (userData) {
             navigation.navigate('FavouriteBooks');
             navigation.closeDrawer();
           } else {
@@ -399,8 +401,10 @@ export const DrawerContent = ({navigation}) => {
       </ListItem>
 
       <ListItem
-        // onPress={() => {navigation.navigate('FAQ')
-        // navigation.closeDrawer();}}
+        onPress={() => {
+          navigation.navigate('Legal', {page: 'Support'});
+          navigation.closeDrawer();
+        }}
         containerStyle={{backgroundColor: backgroundColor}}>
         <MaterialIcons name="support-agent" size={23} color={textColor} />
         <ListItem.Content style={{paddingLeft: 15}}>

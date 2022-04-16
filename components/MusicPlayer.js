@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   ScrollView,
   FlatList,
+  Share,
 } from 'react-native';
 
 import TrackPlayer, {
@@ -30,6 +31,7 @@ import Slider from '@react-native-community/slider';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Fontisto from 'react-native-vector-icons/Fontisto';
 import {postData, ServerURL} from './FetchApi';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {ThemeContext} from './ThemeContext';
@@ -324,7 +326,7 @@ const MusicPlayer = ({route, navigation}) => {
           <View
             style={[style.modalView, {backgroundColor: modelBackgroundColor}]}>
             <Text style={[style.modalText, {color: textColor}]}>
-              Please Buy Subscription to listen further !
+              Buy Subscription Listen Great Audiobooks !
             </Text>
             <Pressable
               style={[style.button, {backgroundColor: '#ff9000'}]}
@@ -762,6 +764,26 @@ const MusicPlayer = ({route, navigation}) => {
     )
   }
 
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message:
+          'Booksinvoice - Download and listen books for free.',
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
   return (
     <>
         <ScrollView showsVerticalScrollIndicator={false}
@@ -905,17 +927,23 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity>
 
-          {/* <TouchableOpacity>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity> */}
-
-          <TouchableOpacity onPress={() => refRBSheet.current.open()}>
-            <MaterialCommunityIcons
-              name="comment-text-outline"
-              size={30}
+          <TouchableOpacity onPress={() => navigation.navigate('Comment', {id:route.params.id})}>
+            <Fontisto
+              style={{marginTop:4}}
+              name="commenting"
+              size={26}
               color="#888888"
             />
           </TouchableOpacity>
+
+          {/* <TouchableOpacity onPress={() => refRBSheet.current.open()}>
+            <Fontisto
+              style={{marginTop:4}}
+              name="commenting"
+              size={26}
+              color="#888888"
+            />
+          </TouchableOpacity> */}
 
           <TouchableOpacity onPress={() => setSpeedModalVisible(true)}>
             <MaterialCommunityIcons
@@ -936,6 +964,21 @@ const MusicPlayer = ({route, navigation}) => {
           </TouchableOpacity>
         </View>
       </View>
+      <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
+        <View style={style.bottomIconContainer}>
+        <TouchableOpacity>
+            <MaterialCommunityIcons name="download" size={30} color="#888888" />
+          </TouchableOpacity>
+        
+          <TouchableOpacity onPress={onShare}>
+            <MaterialCommunityIcons
+              name="share"
+              size={30}
+              color="#888888"
+            />
+          </TouchableOpacity>
+          </View>
+        </View>
 
       {
         route.params.chapters.length > 1 && <View style={{ width: width, backgroundColor:backgroundColor,padding:15}}>
@@ -1048,7 +1091,7 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 0,
     marginBottom: 15,
     width: '80%',
   },

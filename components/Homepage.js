@@ -1,10 +1,11 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   ScrollView,
   Text,
   BackHandler,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -18,6 +19,7 @@ import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import {ThemeContext} from './ThemeContext';
 import {useFocusEffect} from '@react-navigation/native';
+import { checkSyncData, getSyncData } from './AsyncStorage';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -55,6 +57,115 @@ export default function Homepage({navigation, route}) {
   const [refreshing, setRefreshing] = React.useState(false);
 
   var dispatch = useDispatch();
+
+  const fetchProfile = async () => {
+    var key = await checkSyncData();
+
+    if (key[0]) {
+      var userData = await getSyncData(key[0]);
+      // setUserData(userData);
+      if (userData === null) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('Login'),
+            },
+          ],
+        );
+      }
+      else{
+
+        fetchUserData(userData);
+      }
+    }
+  };
+
+  const fetchUserData = async userData => {
+    if (userData.usertype === 'Individual') {
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: 'individual',
+      };
+      var result = await postData('api/getProfile', body);
+      if (
+        result.data[0].username ||
+        result.data[0].address ||
+        result.data[0].zip_pin ||
+        result.state[0].name ||
+        result.city[0].name ||
+        result.data[0].telephone ||
+        result.data[0].email === ''
+      ) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('EditProfile'),
+            },
+          ],
+        );
+      }
+    } else if (userData.usertype === 'Organisation') {
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: 'organisation',
+      };
+      var result = await postData('api/getProfile', body);
+      if (
+        result.data[0].orgnisationname ||
+        result.data[0].address ||
+        result.data[0].postalcode ||
+        result.city[0].name ||
+        result.state[0].name ||
+        result.data[0].orgnisationcontact ||
+        result.data[0].orgnisationemail === ''
+      ) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('EditProfile'),
+            },
+          ],
+        );
+      }
+    }
+  };
+
+  // useEffect(() => {
+  //   fetchUserData();
+  // }, [userData]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchProfile();
+    }, 2500);
+  }, []);
+
 
   const fetch = async () => {
     var body = {type: 1};
@@ -215,6 +326,7 @@ export default function Homepage({navigation, route}) {
           }}
         />
         <SamplePlay
+          navigation={navigation}
           item={item}
           propsStyles={{
             position: 'absolute',

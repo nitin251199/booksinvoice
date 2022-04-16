@@ -100,6 +100,10 @@ export default function BottomSheet({ state, descriptors, navigation, position }
             return <FontAwesome5 name="crown" size={18} color={isFocused ? '#ff9000' : textColor} />;
           }
 
+          if (options.tabBarLabel == 'Cart') {
+            return <FontAwesome5 name="shopping-cart" size={18} color={isFocused ? '#ff9000' : textColor} />;
+          }
+
           if (options.tabBarLabel == 'Profile') {
             return <FontAwesome5 name="user-alt" size={17} color={isFocused ? '#ff9000' : textColor} />;
           }

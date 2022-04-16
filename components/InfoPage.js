@@ -17,8 +17,9 @@ import {
 import {AirbnbRating} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MI from 'react-native-vector-icons/MaterialIcons';
+import {useDispatch} from 'react-redux';
+import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
 import {ThemeContext} from './ThemeContext';
@@ -33,20 +34,18 @@ export default function InfoPage({route, navigation}) {
 
   const textColor = theme === 'dark' ? '#FFF' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
-  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#FFF';
 
   const [book, setBook] = useState([]);
   const [similar, setSimilar] = useState([]);
   // const [refresh, setRefresh] = useState(false);
 
+  var dispatch = useDispatch();
+
   const [newArrivals, setNewArrivals] = useState([]);
   const [topRated, setTopRated] = useState([]);
   const [popularBooks, setPopularBooks] = useState([]);
   const [premiumBooks, setPremiumBooks] = useState([]);
-  const [comments, setComments] = useState([]);
-  const [commentModal, setCommentModal] = useState(false);
   const [chapters, setChapters] = useState([]);
-  const [show, setShow] = useState(false);
 
   const fetchBook = async id => {
     var body = {type: '1', books_id: id};
@@ -85,84 +84,8 @@ export default function InfoPage({route, navigation}) {
     setPremiumBooks(result.data);
   };
 
-  const fetchAllComments = async () => {
-    var body = {type: '1', books_id: id};
-    var result = await postData('api/getComment', body);
-    if (result.msg === 'Success') {
-      setComments(result.data);
-    }
-  };
-
-  const renderComments = ({item}) => {
-    return (
-      <View style={styles.commentContainer}>
-        <View>
-          <Text style={[styles.commentFooter, {color: '#999'}]}>
-            By {item.name} on {item.created_on}
-          </Text>
-        </View>
-        <View>
-          <Text style={[styles.commentHeader, {color: textColor}]}>
-            {item.comment}
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
-  const commentsModal = () => {
-    return (
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={commentModal}
-        onRequestClose={() => {
-          setCommentModal(false);
-        }}>
-        <View style={styles.centeredView}>
-          <View
-            style={[
-              {
-                backgroundColor: modelBackgroundColor,
-                padding: 20,
-                borderRadius: 10,
-              },
-            ]}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingBottom: 20,
-              }}>
-              <Text style={[styles.modalText, {color: textColor}]}>
-                Comments
-              </Text>
-              <TouchableOpacity onPress={() => setCommentModal(false)}>
-                <MaterialCommunityIcons
-                  name="close"
-                  size={20}
-                  color={textColor}
-                />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={comments}
-              // persistentScrollbar
-              // nestedScrollEnabled
-              maxHeight={height * 0.43}
-              renderItem={renderComments}
-              keyExtractor={item => item.id}
-            />
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   useEffect(() => {
     fetchBook(id);
-    fetchAllComments();
     fetchSimilarBooks(categoryid);
     fetchNewArrivals();
     fetchTopRated();
@@ -212,26 +135,24 @@ export default function InfoPage({route, navigation}) {
     setNumLines(textShown ? undefined : 3);
   }, [textShown]);
 
-
   const showChapters = ({item, index}) => {
     return (
       <TouchableOpacity
-      onPress={() => {
-        navigation.navigate('MusicPlayer', {
-          state: book,
-          chapters: chapters,
-          index: index,
-        });
-        // setShow(true)
-      }}
-      >
-        <View
-        style={{
-          flexDirection: 'row',
-          padding: 10,
-          alignItems: 'center',
+        onPress={() => {
+          navigation.navigate('MusicPlayer', {
+            state: book,
+            chapters: chapters,
+            index: index,
+            id: id,
+          });
+          // setShow(true)
         }}>
-        
+        <View
+          style={{
+            flexDirection: 'row',
+            padding: 10,
+            alignItems: 'center',
+          }}>
           <Image
             source={{
               uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
@@ -248,8 +169,7 @@ export default function InfoPage({route, navigation}) {
             }}>
             {item.chaptername}
           </Text>
-        
-      </View>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -277,6 +197,7 @@ export default function InfoPage({route, navigation}) {
           />
         </TouchableOpacity>
         <SamplePlay
+          navigation={navigation}
           item={item}
           propsStyles={{
             position: 'absolute',
@@ -349,6 +270,20 @@ export default function InfoPage({route, navigation}) {
         </View>
       </View>
     );
+  };
+
+  const addToCart = async () => {
+    var key = await checkSyncData();
+
+    if (key[0]) {
+      var userData = await getSyncData(key[0]);
+      if (userData !== null) {
+        // dispatch({type: 'ADD_CART', payload: book});
+        ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
+      } else {
+        navigation.navigate('Login');
+      }
+    }
   };
 
   // const onRefresh = () => {
@@ -598,40 +533,6 @@ export default function InfoPage({route, navigation}) {
                 </View>
               </View>
             ) : null}
-
-            <View
-              style={[
-                styles.textWrapper,
-                {
-                  flexDirection: 'column',
-                  // alignItems: 'center'
-                },
-              ]}>
-              <View style={{flexDirection: 'row'}}>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (comments.length == 0) {
-                      ToastAndroid.show('No Comments yet', ToastAndroid.SHORT);
-                    } else {
-                      setCommentModal(true);
-                    }
-                  }}>
-                  <Text
-                    style={[
-                      styles.text,
-                      {
-                        color: textColor,
-                        fontSize: 16,
-                        width: width * 0.48,
-                        paddingVertical: 15,
-                      },
-                    ]}>
-                    Show All Comments...
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              <View>{commentsModal()}</View>
-            </View>
           </View>
 
           <View style={styles.btnContainer}>
@@ -640,7 +541,8 @@ export default function InfoPage({route, navigation}) {
                 navigation.navigate('MusicPlayer', {
                   state: book,
                   chapters: chapters,
-                  index: null
+                  index: null,
+                  id: id,
                 });
                 // setShow(true)
               }}>
@@ -648,8 +550,7 @@ export default function InfoPage({route, navigation}) {
                 style={[
                   styles.btn,
                   {
-                    width: width * 0.62,
-                    marginRight: 10,
+                    width: width * 0.92,
                   },
                 ]}>
                 <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
@@ -658,38 +559,65 @@ export default function InfoPage({route, navigation}) {
                 <MaterialCommunityIcons name="play" size={30} color="#fff" />
               </View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={onShare}>
-              <View style={styles.btn}>
-                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-                  SHARE
-                </Text>
-                <MaterialCommunityIcons name="share" size={30} color="#fff" />
-              </View>
-            </TouchableOpacity>
           </View>
+          {book.premiumtype === 'Premium' || book.premiumtype === 'Both' ? (
+            <View
+              style={{
+                ...styles.btnContainer,
+                paddingHorizontal: 0,
+                paddingVertical: 0,
+              }}>
+              <TouchableOpacity onPress={() => addToCart()}>
+                <View
+                  style={[
+                    styles.btn,
+                    {
+                      width: width * 0.92,
+                      marginBottom: 10,
+                    },
+                  ]}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '800',
+                      color: '#fff',
+                      marginRight: 10,
+                    }}>
+                    ADD TO CART
+                  </Text>
+                  <MaterialCommunityIcons name="cart" size={25} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <></>
+          )}
 
-          {
-            chapters.length > 1 && <View
-            style={{
-              width: width,
-              backgroundColor: backgroundColor,
-              padding: 15,
-              marginBottom:15
-            }}>
-            <Text style={{
-              fontSize: 16,
-              fontWeight: '800',
-              color: textColor,
-              marginBottom:15,
-              paddingLeft:5
-            }}>Chapters</Text>
-            <FlatList
-              data={chapters}
-              renderItem={showChapters}
-              keyExtractor={(item, index) => index}
-            />
-          </View>
-          }
+          {chapters.length > 1 && (
+            <View
+              style={{
+                width: width,
+                backgroundColor: backgroundColor,
+                padding: 15,
+                marginBottom: 15,
+              }}>
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '800',
+                  color: textColor,
+                  marginBottom: 15,
+                  paddingLeft: 5,
+                }}>
+                Chapters
+              </Text>
+              <FlatList
+                data={chapters}
+                renderItem={showChapters}
+                keyExtractor={(item, index) => index}
+              />
+            </View>
+          )}
 
           <View style={{paddingBottom: 10, paddingLeft: 20}}>
             <Text
@@ -936,6 +864,7 @@ const styles = StyleSheet.create({
   btnContainer: {
     width: width,
     paddingHorizontal: 10,
+    paddingVertical: 10,
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',

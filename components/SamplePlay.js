@@ -1,3 +1,4 @@
+import { NavigationContainer } from '@react-navigation/native';
 import React from 'react';
 import {Alert, StyleSheet, View} from 'react-native';
 import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
@@ -6,7 +7,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {useSelector} from 'react-redux';
 import {ServerURL} from './FetchApi';
 
-export const SamplePlay = ({item, propsStyles, id}) => {
+export const SamplePlay = ({item, propsStyles, navigation}) => {
   const [selected, setSelected] = React.useState({id:''});
   var time = 0;
   var s = 0;
@@ -46,7 +47,7 @@ export const SamplePlay = ({item, propsStyles, id}) => {
         Alert.alert(
           'Booksinvoice',
           'Please subscribe to listen further!',
-          [{text: 'OK'}],
+          [{text: 'OK',onPress: () => navigation.navigate('Subscriptions')}],
           {cancelable: true},
         );
         clearTimeout(t);
