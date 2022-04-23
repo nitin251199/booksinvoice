@@ -4,29 +4,63 @@ import {TouchableOpacity} from 'react-native-gesture-handler';
 import {Header as HeaderRNE, Icon} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
+import { Badge } from 'react-native-paper';
+import { useSelector } from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
 export const AppHeader = ({navigation}) => {
-  // const [userData, setUserData] = useState([]);
 
- 
-  // useEffect(()=>{
-  //   setTimeout(() => {
-  //     Alert.alert(
-  //       'Please Update your profile',
-  //       'To activate 15 days trial period',
-  //       [
-  //         {
-  //           text: 'Ask me later',
-  //           // onPress: () => console.log("Cancel Pressed"),
-  //           style: 'cancel',
-  //         },
-  //         {text: 'Proceed', onPress: () => navigation.navigate('EditProfile')},
-  //       ],
-  //     );
-  //   }, 3000);
-  // },[])
+  var cart = useSelector(state => state?.cart);
+  var keys = Object.keys(cart);
+  
+  const appHeader = () => {
+    return (
+      <SafeAreaView>
+      <StatusBar barStyle='dark-content' translucent backgroundColor='#bf6d01' />
+      <View
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: width,
+          backgroundColor: "#ff9000",
+          height: height * 0.065,
+          flexDirection: 'row',
+          paddingHorizontal:10
+        }}>
+        <View style={{flexDirection: 'row', width: 200, alignItems: 'center'}}>
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer()}
+            style={{marginLeft: 10, marginTop: 0}}>
+            <Icon type="feather" name="menu" color="white" size={27} />
+            {keys.length > 0 && (
+            <Badge
+              size={15}
+              style={{
+                backgroundColor: '#e30047',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+              }}>
+            </Badge>
+          )}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Homepage')}
+          >
+          <Text style={styles.heading}>Booksinvoice</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity onPress={() => navigation.push('Subscriptions')}>
+          <View style={styles.btn}>
+            <Text style={styles.btnText}>Subscribe</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+    )
+  }
 
   return (
     <HeaderRNE
@@ -47,6 +81,17 @@ export const AppHeader = ({navigation}) => {
             onPress={() => navigation.openDrawer()}
             style={{marginLeft: 10, marginTop: 0}}>
             <Icon type="feather" name="menu" color="white" size={27} />
+            {keys.length > 0 && (
+            <Badge
+              size={12}
+              style={{
+                backgroundColor: '#e30047',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+              }}>
+            </Badge>
+          )}
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => navigation.navigate('Homepage')}

@@ -375,7 +375,6 @@ const styles = StyleSheet.create({
   btn: {
     justifyContent: 'space-between',
     flexDirection: 'row',
-    paddingTop: 30,
   },
   centeredView: {
     flex: 1,

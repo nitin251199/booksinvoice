@@ -19,7 +19,7 @@ import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import {ThemeContext} from './ThemeContext';
 import {useFocusEffect} from '@react-navigation/native';
-import { checkSyncData, getSyncData } from './AsyncStorage';
+import {checkSyncData, getSyncData} from './AsyncStorage';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -80,9 +80,7 @@ export default function Homepage({navigation, route}) {
             },
           ],
         );
-      }
-      else{
-
+      } else {
         fetchUserData(userData);
       }
     }
@@ -96,15 +94,17 @@ export default function Homepage({navigation, route}) {
         user_type: 'individual',
       };
       var result = await postData('api/getProfile', body);
+
       if (
-        result.data[0].username ||
-        result.data[0].address ||
-        result.data[0].zip_pin ||
-        result.state[0].name ||
-        result.city[0].name ||
-        result.data[0].telephone ||
+        result.data[0].username === '' ||
+        result.data[0].address === '' ||
+        result.data[0].zip_pin === '' ||
+        result.state[0].name === '' ||
+        result.city[0].name === '' ||
+        result.data[0].telephone === '' ||
         result.data[0].email === ''
       ) {
+        console.log('result', result);
         Alert.alert(
           'Update Your Profile & Activate Free Trial',
           'Without Adding Any Debit or Credit Card',
@@ -129,12 +129,12 @@ export default function Homepage({navigation, route}) {
       };
       var result = await postData('api/getProfile', body);
       if (
-        result.data[0].orgnisationname ||
-        result.data[0].address ||
-        result.data[0].postalcode ||
-        result.city[0].name ||
-        result.state[0].name ||
-        result.data[0].orgnisationcontact ||
+        result.data[0].orgnisationname === '' ||
+        result.data[0].address === '' ||
+        result.data[0].postalcode === '' ||
+        result.city[0].name === '' ||
+        result.state[0].name === '' ||
+        result.data[0].orgnisationcontact === '' ||
         result.data[0].orgnisationemail === ''
       ) {
         Alert.alert(
@@ -165,7 +165,6 @@ export default function Homepage({navigation, route}) {
       fetchProfile();
     }, 2500);
   }, []);
-
 
   const fetch = async () => {
     var body = {type: 1};
@@ -199,18 +198,18 @@ export default function Homepage({navigation, route}) {
 
   const DisplayBanner = ({item}) => {
     return (
-        <View key={item.id}>
-          <Image
-            style={{
-              width: BannerWidth,
-              height: BannerHeight,
-              resizeMode: 'stretch',
-            }}
-            source={{
-              uri: `${ServerURL}/admin/upload/banner/${item.bannername}`,
-            }}
-          />
-        </View>
+      <View key={item.id}>
+        <Image
+          style={{
+            width: BannerWidth,
+            height: BannerHeight,
+            resizeMode: 'stretch',
+          }}
+          source={{
+            uri: `${ServerURL}/admin/upload/banner/${item.bannername}`,
+          }}
+        />
+      </View>
     );
   };
 
@@ -400,7 +399,6 @@ export default function Homepage({navigation, route}) {
       </View>
     );
   };
-  
 
   return (
     <View>
@@ -516,16 +514,26 @@ export default function Homepage({navigation, route}) {
                 </Text>
               </TouchableOpacity>
             </View>
-              <View style={styles.categoryImage}>
-                <FlatList
-                  data={data}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
-                  renderItem={({item}) => <DisplayItem item={item} />}
-                  keyExtractor={item => item.id}
-                />
-              </View>
+            <View style={styles.categoryImage}>
+              <FlatList
+                data={data}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: width,
+                    }}>
+                    <ActivityIndicator size={'large'} />
+                  </View>
+                }
+                renderItem={({item}) => <DisplayItem item={item} />}
+                keyExtractor={item => item.id}
+              />
+            </View>
 
             <Divider />
             <View
@@ -580,7 +588,17 @@ export default function Homepage({navigation, route}) {
                 data={topRated}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: width,
+                    }}>
+                    <ActivityIndicator size={'large'} />
+                  </View>
+                }
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -638,7 +656,17 @@ export default function Homepage({navigation, route}) {
                 data={popularBooks}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: width,
+                    }}>
+                    <ActivityIndicator size={'large'} />
+                  </View>
+                }
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -697,7 +725,17 @@ export default function Homepage({navigation, route}) {
                 data={premiumBooks}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: width,
+                    }}>
+                    <ActivityIndicator size={'large'} />
+                  </View>
+                }
                 renderItem={({item}) => <DisplayItem item={item} />}
                 keyExtractor={item => item.id}
               />
@@ -716,12 +754,25 @@ export default function Homepage({navigation, route}) {
             height={height * 0.2}
             activeOpacity={1}
             width={width}
+            imageProps={{
+              resizeMode: 'stretch'
+            }}
             containerStyle={{marginVertical: 10}}
           />
           <View style={{paddingLeft: 20}}>
             <FlatList
               data={otherCategory}
-              ListEmptyComponent={<View style={{display:'flex',justifyContent:'center',alignItems:'center',width:width}}><ActivityIndicator  size={'large'}/></View>}
+              ListEmptyComponent={
+                <View
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: width,
+                  }}>
+                  <ActivityIndicator size={'large'} />
+                </View>
+              }
               renderItem={({item, index}) => (
                 <DisplayOtherCategory
                   item={item}

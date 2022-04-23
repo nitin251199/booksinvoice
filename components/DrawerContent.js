@@ -17,7 +17,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useDrawerStatus} from '@react-navigation/drawer';
 import {ThemeContext} from './ThemeContext';
-import {List} from 'react-native-paper';
+import {Badge, List} from 'react-native-paper';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
@@ -33,6 +34,10 @@ export const DrawerContent = ({navigation}) => {
   const [languageExpanded, setLanguageExpanded] = React.useState(false);
   const [lexpanded, setLExpanded] = React.useState(false);
   const [userData, setUserData] = React.useState([]);
+
+  var cart = useSelector(state => state?.cart);
+  var isSub = useSelector(state => state.isSubscribed);
+  var keys = Object.keys(cart);
 
   const fetchAllCategory = async () => {
     var body = {type: 1};
@@ -180,6 +185,35 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
+          navigation.navigate('Cart');
+          navigation.closeDrawer();
+        }}
+        containerStyle={{backgroundColor: backgroundColor}}>
+        <View>
+          <FontAwesome5 name="shopping-cart" size={18} color={textColor} />
+          {keys.length > 0 && (
+            <Badge
+              size={15}
+              style={{
+                color: textColor,
+                backgroundColor: '#ff9000',
+                position: 'absolute',
+                top: 0,
+                right: 0,
+              }}>
+              {keys.length}
+            </Badge>
+          )}
+        </View>
+        <ListItem.Content style={{paddingLeft: 17}}>
+          <ListItem.Title>
+            <Text style={[styles.text, {color: textColor}]}>My Cart</Text>
+          </ListItem.Title>
+        </ListItem.Content>
+      </ListItem>
+
+      <ListItem
+        onPress={() => {
           navigation.navigate('Subscriptions');
           navigation.closeDrawer();
         }}
@@ -188,7 +222,7 @@ export const DrawerContent = ({navigation}) => {
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>
-              Buy Subscription
+              { isSub ? 'My Subscription' : 'Buy Subscription'}
             </Text>
           </ListItem.Title>
         </ListItem.Content>

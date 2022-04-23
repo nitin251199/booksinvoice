@@ -109,7 +109,7 @@ export const Subscriptions = ({navigation}) => {
       } 
     }
     else{
-      ToastAndroid.show('Please Login First', ToastAndroid.SHORT);
+      navigation.navigate('Login');
     }  
   }
 

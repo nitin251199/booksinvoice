@@ -7,8 +7,10 @@ import {
   Animated,
   Text,
 } from 'react-native';
+import { Badge } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { useSelector } from 'react-redux';
 import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
@@ -21,6 +23,8 @@ export default function BottomSheet({ state, descriptors, navigation, position }
   // const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
   // const [user, setUser] = React.useState('Login & Buy');
 
+  var cart = useSelector(state => state?.cart);
+  var keys = Object.keys(cart);
 
   return (
   <>
@@ -101,7 +105,16 @@ export default function BottomSheet({ state, descriptors, navigation, position }
           }
 
           if (options.tabBarLabel == 'Cart') {
-            return <FontAwesome5 name="shopping-cart" size={18} color={isFocused ? '#ff9000' : textColor} />;
+            return (
+            <>
+            <FontAwesome5 name="shopping-cart" size={18} color={isFocused ? '#ff9000' : textColor} />
+            {
+              keys.length > 0 && <Badge size={15} style={{color:textColor,backgroundColor:'#ff9000',position:'absolute',top:0,right:0}}>
+              {keys.length}
+              </Badge>
+            }
+            </>)
+            ;
           }
 
           if (options.tabBarLabel == 'Profile') {
@@ -122,11 +135,7 @@ export default function BottomSheet({ state, descriptors, navigation, position }
           }
         };
 
-        const inputRange = state.routes.map((_, i) => i);
-        const opacity = position.interpolate({
-          inputRange,
-          outputRange: inputRange.map(i => (i === index ? 1 : 0)),
-        });
+        
 
         return (
           <TouchableOpacity

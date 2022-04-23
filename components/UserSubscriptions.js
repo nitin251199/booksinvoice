@@ -7,10 +7,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Divider} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
 
@@ -47,7 +49,7 @@ export const UserSubscriptions = ({navigation}) => {
             paddingVertical: 15,
             paddingLeft: 20,
           }}>
-          <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
+          <View style={{width: width * 0.85, justifyContent: 'flex-start'}}>
             <Text
               style={{
                 fontSize: 17,
@@ -69,6 +71,18 @@ export const UserSubscriptions = ({navigation}) => {
             </Text>
             <Text style={{color: textColor}}>Order Id: {item.oid}</Text>
           </View>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Invoice',{item});
+            }}>
+            <View>
+              <FontAwesome5
+                name="file-invoice"
+                size={21}
+                color={textColor}
+              />
+            </View>
+          </TouchableOpacity>
         </View>
         <Divider />
       </View>

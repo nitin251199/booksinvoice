@@ -11,6 +11,8 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
 import {
   Avatar,
@@ -20,6 +22,7 @@ import {
   ListItem,
 } from 'react-native-elements';
 import {useDispatch} from 'react-redux';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {checkSyncData, getSyncData, removeDatasync, storeDatasync} from './AsyncStorage';
 import {postData} from './FetchApi';
 import { ThemeContext } from './ThemeContext';
@@ -51,6 +54,7 @@ export const EditProfile = ({navigation}) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [show, setShow] = useState(false);
   const [showText, setShowText] = useState(false);
+  const [showPass, setShowPass] = useState(true);
 
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
@@ -91,7 +95,8 @@ export const EditProfile = ({navigation}) => {
       setCityName(result.city[0].name);
       setPhone(result.data[0].telephone);
       setEmail(result.data[0].email);
-      blinkingText(result.data[0])
+      setCurrentPassword(result.data[0].password);
+      blinkingText(result)
     } else if (userData.usertype === 'Organisation') {
       var body = {
         type: 1,
@@ -109,15 +114,47 @@ export const EditProfile = ({navigation}) => {
       setCountry(result.data[0].country_id);
       setPhone(result.data[0].orgnisationcontact);
       setEmail(result.data[0].orgnisationemail);
-      // setCurrentPassword(result.data[0].password);
+      setCurrentPassword(result.data[0].password);
     }
   };
 
   const blinkingText = (result) => {
-    setShowText(true);
-    setTimeout(() => {
-      setShowText(false);
-    }, 1000);
+    if (userData.usertype === 'Individual') {
+      if (
+        result.data[0].username === '' ||
+        result.data[0].address === '' ||
+        result.data[0].zip_pin === '' ||
+        result.state[0].name === '' ||
+        result.city[0].name === '' ||
+        result.data[0].telephone === '' ||
+        result.data[0].email === ''
+      )
+      {
+        setShowText(true);
+      }
+      else
+      {
+        setShowText(false);
+      }
+    }
+    else if (userData.usertype === 'Organisation') {
+      if (
+        result.data[0].orgnisationname === '' ||
+        result.data[0].address === '' ||
+        result.data[0].postalcode === '' ||
+        result.city[0].name === '' ||
+        result.state[0].name === '' ||
+        result.data[0].orgnisationcontact === '' ||
+        result.data[0].orgnisationemail === ''
+      )
+      {
+        setShowText(true);
+      }
+      else
+      {
+        setShowText(false);
+      }
+    }
   }
 
   const fetchAllCountry = async () => {
@@ -205,8 +242,9 @@ export const EditProfile = ({navigation}) => {
         var result = await postData('api/getProfileedit', body);
         // alert(userData.id)
         if (result.data == 1) {
-          alert('Profile Updated Successfully');
+          Alert.alert('Profile Updated Successfully','Your trial pack is active now!');
           fetchProfile();
+          fetchUserData();
           toggleOverlay();
           storeDatasync(userData.id, {
             id: userData.id,
@@ -252,8 +290,9 @@ export const EditProfile = ({navigation}) => {
         var result = await postData('api/getProfileedit', body);
         // alert(userData.id)
         if (result.data == 1) {
-          alert('Profile Updated Successfully');
+          Alert.alert('Profile Updated Successfully','Your trial pack is active now!');
           fetchProfile();
+          fetchUserData();
           toggleOverlay();
           storeDatasync(userData.id, {
             id: userData.id,
@@ -290,6 +329,7 @@ export const EditProfile = ({navigation}) => {
         transparent={true}
         visible={visible}>
         <View style={styles.centeredView}>
+          <KeyboardAvoidingView></KeyboardAvoidingView>
           <View style={[styles.modalView, {backgroundColor: backgroundColor}]}>
             <View style={{margin: 10}}>
               <Text
@@ -401,14 +441,23 @@ export const EditProfile = ({navigation}) => {
                 placeholder="Email"
                 placeholderTextColor="#999"
               />
+              <View style={[styles.textInput, {borderBottomColor: 'gray',flexDirection:'row',alignItems:'center'}]}>
               <TextInput
                 value={currentPassword}
-                secureTextEntry
+                secureTextEntry={showPass}
                 onChangeText={text => setCurrentPassword(text)}
-                style={[styles.textInput, {borderBottomColor: 'gray',color:textColor}]}
+                style={{color:textColor,width: width * 0.72}}
                 placeholder="Current Password"
                 placeholderTextColor="#999"
               />
+              <MaterialCommunityIcons
+                onPress={() => setShowPass(!showPass)}
+                style={{marginHorizontal: 10}}
+                name={showPass ? 'eye-off' : 'eye'}
+                size={25}
+                color={textColor}
+              />
+              </View>
               <TextInput
                 value={newPassword}
                 secureTextEntry
@@ -467,6 +516,7 @@ export const EditProfile = ({navigation}) => {
       type: 'SET_STATUS',
       payload: {isLogin: false, isSubscribed: false},
     });
+    dispatch({type:'REMOVE_ALL_CART'})
     storeDatasync('isSubscribed', false);
     navigation.navigate('Homepage');
     // dispatch({type: 'REMOVE_USER', payload: userData.id});
@@ -514,7 +564,7 @@ export const EditProfile = ({navigation}) => {
             <Text style={[styles.usertype, {color: textColor}]}>
               {userData.usertype}
             </Text>
-          <Text style={{color: 'red',fontSize:9}}>
+          <Text style={{color: 'red',fontSize:9, display: showText ? 'flex': 'none'}}>
           Update your profile & Activate Free Trial Without Adding Any Debit or Credit Card</Text>
 
           </View>
@@ -630,8 +680,8 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 18,
-    fontWeight: '800',
     textAlign: 'center',
+    fontWeight: '800',
     padding: 3,
   },
   useremail: {

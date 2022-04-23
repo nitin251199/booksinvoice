@@ -18,7 +18,7 @@ import {AirbnbRating} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
@@ -40,6 +40,9 @@ export default function InfoPage({route, navigation}) {
   // const [refresh, setRefresh] = useState(false);
 
   var dispatch = useDispatch();
+
+  var cart = useSelector(state => state?.cart);
+  var keys = Object.keys(cart);
 
   const [newArrivals, setNewArrivals] = useState([]);
   const [topRated, setTopRated] = useState([]);
@@ -92,26 +95,6 @@ export default function InfoPage({route, navigation}) {
     fetchPopularBooks();
     fetchPremiumBooks();
   }, []);
-
-  const onShare = async () => {
-    try {
-      const result = await Share.share({
-        message:
-          'React Native | A framework for building native apps using React',
-      });
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // shared with activity type of result.activityType
-        } else {
-          // shared
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-      }
-    } catch (error) {
-      alert(error.message);
-    }
-  };
 
   const [showMoreButton, setShowMoreButton] = useState(false);
   const [textShown, setTextShown] = useState(false);
@@ -278,8 +261,9 @@ export default function InfoPage({route, navigation}) {
     if (key[0]) {
       var userData = await getSyncData(key[0]);
       if (userData !== null) {
-        // dispatch({type: 'ADD_CART', payload: book});
+        dispatch({type: 'ADD_CART', payload: [book.id, book]});
         ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
+        navigation.setParams({x:''})
       } else {
         navigation.navigate('Login');
       }
@@ -567,27 +551,62 @@ export default function InfoPage({route, navigation}) {
                 paddingHorizontal: 0,
                 paddingVertical: 0,
               }}>
-              <TouchableOpacity onPress={() => addToCart()}>
-                <View
-                  style={[
-                    styles.btn,
-                    {
-                      width: width * 0.92,
-                      marginBottom: 10,
-                    },
-                  ]}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '800',
-                      color: '#fff',
-                      marginRight: 10,
-                    }}>
-                    ADD TO CART
-                  </Text>
-                  <MaterialCommunityIcons name="cart" size={25} color="#fff" />
-                </View>
-              </TouchableOpacity>
+              {keys.includes(book.id) ? (
+                <TouchableOpacity>
+                  <View
+                    style={[
+                      styles.btn,
+                      {
+                        width: width * 0.92,
+                        marginBottom: 10,
+                        backgroundColor: backgroundColor,
+                        borderColor: textColor,
+                        borderWidth: 1,
+                      },
+                    ]}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '800',
+                        color: '#fff',
+                        marginRight: 10,
+                      }}>
+                      ADDED TO CART
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="cart"
+                      size={25}
+                      color="#fff"
+                    />
+                  </View>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={() => addToCart()}>
+                  <View
+                    style={[
+                      styles.btn,
+                      {
+                        width: width * 0.92,
+                        marginBottom: 10,
+                      },
+                    ]}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '800',
+                        color: '#fff',
+                        marginRight: 10,
+                      }}>
+                      ADD TO CART
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="cart"
+                      size={25}
+                      color="#fff"
+                    />
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <></>

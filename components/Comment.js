@@ -12,16 +12,17 @@ import {
   View,
 } from 'react-native';
 import {Avatar} from 'react-native-elements';
-import { FAB } from 'react-native-paper';
+import {FAB} from 'react-native-paper';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
-export const Comment = ({route,navigation}) => {
+export const Comment = ({route, navigation}) => {
   const {theme} = React.useContext(ThemeContext);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
@@ -32,7 +33,8 @@ export const Comment = ({route,navigation}) => {
   const [commentText, setCommentText] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-const refRBSheet = useRef(null);
+  const [userData, setUserData] = useState([]);
+  const refRBSheet = useRef(null);
   const id = route.params.id;
 
   const fetchAllComments = async () => {
@@ -42,6 +44,22 @@ const refRBSheet = useRef(null);
     if (result.msg === 'Success') {
       setComments(result.data);
       setLoading(false);
+    } else {
+      setLoading(false);
+      ToastAndroid.show('No comments', ToastAndroid.SHORT);
+    }
+  };
+
+  const fetchUser = async () => {
+    var key = await checkSyncData();
+
+    if (key[0]) {
+      var userData = await getSyncData(key[0]);
+      setUserData(userData);
+      setName(userData?.user_name);
+      setEmail(userData?.useremail);
+    } else {
+      setUserData([]);
     }
   };
 
@@ -93,6 +111,7 @@ const refRBSheet = useRef(null);
 
   useEffect(() => {
     fetchAllComments();
+    fetchUser();
   }, []);
 
   const postComment = async () => {
@@ -104,7 +123,9 @@ const refRBSheet = useRef(null);
       books_id: id,
     };
     var result = await postData('api/getAddcomment', body);
+
     if (result.msg === 'added') {
+      fetchAllComments();
       ToastAndroid.show('Comment Added Successfully', ToastAndroid.SHORT);
       refRBSheet.current.close();
     } else {
@@ -132,94 +153,134 @@ const refRBSheet = useRef(null);
             borderTopRightRadius: 20,
           },
         }}
-        height={height * 0.6}>
-        <View>
-          <Text
+        height={userData ? height * 0.25 : height * 0.6}
+        >
+
+        {userData ? (
+          <View
             style={{
-              color: textColor,
+              borderWidth: 4,
+              borderRadius: 30,
               margin: 10,
-              marginHorizontal: 20,
-              fontWeight: '800',
-              fontSize: 22,
+              borderColor: '#99999950',
+              height:50
             }}>
-            Write A review
-          </Text>
-          <Text style={{color: textColor, marginHorizontal: 20, fontSize: 14}}>
-            We will not publish your email address. Required fields are marked*
-          </Text>
-          <View style={{marginTop: 20, marginHorizontal: 20}}>
-            <Text style={{color: textColor, fontSize: 14}}>Comment</Text>
             <TextInput
-              onChangeText={text => setCommentText(text)}
-              style={{
-                borderWidth: 1,
-                borderRadius: 5,
-                marginVertical: 10,
-                borderColor: textColor,
-                color: textColor,
-                paddingHorizontal: 10,
-              }}
-              multiline
-              numberOfLines={3}
               placeholder="Write your comment here"
               placeholderTextColor="#999"
+              onChangeText={text => setCommentText(text)}
+              autoFocus
+              style={{paddingLeft: 15,color: textColor}}
             />
-            <View style={{flexDirection: 'row'}}>
-              <View style={{flexDirection: 'column', width: '50%'}}>
-                <Text style={{color: textColor, fontSize: 14}}>Name*</Text>
-                <TextInput
-                  onChangeText={text => setName(text)}
-                  placeholder="Name"
-                  placeholderTextColor="#999"
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: 5,
-                    marginVertical: 10,
-                    marginRight: 10,
-                    borderColor: textColor,
-                    color: textColor,
-                    paddingHorizontal: 10,
-                  }}
-                />
-              </View>
-              <View style={{flexDirection: 'column', width: '50%'}}>
-                <Text style={{color: textColor, fontSize: 14}}>Email*</Text>
-                <TextInput
-                  onChangeText={text => setEmail(text)}
-                  placeholder="Email"
-                  placeholderTextColor="#999"
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: 5,
-                    marginVertical: 10,
-                    borderColor: textColor,
-                    color: textColor,
-                    paddingHorizontal: 10,
-                  }}
-                />
-              </View>
-            </View>
             <TouchableOpacity onPress={() => postComment()}>
-              <View
-                style={{
-                  backgroundColor: '#ff9000',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: 20,
-                  marginVertical: 10,
-                  borderRadius: 5,
-                }}>
-                <Text style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
-                  Post Comment
-                </Text>
-              </View>
-            </TouchableOpacity>
+                <View
+                  style={{
+                    backgroundColor: '#ff9000',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 10,
+                    marginVertical: 15,
+                    borderRadius: 5,
+                    height:50
+                  }}>
+                  <Text
+                    style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
+                    Post Comment
+                  </Text>
+                </View>
+              </TouchableOpacity>
           </View>
-        </View>
+        ) : (
+          <View>
+            <Text
+              style={{
+                color: textColor,
+                margin: 10,
+                marginHorizontal: 20,
+                fontWeight: '800',
+                fontSize: 22,
+              }}>
+              Write A review
+            </Text>
+            <Text
+              style={{color: textColor, marginHorizontal: 20, fontSize: 14}}>
+              We will not publish your email address. Required fields are
+              marked*
+            </Text>
+            <View style={{marginTop: 20, marginHorizontal: 20}}>
+              <Text style={{color: textColor, fontSize: 14}}>Comment</Text>
+              <TextInput
+                onChangeText={text => setCommentText(text)}
+                style={{
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  marginVertical: 10,
+                  borderColor: textColor,
+                  color: textColor,
+                  paddingHorizontal: 10,
+                }}
+                multiline
+                numberOfLines={3}
+                placeholder="Write your comment here"
+                placeholderTextColor="#999"
+              />
+              <View style={{flexDirection: 'row'}}>
+                <View style={{flexDirection: 'column', width: '50%'}}>
+                  <Text style={{color: textColor, fontSize: 14}}>Name*</Text>
+                  <TextInput
+                    onChangeText={text => setName(text)}
+                    placeholder="Name"
+                    placeholderTextColor="#999"
+                    style={{
+                      borderWidth: 1,
+                      borderRadius: 5,
+                      marginVertical: 10,
+                      marginRight: 10,
+                      borderColor: textColor,
+                      color: textColor,
+                      paddingHorizontal: 10,
+                    }}
+                  />
+                </View>
+                <View style={{flexDirection: 'column', width: '50%'}}>
+                  <Text style={{color: textColor, fontSize: 14}}>Email*</Text>
+                  <TextInput
+                    onChangeText={text => setEmail(text)}
+                    placeholder="Email"
+                    placeholderTextColor="#999"
+                    style={{
+                      borderWidth: 1,
+                      borderRadius: 5,
+                      marginVertical: 10,
+                      borderColor: textColor,
+                      color: textColor,
+                      paddingHorizontal: 10,
+                    }}
+                  />
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => postComment()}>
+                <View
+                  style={{
+                    backgroundColor: '#ff9000',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 20,
+                    marginVertical: 10,
+                    borderRadius: 5,
+                  }}>
+                  <Text
+                    style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
+                    Post Comment
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </RBSheet>
     );
   };
-
 
   return (
     <SafeAreaView
@@ -229,14 +290,20 @@ const refRBSheet = useRef(null);
           backgroundColor: backgroundColor,
         },
       ]}>
-        <View style={{padding: 15,flexDirection:'row',alignItems:'center'}}>
-            <TouchableOpacity onPress={()=>navigation.goBack()}>
-            <FontAwesome5 name="chevron-down" color={textColor} size={23}/>
-            </TouchableOpacity>
-          <Text style={{textAlign: 'center', fontSize: 20, fontWeight: '800',width:width*0.85}}>
-            {comments.length} Comments
-          </Text>
-        </View>
+      <View style={{padding: 15, flexDirection: 'row', alignItems: 'center'}}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <FontAwesome5 name="chevron-down" color={textColor} size={23} />
+        </TouchableOpacity>
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            fontWeight: '800',
+            width: width * 0.85,
+          }}>
+          {comments.length} Comments
+        </Text>
+      </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         <FlatList
           nestedScrollEnabled
@@ -247,12 +314,12 @@ const refRBSheet = useRef(null);
         />
       </ScrollView>
       <FAB
-          style={styles.fab}
-          icon="plus"
-          label="Comment"
-          onPress={() => refRBSheet.current.open()}
-        />
-        {commentBottomSheet()}
+        style={styles.fab}
+        icon="plus"
+        label="Comment"
+        onPress={() => refRBSheet.current.open()}
+      />
+      {commentBottomSheet()}
     </SafeAreaView>
   );
 };
@@ -285,6 +352,6 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
-    backgroundColor:'#ff9000'
+    backgroundColor: '#ff9000',
   },
 });

@@ -9,7 +9,7 @@ import {createDrawerNavigator} from '@react-navigation/drawer';
 import {DrawerContent} from './DrawerContent';
 import {AboutUs} from './AboutUs';
 import {FAQ} from './FAQ';
-import {useDispatch, useSelector} from 'react-redux';
+import {connect, useDispatch, useSelector} from 'react-redux';
 import {WelcomePage} from './WelcomePage';
 import {CategoryPage} from './CategoryPage';
 import {AppHeader} from './AppHeader';
@@ -31,6 +31,8 @@ import { notificationListener, requestUserPermission } from './NotificationServi
 import { useNavigation } from '@react-navigation/native';
 import { Comment } from './Comment';
 import { Cart } from './Cart';
+import { Badge } from 'react-native-elements';
+import Invoice from './Invoice';
 
 export default function RootNavigator() {
 
@@ -75,11 +77,11 @@ export default function RootNavigator() {
           component={SubscriptionComponent}
           options={{tabBarLabel: 'Subscriptions', lazy: true}}
         />
-        <Tab.Screen
+        {/* <Tab.Screen
           name="CartComponent"
           component={CartComponent}
           options={{tabBarLabel: 'Cart'}}
-        />
+        /> */}
         <Tab.Screen
           name="EditProfile"
           component={ProfileComponent}
@@ -131,6 +133,11 @@ export default function RootNavigator() {
         <Stack.Screen
           name="PaymentSummary"
           component={PaymentSummary}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="Invoice"
+          component={Invoice}
           options={{header: AppHeader}}
         />
       </Stack.Navigator>
@@ -217,30 +224,6 @@ export default function RootNavigator() {
           component={Comment}
           options={{headerShown: false}}
         />
-      </Stack.Navigator>
-    );
-  }
-
-  function CartComponent() {
-    return (
-      <Stack.Navigator screenOptions={{
-        presentation: "modal"
-      }}>
-        <Stack.Screen
-          name="Cart"
-          component={Cart}
-          options={{header: AppHeader}}
-        />
-        <Stack.Screen
-          name="PaymentScreen"
-          component={PaymentScreen}
-          options={{header: AppHeader}}
-        />
-        <Stack.Screen
-          name="PaymentSummary"
-          component={PaymentSummary}
-          options={{header: AppHeader}}
-        />  
       </Stack.Navigator>
     );
   }
@@ -339,6 +322,16 @@ export default function RootNavigator() {
           name="Comment"
           component={Comment}
           options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={Cart}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="Invoice"
+          component={Invoice}
+          options={{header: AppHeader}}
         />
       </Stack.Navigator>
     );

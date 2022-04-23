@@ -35,6 +35,7 @@ export const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [mobileNo, setMobileNo] = useState('');
+  const [plainMobileNo, setPlainMobileNo] = useState('');
   const [otp, setOtp] = useState('');
   const [show, setShow] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -212,6 +213,9 @@ export const Login = ({navigation}) => {
             placeholder="Mobile Number"
             onChangeFormattedText={text => {
               setMobileNo(text);
+            }}
+            onChangeText={text => {
+              setPlainMobileNo(text);
             }}
             withDarkTheme={theme === 'dark' ? true : false}
             withShadow
@@ -460,7 +464,7 @@ export const Login = ({navigation}) => {
               />
               <TextInput
                 style={{width: '80%', color: textColor}}
-                placeholder="E-mail"
+                placeholder="Login id ex:(xxxxxx1234@biv.com)"
                 placeholderTextColor="#999"
                 onChangeText={text => setEmail(text)}
               />
@@ -548,7 +552,7 @@ export const Login = ({navigation}) => {
                 borderColor: textColor,
               }}>
               <Text style={{color: textColor}}>
-                Don't have an account? Sign Up
+                Don't have an account? Sign Up / Log In
               </Text>
             </View>
           </TouchableOpacity>
@@ -644,7 +648,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     resizeMode: 'contain',
-    height: height * 0.15,
+    height: height * 0.12,
     width: width * 0.5,
     // borderRadius: 10,
     margin: 20,

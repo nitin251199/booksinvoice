@@ -7,20 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:410965554876:android:ab3d6fe70a2cb930b742b9",
+        "mobilesdk_app_id": "1:410965554876:android:6aa78719a27918cbb742b9",
         "android_client_info": {
           "package_name": "com.booksinvoice"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "410965554876-0eq9mnbrkdto0qkk52qhc85ek0tq478u.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.booksinvoice",
-            "certificate_hash": "b0926d7de4260551738d4f19e20a4c87987d148f"
-          }
-        },
         {
           "client_id": "410965554876-gos1mfq2c0r6v96nhf5uuousubecmp0h.apps.googleusercontent.com",
           "client_type": 1,
