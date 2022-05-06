@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Button, ButtonGroup} from 'react-native-elements';
 import {postData} from './FetchApi';
@@ -50,6 +51,18 @@ export const Login = ({navigation}) => {
   const textColor = theme === 'dark' ? '#fff' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
+  useFocusEffect(
+    React.useCallback(() => {
+      // alert('Screen was focused');
+      // Do something when the screen is focused
+      return () => {
+       setShowSignup(false);
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [])
+  );
+
   useEffect(() => {
     GoogleSignin.configure();
     isSignedIn();
@@ -61,6 +74,7 @@ export const Login = ({navigation}) => {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       saveGoogleInfo(userInfo);
+      console.log('User Info --> ', userInfo);
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
@@ -159,7 +173,7 @@ export const Login = ({navigation}) => {
 
   const checkSubscription = async res => {
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
-    var result = await postData('api/getSubscription', body);
+    var result = await postData('api/getSubscription', body)
     if (result.msg === 'Subscribed') {
       return true;
     } else {
@@ -300,6 +314,7 @@ export const Login = ({navigation}) => {
       type: 1,
     };
     var result = await postData('api/getLogin', body);
+    
     if (result.msg === 'Login') {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');

@@ -1,20 +1,22 @@
-import { NavigationContainer } from '@react-navigation/native';
+import {NavigationContainer} from '@react-navigation/native';
 import React from 'react';
 import {Alert, StyleSheet, View} from 'react-native';
 import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
 import TrackPlayer from 'react-native-track-player';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {ServerURL} from './FetchApi';
 
 export const SamplePlay = ({item, propsStyles, navigation}) => {
-  const [selected, setSelected] = React.useState({id:''});
   var time = 0;
   var s = 0;
+  var timeout;
+  const selected = useSelector(state => state.currentSong);
 
-  const setup = async (i) => {
-    
-    setSelected({id: i.id});
+  var dispatch = useDispatch();
+
+  const setup = async i => {
+    dispatch({type: 'SET_CURRENT_SONG', payload: {id: i.id}});
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
@@ -39,36 +41,41 @@ export const SamplePlay = ({item, propsStyles, navigation}) => {
 
   const getSectionDone = async () => {
     s++;
-    var t = setTimeout(getSectionDone, 1000);
+    timeout = setTimeout(getSectionDone, 1000);
     if (!status) {
       if (s >= time) {
         await TrackPlayer.stop();
-        setSelected({id: ''});
+        dispatch({type: 'SET_CURRENT_SONG', payload: {id: ''}});
         Alert.alert(
           'Booksinvoice',
           'Please subscribe to listen further!',
-          [{text: 'OK',onPress: () => navigation.navigate('Subscriptions')}],
+          [{
+            text: 'Cancel',
+            // onPress: () => console.log("Cancel Pressed"),
+            style: 'cancel',
+          },
+            {text: 'OK', onPress: () => navigation.navigate('Subscriptions')}],
           {cancelable: true},
         );
-        clearTimeout(t);
+        clearTimeout(timeout);
       }
     }
   };
 
   return (
     <View style={propsStyles}>
-      { selected.id === item.id ? (
+      {selected.id === item.id ? (
         <TouchableWithoutFeedback
           onPress={() => {
             TrackPlayer.stop();
-            setSelected({id:''});
+            dispatch({type: 'SET_CURRENT_SONG', payload: {id: ''}});
+            clearTimeout(timeout)
           }}>
           <View style={styles.sample}>
             <MaterialCommunityIcons name="pause" size={25} color="black" />
           </View>
         </TouchableWithoutFeedback>
-      )
-      : (
+      ) : (
         <TouchableWithoutFeedback
           onPress={() => {
             setup(item);
@@ -77,8 +84,7 @@ export const SamplePlay = ({item, propsStyles, navigation}) => {
             <MaterialCommunityIcons name="play" size={25} color="black" />
           </View>
         </TouchableWithoutFeedback>
-      )
-       }
+      )}
     </View>
   );
 };

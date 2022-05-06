@@ -1,8 +1,11 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import messaging from '@react-native-firebase/messaging';
+import { getSyncData, storeDatasync } from './AsyncStorage';
 
 export async function requestUserPermission() {
-  const authStatus = await messaging().requestPermission();
+  const authStatus = await messaging().requestPermission({
+    sound: true,
+    alert: true,
+  });
   const enabled =
     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
@@ -14,7 +17,7 @@ export async function requestUserPermission() {
 }
 
 const getFcmToken = async () => {
-  let fcmToken = await AsyncStorage.getItem('fcmToken');
+  let fcmToken = await getSyncData('fcmToken');
   console.log('the old token', fcmToken);
   if (!fcmToken) {
     try {
@@ -22,7 +25,7 @@ const getFcmToken = async () => {
       if (fcmToken) {
         // user has a device token
         console.log('the new token', fcmToken);
-        await AsyncStorage.setItem('fcmToken', fcmToken);
+        await storeDatasync('fcmToken', fcmToken);
       }
     } catch (error) {
       console.log('error getting token', error);

@@ -15,6 +15,7 @@ import {
   ToastAndroid,
 } from 'react-native';
 import {AirbnbRating} from 'react-native-elements';
+import {Button} from 'react-native-paper';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -37,6 +38,7 @@ export default function InfoPage({route, navigation}) {
 
   const [book, setBook] = useState([]);
   const [similar, setSimilar] = useState([]);
+  const [loading, setLoading] = useState(false);
   // const [refresh, setRefresh] = useState(false);
 
   var dispatch = useDispatch();
@@ -256,14 +258,23 @@ export default function InfoPage({route, navigation}) {
   };
 
   const addToCart = async () => {
+    setLoading(true);
     var key = await checkSyncData();
 
     if (key[0]) {
       var userData = await getSyncData(key[0]);
       if (userData !== null) {
         dispatch({type: 'ADD_CART', payload: [book.id, book]});
+        var body = {
+          type: 1,
+          user_id: userData.id,
+          user_type: userData.usertype,
+          book_id: id,
+        };
+        var result = await postData('api/getAddcart', body);
         ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
-        navigation.setParams({x:''})
+        navigation.setParams({x: ''});
+        setLoading(false);
       } else {
         navigation.navigate('Login');
       }
@@ -540,7 +551,7 @@ export default function InfoPage({route, navigation}) {
                 <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
                   PLAY
                 </Text>
-                <MaterialCommunityIcons name="play" size={30} color="#fff" />
+                <MaterialCommunityIcons name="play" size={22} color="#fff" />
               </View>
             </TouchableOpacity>
           </View>
@@ -552,60 +563,56 @@ export default function InfoPage({route, navigation}) {
                 paddingVertical: 0,
               }}>
               {keys.includes(book.id) ? (
-                <TouchableOpacity>
-                  <View
-                    style={[
-                      styles.btn,
-                      {
-                        width: width * 0.92,
-                        marginBottom: 10,
-                        backgroundColor: backgroundColor,
-                        borderColor: textColor,
-                        borderWidth: 1,
-                      },
-                    ]}>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: '800',
-                        color: '#fff',
-                        marginRight: 10,
-                      }}>
-                      ADDED TO CART
-                    </Text>
-                    <MaterialCommunityIcons
-                      name="cart"
-                      size={25}
-                      color="#fff"
-                    />
-                  </View>
-                </TouchableOpacity>
+                <View
+                  style={[
+                    styles.btn,
+                    {
+                      width: width * 0.92,
+                      marginBottom: 10,
+                      backgroundColor: backgroundColor,
+                      borderColor: textColor,
+                      borderWidth: 1,
+                    },
+                  ]}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: '800',
+                      color: '#fff',
+                      marginRight: 10,
+                    }}>
+                    ADDED TO CART
+                  </Text>
+                  <MaterialCommunityIcons name="cart" size={20} color="#fff" />
+                </View>
               ) : (
-                <TouchableOpacity onPress={() => addToCart()}>
-                  <View
-                    style={[
-                      styles.btn,
-                      {
-                        width: width * 0.92,
-                        marginBottom: 10,
-                      },
-                    ]}>
-                    <Text
-                      style={{
-                        fontSize: 18,
-                        fontWeight: '800',
-                        color: '#fff',
-                        marginRight: 10,
-                      }}>
-                      ADD TO CART
-                    </Text>
-                    <MaterialCommunityIcons
-                      name="cart"
-                      size={25}
-                      color="#fff"
-                    />
-                  </View>
-                </TouchableOpacity>
+                <Button
+                  onPress={() => addToCart()}
+                  style={{backgroundColor: '#ff9000', marginBottom: 10}}
+                  mode="contained"
+                  loading={loading}
+                  dark
+                  icon="cart"
+                  labelStyle={{
+                    fontSize: 18,
+                    fontWeight: '800',
+                    color: '#fff',
+                  }}
+                  contentStyle={[
+                    // styles.btn,
+                    {
+                      width: width * 0.92,
+                      padding: 2,
+                      display: 'flex',
+                      flexDirection: 'row-reverse',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      // margin: 5,
+                      borderRadius: 5,
+                    },
+                  ]}>
+                  ADD TO CART
+                </Button>
               )}
             </View>
           ) : (

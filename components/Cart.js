@@ -1,11 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   ToastAndroid,
   TouchableOpacity,
   View,
@@ -13,10 +16,13 @@ import {
 import {AirbnbRating, Divider} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import {useDispatch, useSelector} from 'react-redux';
-import {ServerURL} from './FetchApi';
+import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
 import {ThemeContext} from './ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Button } from 'react-native-paper';
+import { Button as Button2 } from 'react-native-elements';
+import { checkSyncData, getSyncData } from './AsyncStorage';
 
 const {width, height} = Dimensions.get('window');
 
@@ -25,6 +31,7 @@ export const Cart = ({navigation}) => {
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
+  const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
   var dispatch = useDispatch();
 
@@ -33,14 +40,132 @@ export const Cart = ({navigation}) => {
   var keys = Object.keys(carts);
   const [cart, setCart] = useState(cartItems);
   const [refresh, setRefresh] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [coupon, setCoupon] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponStatus, setCouponStatus] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState([]);
+  const [subtotal, setSubTotal] = useState(cartItems.reduce(calculateAmount, 0));
+  const [total, setTotal] = useState(cartItems.reduce(calculateAmount, 0));
+
+  var phone = '';
+  var pinCode = '';
+  var address = '';
+  var country = '';
+  var state = '';
+  var city = '';
+  var couponid = '';
+
+  function calculateAmount(a, b) {
+    a = parseFloat(a);
+    b = parseFloat(b.price);
+		return (a + b)
+	}
 
   const removeBook = (item) => {
     dispatch({type: 'REMOVE_CART', payload: item.id});
-    setCart(cartItems);
     setRefresh(!refresh);
     ToastAndroid.show('Book Removed from Cart', ToastAndroid.SHORT);
-    navigation.setParams({x:''})
+    navigation.setParams({y:''})
+    setCart(cartItems);
   };
+
+  const handleCouponProceed = async() => {
+    setCouponLoading(true);
+    var body = {"coupons": coupon, coupon_type: 'Discount Coupons'}
+    var result = await postData('api/getCoupon', body);
+    if(result.msg === 'Success') {
+      let percentage = parseFloat(result.data[0].percentage);
+      let d = subtotal*(percentage/100);
+       d = d.toFixed(2)
+        let s = (subtotal - d).toFixed(2);
+        setTotal(parseFloat(s))
+        couponid = result.data[0].id;
+        setCouponStatus(true);
+        setCouponLoading(false)
+        fetchDetails()  
+    }
+    else
+    {
+      ToastAndroid.show('Invalid Coupon', ToastAndroid.SHORT);
+      setCouponLoading(false);
+    }
+  }
+
+  const fetchDetails = async () => {
+    var key = await checkSyncData();
+
+    if (key) {
+      await getSyncData(key[0]).then(async res => {
+        await fetchUserData(res).then(async result => {
+          var body = {
+            type: '1',
+            user_type: res.usertype,
+            user_id: res.id,
+            packgesid:"",
+            price: total,
+            forccavenu:  'INR',
+            name: res.user_name,
+            address: address,
+            postalcode: pinCode,
+            usermobile: phone,
+            email: res.useremail,
+            copies: "",
+            coupons: couponid,
+            country: country,
+            state: state,
+            city: city,
+          };
+          var result = await postData('api/getPaymentbooks', body);
+          setPaymentDetails(result.data);
+          setLoading(false);
+          setCouponLoading(false)
+          setShowModal(false)
+        });
+      });
+    }
+  };
+
+  const handleProceed = () => {
+    navigation.navigate('PaymentScreen', {paymentDetails,total});
+  };
+
+  useEffect(() => {
+    fetchDetails();
+  }, []);
+
+  const fetchUserData = async res => {
+    if (res.usertype === 'Individual') {
+      var body = {
+        type: 1,
+        user_id: res.id,
+        user_type: 'individual',
+      };
+      var result = await postData('api/getProfile', body);
+
+      address = result.data[0].address;
+      pinCode = result.data[0].zip_pin;
+      phone = result.data[0].telephone;
+      country = result.country[0].name;
+      state = result.state[0].name;
+      city = result.city[0].name;
+    } else if (res.usertype === 'Organisation') {
+      var body = {
+        type: 1,
+        user_id: res.id,
+        user_type: 'organisation',
+      };
+      var result = await postData('api/getProfile', body);
+      address = result.data[0].address;
+      pinCode = result.data[0].postalcode;
+      phone = result.data[0].orgnisationcontact;
+      country = result.country[0].name;
+      state = result.state[0].name;
+      city = result.city[0].name;
+    }
+  };
+
 
   const displayBooks = ({item, index}) => {
     return (
@@ -72,7 +197,7 @@ export const Cart = ({navigation}) => {
             item={item}
             propsStyles={{
               position: 'absolute',
-              top: '67%',
+              top: '59%',
               left: '6%',
               elevation: 10,
             }}
@@ -101,6 +226,8 @@ export const Cart = ({navigation}) => {
             </TextTicker>
             <Text style={{color: textColor}}>{item.bookauthor}</Text>
             <Text style={{color: textColor}}>{item.bookcategory}</Text>
+            <Text style={{color: textColor}}>₹ {item.price}</Text>
+            <Text style={{color: textColor}}>$ {item.dollerprice}</Text>
             <Text style={{color: textColor}}>Narrator: {item.narrator}</Text>
             <Text style={{color: textColor}}>Views: {item.viewcount}</Text>
             {item.premiumtype === 'Premium' ? (
@@ -188,6 +315,72 @@ export const Cart = ({navigation}) => {
     );
   };
 
+
+  const couponModal = () => {
+    return (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showModal}
+        onRequestClose={() => {
+          setShowModal(false);
+        }}>
+        <View style={styles.centeredView}>
+          <View
+            style={[
+              {
+                backgroundColor: modelBackgroundColor,
+                padding: 20,
+                borderRadius: 10,
+              },
+            ]}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: textColor,
+                margin: 10,
+              }}>
+              Enter Coupon Code
+            </Text>
+            <TextInput
+              value={coupon}
+              onChangeText={text => setCoupon(text)}
+              style={{
+                borderWidth: 1,
+                borderColor: textColor,
+                borderRadius: 10,
+                paddingLeft: 10,
+                color: textColor,
+              }}
+              placeholder="Coupon Code"
+              placeholderTextColor="#999"
+            />
+            
+            <TouchableOpacity onPress={() => handleCouponProceed()}>
+              <View
+                style={{
+                  marginVertical: 10,
+                  padding: 15,
+                  borderRadius: 10,
+                  backgroundColor: '#ff9000',
+                }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontWeight: '800',
+                    color: '#FFF',
+                  }}>
+                  { couponLoading ? <ActivityIndicator color={'#000'}/> : 'Apply Coupon'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   if (carts.length === 0) {
     return (
       <View
@@ -216,7 +409,14 @@ export const Cart = ({navigation}) => {
   }
 
   return (
-    <ScrollView style={[styles.container, {backgroundColor: backgroundColor}]}>
+    <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+      <ActivityIndicator
+        animating={loading}
+        size={'large'}
+        style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
+      />
+      <ScrollView >
+      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
       <Text
         style={{
           fontSize: 20,
@@ -226,13 +426,49 @@ export const Cart = ({navigation}) => {
         }}>
         My Cart ({keys.length})
       </Text>
+      <Text
+        style={{
+          fontSize: 20,
+          color: textColor,
+          fontWeight: '800',
+          padding: 20,
+        }}>
+        ₹ {total}
+      </Text>
+      </View>
 
       <FlatList
-        data={cart}
+        data={cartItems}
         renderItem={displayBooks}
         keyExtractor={item => item.id}
       />
+
     </ScrollView>
+    {couponModal()}
+      <View style={{position:'absolute',bottom:0,flexDirection:'row',width:width}}>
+      
+      <Button
+      dark
+      labelStyle={{fontSize:16,letterSpacing:0}} 
+      mode="contained"
+      style={{backgroundColor: '#ff9000',borderRadius:0}}
+      contentStyle={{width:width*0.5,paddingVertical:5}}
+      onPress={() => handleProceed()}
+      >
+       Checkout</Button>
+       <Button2
+              disabled={couponStatus}
+              onPress={() => setShowModal(true)}
+              title={couponStatus ? 'Coupon Applied' : 'Apply Coupon'}
+              type="outline"
+              titleStyle={{color: 'red'}}
+              buttonStyle={{borderColor: 'red',borderRadius:0,paddingBottom:10}}
+              disabledStyle={{borderColor: 'green',borderRadius:0}}
+              disabledTitleStyle={{color: 'green'}}
+              containerStyle={{width: width * 0.5}}
+            />
+      </View>
+    </View>
   );
 };
 
@@ -251,5 +487,10 @@ const styles = StyleSheet.create({
     // shadowRadius: 14,
     // shadowColor: 'red',
     // shadowOffset: {width: 0, height: 0},
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

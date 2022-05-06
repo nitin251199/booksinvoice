@@ -2,6 +2,7 @@ import {Picker} from '@react-native-picker/picker';
 import React from 'react';
 import {ActivityIndicator, StyleSheet, Switch, Text, View} from 'react-native';
 import { ThemeContext } from './ThemeContext';
+import pkg from '../package.json';
 
 
 export const Settings = () => {
@@ -76,7 +77,7 @@ export const Settings = () => {
               <Text style={[styles.itemText,{color: textColor}]}>Version</Text>
               <Text style={{fontSize: 12,color: textColor}}>App Version</Text>
             </View>
-            <Text style={[styles.itemText,{color: textColor}]}>1.0.0</Text>
+            <Text style={[styles.itemText,{color: textColor}]}>{pkg.version}</Text>
           </View>
           <View style={[styles.menu, {paddingTop: 20}]}>
             <View>

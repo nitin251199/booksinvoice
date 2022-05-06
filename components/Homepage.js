@@ -6,15 +6,16 @@ import {
   BackHandler,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
+  
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StyleSheet, View, Dimensions} from 'react-native';
-import {AirbnbRating, Divider, Image, Tile} from 'react-native-elements';
+import {AirbnbRating, Divider, Tile,Image} from 'react-native-elements';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
-import {TouchableOpacity} from 'react-native-gesture-handler';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import {ThemeContext} from './ThemeContext';
@@ -38,17 +39,17 @@ export default function Homepage({navigation, route}) {
   const setother = useSelector(state => state?.home?.books_by_cate) || [];
   const setad = useSelector(state => state?.home?.advertise) || [];
 
-  const [data, setData] = useState(Object.values(setdata));
+  const [data, setData] =  useState(Object.values(setdata))
 
-  const [banner, setBanner] = useState(Object.values(setbanner));
+  const [banner, setBanner] = useState(Object.values(setbanner))
 
-  const [topRated, setTopRated] = useState(Object.values(settop));
+  const [topRated, setTopRated] = useState(Object.values(settop))
 
-  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular));
+  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular))
 
-  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium));
+  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium))
 
-  const [category, setCategory] = useState(Object.values(setcategory));
+  const [category, setCategory] = useState(Object.values(setcategory))
 
   const [otherCategory, setOtherCategory] = useState(setother);
 
@@ -57,114 +58,6 @@ export default function Homepage({navigation, route}) {
   const [refreshing, setRefreshing] = React.useState(false);
 
   var dispatch = useDispatch();
-
-  const fetchProfile = async () => {
-    var key = await checkSyncData();
-
-    if (key[0]) {
-      var userData = await getSyncData(key[0]);
-      // setUserData(userData);
-      if (userData === null) {
-        Alert.alert(
-          'Update Your Profile & Activate Free Trial',
-          'Without Adding Any Debit or Credit Card',
-          [
-            {
-              text: 'Ask me later',
-              // onPress: () => console.log("Cancel Pressed"),
-              style: 'cancel',
-            },
-            {
-              text: 'Proceed',
-              onPress: () => navigation.navigate('Login'),
-            },
-          ],
-        );
-      } else {
-        fetchUserData(userData);
-      }
-    }
-  };
-
-  const fetchUserData = async userData => {
-    if (userData.usertype === 'Individual') {
-      var body = {
-        type: 1,
-        user_id: userData.id,
-        user_type: 'individual',
-      };
-      var result = await postData('api/getProfile', body);
-
-      if (
-        result.data[0].username === '' ||
-        result.data[0].address === '' ||
-        result.data[0].zip_pin === '' ||
-        result.state[0].name === '' ||
-        result.city[0].name === '' ||
-        result.data[0].telephone === '' ||
-        result.data[0].email === ''
-      ) {
-        console.log('result', result);
-        Alert.alert(
-          'Update Your Profile & Activate Free Trial',
-          'Without Adding Any Debit or Credit Card',
-          [
-            {
-              text: 'Ask me later',
-              // onPress: () => console.log("Cancel Pressed"),
-              style: 'cancel',
-            },
-            {
-              text: 'Proceed',
-              onPress: () => navigation.navigate('EditProfile'),
-            },
-          ],
-        );
-      }
-    } else if (userData.usertype === 'Organisation') {
-      var body = {
-        type: 1,
-        user_id: userData.id,
-        user_type: 'organisation',
-      };
-      var result = await postData('api/getProfile', body);
-      if (
-        result.data[0].orgnisationname === '' ||
-        result.data[0].address === '' ||
-        result.data[0].postalcode === '' ||
-        result.city[0].name === '' ||
-        result.state[0].name === '' ||
-        result.data[0].orgnisationcontact === '' ||
-        result.data[0].orgnisationemail === ''
-      ) {
-        Alert.alert(
-          'Update Your Profile & Activate Free Trial',
-          'Without Adding Any Debit or Credit Card',
-          [
-            {
-              text: 'Ask me later',
-              // onPress: () => console.log("Cancel Pressed"),
-              style: 'cancel',
-            },
-            {
-              text: 'Proceed',
-              onPress: () => navigation.navigate('EditProfile'),
-            },
-          ],
-        );
-      }
-    }
-  };
-
-  // useEffect(() => {
-  //   fetchUserData();
-  // }, [userData]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      fetchProfile();
-    }, 2500);
-  }, []);
 
   const fetch = async () => {
     var body = {type: 1};
@@ -216,20 +109,22 @@ export default function Homepage({navigation, route}) {
   const DisplayCategory = ({item}) => {
     return (
       <View style={{display: 'flex', flexDirection: 'column'}}>
-        <Image
-          onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          style={{
-            height: height * 0.12,
-            width: width * 0.45,
-            resizeMode: 'stretch',
-            marginTop: 10,
-            marginRight: 10,
-            borderRadius: 2,
-          }}
-          source={{
-            uri: `${ServerURL}/admin/upload/bookcat/${item.catphoto}`,
-          }}
-        />
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CategoryPage', {item: item})}>
+          <Image
+            style={{
+              height: height * 0.12,
+              width: width * 0.45,
+              resizeMode: 'stretch',
+              marginTop: 10,
+              marginRight: 10,
+              borderRadius: 2,
+            }}
+            source={{
+              uri: `${ServerURL}/admin/upload/bookcat/${item.catphoto}`,
+            }}
+          />
+        </TouchableOpacity>
         <Text
           style={[
             styles.imageText,
@@ -308,22 +203,24 @@ export default function Homepage({navigation, route}) {
           flexDirection: 'column',
           // width: width * 0.30,
         }}>
-        <Image
+        <TouchableOpacity
           onPress={() =>
             navigation.navigate('InfoPage', {
               state: item.id,
               category: item.bookcategoryid,
-              new_arrival: data,
-              top_rated: topRated,
-              populars_books: popularBooks,
-              premium_books: premiumBooks,
+              // data: data,
+              // topRated: topRated,
+              // popularBooks: popularBooks,
+              // premiumBooks: premiumBooks,
             })
-          }
-          style={[styles.image]}
-          source={{
-            uri: `${ServerURL}/admin/upload/bookcategory/${item.bookcategoryid}/${item.photo}`,
-          }}
-        />
+          }>
+          <Image
+            style={[styles.image]}
+            source={{
+              uri: `${ServerURL}/admin/upload/bookcategory/${item.bookcategoryid}/${item.photo}`,
+            }}
+          />
+        </TouchableOpacity>
         <SamplePlay
           navigation={navigation}
           item={item}
@@ -399,6 +296,7 @@ export default function Homepage({navigation, route}) {
       </View>
     );
   };
+
 
   return (
     <View>
@@ -518,6 +416,8 @@ export default function Homepage({navigation, route}) {
               <FlatList
                 data={data}
                 horizontal
+                removeClippedSubviews
+                // initialNumToRender={3}
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
                   <View
@@ -587,6 +487,8 @@ export default function Homepage({navigation, route}) {
               <FlatList
                 data={topRated}
                 horizontal
+                removeClippedSubviews
+                // initialNumToRender={3}
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
                   <View
@@ -655,6 +557,8 @@ export default function Homepage({navigation, route}) {
               <FlatList
                 data={popularBooks}
                 horizontal
+                removeClippedSubviews
+                // initialNumToRender={3}
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
                   <View
@@ -715,7 +619,7 @@ export default function Homepage({navigation, route}) {
                     paddingRight: 15,
                     color: '#999',
                   }}>
-                  View All
+                  View Allll
                 </Text>
               </TouchableOpacity>
             </View>
@@ -724,6 +628,8 @@ export default function Homepage({navigation, route}) {
               <FlatList
                 data={premiumBooks}
                 horizontal
+                removeClippedSubviews
+                // initialNumToRender={3}
                 showsHorizontalScrollIndicator={false}
                 ListEmptyComponent={
                   <View
@@ -755,13 +661,15 @@ export default function Homepage({navigation, route}) {
             activeOpacity={1}
             width={width}
             imageProps={{
-              resizeMode: 'stretch'
+              resizeMode: 'stretch',
             }}
             containerStyle={{marginVertical: 10}}
           />
           <View style={{paddingLeft: 20}}>
             <FlatList
               data={otherCategory}
+              removeClippedSubviews
+              // initialNumToRender={3}
               ListEmptyComponent={
                 <View
                   style={{

@@ -44,7 +44,7 @@ const postDataAndImage = async(url,formData,config)=>{
         const result=await response.data;
         return result;
     }catch(e){
-        // console.log("error",e);
+        console.log("error",e);
         return null;
     }
 };

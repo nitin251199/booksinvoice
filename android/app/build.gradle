@@ -135,9 +135,10 @@ android {
         applicationId "com.booksinvoice"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
-        versionName "3.0"
+        versionCode versionMajor * 10000 + versionMinor * 100 + versionPatch
+        versionName "${versionMajor}.${versionMinor}.${versionPatch}"
         multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
     }
     splits {
         abi {

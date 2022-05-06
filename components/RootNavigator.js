@@ -31,8 +31,7 @@ import { notificationListener, requestUserPermission } from './NotificationServi
 import { useNavigation } from '@react-navigation/native';
 import { Comment } from './Comment';
 import { Cart } from './Cart';
-import { Badge } from 'react-native-elements';
-import Invoice from './Invoice';
+import { OfflineScreen } from './OfflineScreen';
 
 export default function RootNavigator() {
 
@@ -65,7 +64,7 @@ export default function RootNavigator() {
         <Tab.Screen
           name="HomeComponent"
           component={HomepageComponent}
-          options={{tabBarLabel: 'Home'}}
+          options={{tabBarLabel: 'Home',}}
         />
         <Tab.Screen
           name="SearchComponent"
@@ -98,6 +97,11 @@ export default function RootNavigator() {
         <Stack.Screen
           name="Welcome"
           component={WelcomePage}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="OfflineScreen"
+          component={OfflineScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
@@ -135,11 +139,7 @@ export default function RootNavigator() {
           component={PaymentSummary}
           options={{header: AppHeader}}
         />
-        <Stack.Screen
-          name="Invoice"
-          component={Invoice}
-          options={{header: AppHeader}}
-        />
+       
       </Stack.Navigator>
     );
   }
@@ -188,6 +188,11 @@ export default function RootNavigator() {
         <Stack.Screen
             name="Subscriptions"
             component={Subscriptions}
+            options={{header: AppHeader}}
+          />
+          <Stack.Screen
+            name="UserSubscriptions"
+            component={UserSubscriptions}
             options={{header: AppHeader}}
           />
       </Stack.Navigator>
@@ -328,11 +333,7 @@ export default function RootNavigator() {
           component={Cart}
           options={{header: AppHeader}}
         />
-        <Stack.Screen
-          name="Invoice"
-          component={Invoice}
-          options={{header: AppHeader}}
-        />
+       
       </Stack.Navigator>
     );
   }

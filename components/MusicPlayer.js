@@ -17,6 +17,7 @@ import {
   FlatList,
   Share,
 } from 'react-native';
+import BackgroundTimer from 'react-native-background-timer';
 
 import TrackPlayer, {
   Capability,
@@ -35,14 +36,11 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import {postData, ServerURL} from './FetchApi';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {ThemeContext} from './ThemeContext';
-import RBSheet from 'react-native-raw-bottom-sheet';
-import {TextInput} from 'react-native-gesture-handler';
 import {Slider as SpeedSlider} from 'react-native-elements';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { useSelector } from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
-
-
 
 const MusicPlayer = ({route, navigation}) => {
   const playBackState = usePlaybackState();
@@ -60,11 +58,12 @@ const MusicPlayer = ({route, navigation}) => {
   const [status, setStatus] = useState(true);
   const [speed, setSpeed] = useState(1);
   const [isFavourite, setIsFavourite] = useState(false);
-  const [commentText, setCommentText] = useState('');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [speedModalVisible, setSpeedModalVisible] = useState(false);
-  const [chapter, setChapter ] = useState([]);
+  const [timerModalVisible, setTimerModalVisible] = useState(false);
+  const [chapter, setChapter] = useState([]);
+  const [timerValue, setTimerValue] = useState(0);
+
+  var isSub = useSelector(state => state.isSubscribed);
 
   // custom referecnces
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -84,57 +83,55 @@ const MusicPlayer = ({route, navigation}) => {
         await TrackPlayer.play();
       } else {
         await TrackPlayer.pause();
-        setSelected({index:''})
+        setSelected({index: ''});
       }
     }
   };
 
-  const index = route.params.index
-  const chapters = []
+  const index = route.params.index;
+  const chapters = [];
 
- if(index !== null){
-  var temp = [
-    {
-      id: route.params.state.id,
-      url: `${ServerURL}/admin/upload/bookaudio/${route.params.chapters[index].audiofile}`,
-      title: route.params.chapters[index].chaptername,
-      artist: route.params.state.bookauthor,
-      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-      album: route.params.state.bookcategory,
-      duration: route.params.state.sampleplay_time,
-      index: 0
-    }
-  ];
- }
- else{
-  var temp = [
-    {
-      id: route.params.state.id,
-      url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
-      title: route.params.state.bookname,
-      artist: route.params.state.bookauthor,
-      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-      album: route.params.state.bookcategory,
-      duration: route.params.state.sampleplay_time,
-      index: 0
-    }
-  ];
- }
-
-  
-  const mapTracks = async () => {
-    if(index !== null){
-    temp.push({
-      id: route.params.state.id,
-      url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
-      title: route.params.state.bookname,
-      artist: route.params.state.bookauthor,
-      artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-      album: route.params.state.bookcategory,
-      duration: route.params.state.sampleplay_time,
-      index: 1
-    })
+  if (index !== null) {
+    var temp = [
+      {
+        id: route.params.state.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${route.params.chapters[index].audiofile}`,
+        title: route.params.chapters[index].chaptername,
+        artist: route.params.state.bookauthor,
+        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+        album: route.params.state.bookcategory,
+        duration: route.params.state.sampleplay_time,
+        index: 0,
+      },
+    ];
+  } else {
+    var temp = [
+      {
+        id: route.params.state.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
+        title: route.params.state.bookname,
+        artist: route.params.state.bookauthor,
+        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+        album: route.params.state.bookcategory,
+        duration: route.params.state.sampleplay_time,
+        index: 0,
+      },
+    ];
   }
+
+  const mapTracks = async () => {
+    if (index !== null) {
+      temp.push({
+        id: route.params.state.id,
+        url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
+        title: route.params.state.bookname,
+        artist: route.params.state.bookauthor,
+        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+        album: route.params.state.bookcategory,
+        duration: route.params.state.sampleplay_time,
+        index: 1,
+      });
+    }
     await route.params.chapters.map((track, index) => {
       temp.push({
         id: route.params.state.id,
@@ -144,7 +141,7 @@ const MusicPlayer = ({route, navigation}) => {
         artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
         album: route.params.state.bookcategory,
         duration: route.params.state.sampleplay_time,
-        index: index+1
+        index: index + 1,
       });
       chapters.push({
         id: route.params.state.id,
@@ -154,7 +151,7 @@ const MusicPlayer = ({route, navigation}) => {
         artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
         album: route.params.state.bookcategory,
         duration: route.params.state.sampleplay_time,
-        index: index+1
+        index: index + 1,
       });
     });
     setTracks(temp);
@@ -177,6 +174,7 @@ const MusicPlayer = ({route, navigation}) => {
       });
       await TrackPlayer.add(temp);
       TrackPlayer.play();
+      backgroundTimer();
     } catch (error) {
       console.log(error);
     }
@@ -226,9 +224,11 @@ const MusicPlayer = ({route, navigation}) => {
 
   const skipTo = async trackId => {
     await TrackPlayer.skip(trackId);
+    backgroundTimer();
   };
 
   useEffect(() => {
+    checkLogin();
     mapTracks();
     setupPlayer();
     scrollX.addListener(({value}) => {
@@ -240,7 +240,6 @@ const MusicPlayer = ({route, navigation}) => {
 
       //   console.log(`Index : ${index}`);
     });
-
     return () => {
       scrollX.removeAllListeners();
       // TrackPlayer.stop();
@@ -252,6 +251,7 @@ const MusicPlayer = ({route, navigation}) => {
       offset: (songIndex + 1) * width,
     });
     TrackPlayer.play();
+    backgroundTimer();
   };
 
   const skipToPrevious = () => {
@@ -259,6 +259,7 @@ const MusicPlayer = ({route, navigation}) => {
       offset: (songIndex - 1) * width,
     });
     TrackPlayer.play();
+    backgroundTimer();
   };
 
   const checkLogin = async () => {
@@ -267,20 +268,22 @@ const MusicPlayer = ({route, navigation}) => {
     if (key[0] !== 'isLogin') {
       var userData = await getSyncData(key[0]).then(async res => {
         checkFavourite(res);
-        var body = {
-          type: 1,
-          user_id: res.id,
-          user_type: res.usertype.toLowerCase(),
-        };
-        var result = await postData('api/getSubscription', body);
-        if (result.msg === 'Subscribed') {
-          setStatus(false);
-        }
+        // var body = {
+        //   type: 1,
+        //   user_id: res.id,
+        //   user_type: res.usertype.toLowerCase(),
+        // };
+        // var result = await postData('api/getSubscription', body);
+        // if (result.msg === 'Subscribed') {
+        //   setStatus(false);
+        // }
         var {id, usertype} = res;
         setUserData({id, usertype});
       });
     }
   };
+
+
 
   const skipForward = async () => {
     await TrackPlayer.seekTo(progress.position + 10);
@@ -290,20 +293,39 @@ const MusicPlayer = ({route, navigation}) => {
     await TrackPlayer.seekTo(progress.position - 10);
   };
 
-  useEffect(() => {
-    checkLogin();
-  }, []);
+  // const getSectionDone = async () => {
+  //   if (status) {
+  //     const currentTrack = await TrackPlayer.getCurrentTrack();
+  //     if (currentTrack != null) {
+  //       if (Math.floor(progress.position) >= tracks[currentTrack].duration) {
+  //         await TrackPlayer.stop();
+  //         setModalVisible(true);
+  //       }
+  //     }
+  //   }
+  // };
 
-  const getSectionDone = async () => {
-    if (status) {
-      const currentTrack = await TrackPlayer.getCurrentTrack();
-      if (currentTrack != null) {
-        if (Math.floor(progress.position) >= tracks[currentTrack].duration) {
-          await TrackPlayer.stop();
-          setModalVisible(true);
-        }
-      }
+  // useEffect(() => {
+  //   getSectionDone();
+  // }, [progress.position]);
+
+  const backgroundTimer = async () => {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    // Start a timer that runs once after X milliseconds
+    console.log('status', isSub);
+    if (!isSub) {
+        BackgroundTimer.start();
+        const timeoutId = BackgroundTimer.setTimeout(async () => {
+          if (currentTrack != null) {
+            await TrackPlayer.stop();
+            setModalVisible(true);
+          }
+          // this will be executed once after 10 seconds
+          // even when app is the the background
+        }, temp[currentTrack].duration * 1000);
     }
+    // Cancel the timeout if necessary
+    // BackgroundTimer.clearTimeout(timeoutId);
   };
 
   const buySubscriptionModel = () => {
@@ -314,8 +336,7 @@ const MusicPlayer = ({route, navigation}) => {
         transparent
         onShow={async () => {
           var key = await checkSyncData();
-
-          if (key[0] !== 'isLogin') {
+          if (key[0] !== 'fcmToken') {
             setUser('Buy Subscription');
           }
         }}
@@ -344,10 +365,6 @@ const MusicPlayer = ({route, navigation}) => {
     );
   };
 
-  useEffect(() => {
-    getSectionDone();
-  }, [progress.position]);
-
   // const closePlayer = () => {
   //   refMiniRBSheet.current.close()
   //   console.log('close', refMiniRBSheet);
@@ -366,132 +383,6 @@ const MusicPlayer = ({route, navigation}) => {
   //       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
   //   }, [progress.position])
   // );
-
-  const postComment = async () => {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
-    var body = {
-      type: 1,
-      c_name: name,
-      c_email: email,
-      c_msg: commentText,
-      books_id: tracks[currentTrack].id,
-    };
-    var result = await postData('api/getAddcomment', body);
-    if (result.msg === 'added') {
-      ToastAndroid.show('Comment Added Successfully', ToastAndroid.SHORT);
-      refRBSheet.current.close();
-    } else {
-      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
-      refRBSheet.current.close();
-    }
-  };
-
-  const commentBottomSheet = () => {
-    return (
-      <RBSheet
-        ref={refRBSheet}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        customStyles={{
-          wrapper: {
-            backgroundColor: 'transparent',
-          },
-          draggableIcon: {
-            backgroundColor: textColor,
-          },
-          container: {
-            backgroundColor: backgroundColor,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          },
-        }}
-        height={height * 0.6}>
-        <View>
-          <Text
-            style={{
-              color: textColor,
-              margin: 10,
-              marginHorizontal: 20,
-              fontWeight: '800',
-              fontSize: 22,
-            }}>
-            Write A review
-          </Text>
-          <Text style={{color: textColor, marginHorizontal: 20, fontSize: 14}}>
-            We will not publish your email address. Required fields are marked*
-          </Text>
-          <View style={{marginTop: 20, marginHorizontal: 20}}>
-            <Text style={{color: textColor, fontSize: 14}}>Comment</Text>
-            <TextInput
-              onChangeText={text => setCommentText(text)}
-              style={{
-                borderWidth: 1,
-                borderRadius: 5,
-                marginVertical: 10,
-                borderColor: textColor,
-                color: textColor,
-                paddingHorizontal: 10,
-              }}
-              multiline
-              numberOfLines={3}
-              placeholder="Write your comment here"
-              placeholderTextColor="#999"
-            />
-            <View style={{flexDirection: 'row'}}>
-              <View style={{flexDirection: 'column', width: '50%'}}>
-                <Text style={{color: textColor, fontSize: 14}}>Name*</Text>
-                <TextInput
-                  onChangeText={text => setName(text)}
-                  placeholder="Name"
-                  placeholderTextColor="#999"
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: 5,
-                    marginVertical: 10,
-                    marginRight: 10,
-                    borderColor: textColor,
-                    color: textColor,
-                    paddingHorizontal: 10,
-                  }}
-                />
-              </View>
-              <View style={{flexDirection: 'column', width: '50%'}}>
-                <Text style={{color: textColor, fontSize: 14}}>Email*</Text>
-                <TextInput
-                  onChangeText={text => setEmail(text)}
-                  placeholder="Email"
-                  placeholderTextColor="#999"
-                  style={{
-                    borderWidth: 1,
-                    borderRadius: 5,
-                    marginVertical: 10,
-                    borderColor: textColor,
-                    color: textColor,
-                    paddingHorizontal: 10,
-                  }}
-                />
-              </View>
-            </View>
-            <TouchableOpacity onPress={() => postComment()}>
-              <View
-                style={{
-                  backgroundColor: '#ff9000',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: 20,
-                  marginVertical: 10,
-                  borderRadius: 5,
-                }}>
-                <Text style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
-                  Post Comment
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </RBSheet>
-    );
-  };
 
   const renderSongs = ({item, index}) => {
     return (
@@ -576,8 +467,8 @@ const MusicPlayer = ({route, navigation}) => {
               </Text>
               <View style={{width: 150}}>
                 <SpeedSlider
-                  value={speed*10}
-                  onValueChange={value => setSpeed(value/10)}
+                  value={speed * 10}
+                  onValueChange={value => setSpeed(value / 10)}
                   maximumValue={35}
                   minimumValue={5}
                   step={1}
@@ -601,7 +492,7 @@ const MusicPlayer = ({route, navigation}) => {
               </Text>
             </View>
             <View style={{flexDirection: 'row'}}>
-              <TouchableOpacity onPress={()=>setSpeed(1)}>
+              <TouchableOpacity onPress={() => setSpeed(1)}>
                 <View
                   style={{
                     width: 40,
@@ -615,7 +506,7 @@ const MusicPlayer = ({route, navigation}) => {
                   <Text style={{color: textColor}}>1x</Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity onPress={()=>setSpeed(2)}>
+              <TouchableOpacity onPress={() => setSpeed(2)}>
                 <View
                   style={{
                     width: 40,
@@ -629,7 +520,7 @@ const MusicPlayer = ({route, navigation}) => {
                   <Text style={{color: textColor}}>2x</Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity onPress={()=>setSpeed(3)}>
+              <TouchableOpacity onPress={() => setSpeed(3)}>
                 <View
                   style={{
                     width: 40,
@@ -721,54 +612,220 @@ const MusicPlayer = ({route, navigation}) => {
     }
   };
 
-  const [selected, setSelected ] = useState({index:0});
+  const [selected, setSelected] = useState({index: 0});
 
-  const playChapter = (item,i) => {
-    var { index } = item;
+  const playChapter = (item, i) => {
+    var {index} = item;
     setSelected({index});
-    skipTo(i+1);
+    skipTo(i + 1);
     if (playBackState == State.Paused) {
-     TrackPlayer.play();
+      TrackPlayer.play();
     }
-  }
+  };
 
   const pauseChapter = () => {
-    setSelected({index:''});
+    setSelected({index: ''});
     TrackPlayer.pause();
-  }
-  
-  const showChapters = ({item,index}) => {
-    return(
-      <View style={{flexDirection:'row',padding:10,alignItems:'center',justifyContent:'space-between'}}>
+  };
 
-        <View style={{flexDirection:'row',alignItems:'center',width:width*0.8,overflow:'hidden'}}>
-        <Image source={{ 
-          uri: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`
-        }}
-        style={{width: 35, height: 35, borderRadius: 5}}/>
-        <TouchableOpacity onPress={()=>playChapter(item,index)}>
-        <Text style={{fontSize:15,color:textColor,marginLeft:15,fontWeight:'700'}}>{item.title}</Text>
-        </TouchableOpacity>
-        </View>
-        {
-          selected.index === item.index ?
-          <TouchableOpacity onPress={()=>pauseChapter()}>
-            <FontAwesome5 name='pause' color={'#ff9000'} size={20} />
+  const showChapters = ({item, index}) => {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 10,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: width * 0.8,
+            overflow: 'hidden',
+          }}>
+          <Image
+            source={{
+              uri: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+            }}
+            style={{width: 35, height: 35, borderRadius: 5}}
+          />
+          <TouchableOpacity onPress={() => playChapter(item, index)}>
+            <Text
+              style={{
+                fontSize: 15,
+                color: textColor,
+                marginLeft: 15,
+                fontWeight: '700',
+              }}>
+              {item.title}
+            </Text>
           </TouchableOpacity>
-          :
-          <TouchableOpacity onPress={()=>playChapter(item,index)}>
-            <FontAwesome5 name='play' color={'#ff9000'} size={20} />
-          </TouchableOpacity>
-        }
         </View>
-    )
-  }
+        {selected.index === item.index ? (
+          <TouchableOpacity onPress={() => pauseChapter()}>
+            <FontAwesome5 name="pause" color={'#ff9000'} size={20} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={() => playChapter(item, index)}>
+            <FontAwesome5 name="play" color={'#ff9000'} size={20} />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
+  const timerBS = () => {
+    {
+      return (
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={timerModalVisible}
+          onRequestClose={() => {
+            setTimerModalVisible(false);
+          }}>
+          <View style={style.centeredView}>
+            <View
+              style={[
+                {
+                  backgroundColor: modelBackgroundColor,
+                  padding: 20,
+                  borderRadius: 10,
+                },
+              ]}>
+              <Text
+                style={[
+                  {
+                    color: textColor,
+                    padding: 10,
+                    fontSize: 20,
+                    fontWeight: '600',
+                    marginBottom: 20,
+                  },
+                ]}>
+                Set Sleep timer
+              </Text>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 22,
+                  color: textColor,
+                  fontWeight: '800',
+                  padding: 10,
+                }}>
+                {timerValue}s
+              </Text>
+              <View style={{flexDirection: 'row'}}>
+                <TouchableOpacity onPress={() => setTimerValue(30)}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 50,
+                      backgroundColor:
+                        timerValue === 30 ? '#ff9000' : '#99999950',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      margin: 20,
+                    }}>
+                    <Text style={{color: textColor}}>30s</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setTimerValue(60)}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 50,
+                      backgroundColor:
+                        timerValue === 60 ? '#ff9000' : '#99999950',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      margin: 20,
+                    }}>
+                    <Text style={{color: textColor}}>60s</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setTimerValue(120)}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 50,
+                      backgroundColor:
+                        timerValue === 120 ? '#ff9000' : '#99999950',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      margin: 20,
+                    }}>
+                    <Text style={{color: textColor}}>120s</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-around',
+                  padding: 20,
+                }}>
+                <TouchableOpacity onPress={() => setTimerModalVisible(false)}>
+                  <View
+                    style={{
+                      backgroundColor: 'transparent',
+                      padding: 10,
+                      borderRadius: 2,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '500',
+                        color: textColor,
+                      }}>
+                      Cancel
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleTimerValue()}>
+                  <View
+                    style={{
+                      backgroundColor: '#ff9000',
+                      paddingVertical: 10,
+                      borderRadius: 3,
+                      paddingHorizontal: 40,
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '500',
+                        color: textColor,
+                      }}>
+                      OK
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      );
+    }
+  };
+
+  const handleTimerValue = () => {
+    setTimerModalVisible(false);
+    BackgroundTimer.start();
+    const timeoutId = BackgroundTimer.setTimeout(async () => {
+      await TrackPlayer.stop();
+      // this will be executed once after 10 seconds
+      // even when app is the the background
+    }, timerValue * 1000);
+  };
 
   const onShare = async () => {
     try {
       const result = await Share.share({
-        message:
-          'Booksinvoice - Download and listen books for free.',
+        message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
@@ -786,157 +843,165 @@ const MusicPlayer = ({route, navigation}) => {
 
   return (
     <>
-        <ScrollView showsVerticalScrollIndicator={false}
-      contentContainerStyle={{
-        justifyContent:'center',
-      }}
-      style={[
-        style.container,
-        {
-          backgroundColor: backgroundColor,
-        },
-      ]}>
-      {commentBottomSheet()}
-      {/* music player section */}
-      <View style={style.mainContainer}>
-        {/* Image */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          justifyContent: 'center',
+        }}
+        style={[
+          style.container,
+          {
+            backgroundColor: backgroundColor,
+          },
+        ]}>
+        {/* music player section */}
+        <View style={style.mainContainer}>
+          {/* Image */}
 
-        <Animated.FlatList
-          ref={songSlider}
-          renderItem={renderSongs}
-          data={tracks}
-          keyExtractor={(item, index) => index}
-          horizontal
-          pagingEnabled
-          ListEmptyComponent={() => <ActivityIndicator size="large" />}
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onScroll={Animated.event(
-            [
-              {
-                nativeEvent: {
-                  contentOffset: {x: scrollX},
+          <Animated.FlatList
+            ref={songSlider}
+            renderItem={renderSongs}
+            data={tracks}
+            keyExtractor={(item, index) => index}
+            horizontal
+            pagingEnabled
+            ListEmptyComponent={() => <ActivityIndicator size="large" />}
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={Animated.event(
+              [
+                {
+                  nativeEvent: {
+                    contentOffset: {x: scrollX},
+                  },
                 },
-              },
-            ],
-            {useNativeDriver: true},
-          )}
-        />
-
-        {/* Title & Artist Name */}
-        <View>
-          <Text
-            style={[style.songContent, style.songTitle, {color: textColor}]}>
-            {/* {songs[songIndex].title} */ trackTitle}
-          </Text>
-          <Text
-            style={[style.songContent, style.songArtist, {color: textColor}]}>
-            {/* {songs[songIndex].artist} */ trackArtist}
-          </Text>
-        </View>
-
-        {/* songslider */}
-        <View>
-          <Slider
-            style={style.progressBar}
-            value={progress.position}
-            minimumValue={0}
-            maximumValue={progress.duration}
-            thumbTintColor="#ff9000"
-            minimumTrackTintColor="#ff9000"
-            maximumTrackTintColor={textColor}
-            onSlidingComplete={async value => {
-              await TrackPlayer.seekTo(value);
-            }}
+              ],
+              {useNativeDriver: true},
+            )}
           />
 
-          {/* Progress Durations */}
-          <View style={style.progressLevelDuraiton}>
+          {/* Title & Artist Name */}
+          <View>
             <Text
-              style={[
-                style.progressLabelText,
-                {
-                  color: textColor,
-                },
-              ]}>
-              {new Date(progress.position * 1000).toISOString().substr(14, 5)}
+              style={[style.songContent, style.songTitle, {color: textColor}]}>
+              {/* {songs[songIndex].title} */ trackTitle}
             </Text>
             <Text
-              style={[
-                style.progressLabelText,
-                {
-                  color: textColor,
-                },
-              ]}>
-              {new Date((progress.duration - progress.position) * 1000)
-                .toISOString()
-                .substr(14, 5)}
+              style={[style.songContent, style.songArtist, {color: textColor}]}>
+              {/* {songs[songIndex].artist} */ trackArtist}
             </Text>
+          </View>
+
+          {/* songslider */}
+          <View>
+            <Slider
+              style={style.progressBar}
+              value={progress.position}
+              minimumValue={0}
+              maximumValue={progress.duration}
+              thumbTintColor="#ff9000"
+              minimumTrackTintColor="#ff9000"
+              maximumTrackTintColor={textColor}
+              onSlidingComplete={async value => {
+                await TrackPlayer.seekTo(value);
+              }}
+            />
+
+            {/* Progress Durations */}
+            <View style={style.progressLevelDuraiton}>
+              <Text
+                style={[
+                  style.progressLabelText,
+                  {
+                    color: textColor,
+                  },
+                ]}>
+                {new Date(progress.position * 1000).toISOString().substr(14, 5)}
+              </Text>
+              <Text
+                style={[
+                  style.progressLabelText,
+                  {
+                    color: textColor,
+                  },
+                ]}>
+                {new Date((progress.duration - progress.position) * 1000)
+                  .toISOString()
+                  .substr(14, 5)}
+              </Text>
+            </View>
+          </View>
+
+          {/* music control */}
+          <View style={style.musicControlsContainer}>
+            <TouchableOpacity onPress={skipBackward}>
+              <MaterialIcons name="replay-10" size={30} color="#ff9000" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={skipToPrevious}>
+              <Ionicons
+                name="play-skip-back-outline"
+                size={35}
+                color="#ff9000"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => togglePlayBack(playBackState)}>
+              <Ionicons
+                name={
+                  playBackState === State.Playing
+                    ? 'ios-pause-circle'
+                    : 'ios-play-circle'
+                }
+                size={75}
+                color="#ff9000"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={skipToNext}>
+              <Ionicons
+                name="play-skip-forward-outline"
+                size={35}
+                color="#ff9000"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={skipForward}>
+              <MaterialIcons name="forward-10" size={30} color="#ff9000" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* music control */}
-        <View style={style.musicControlsContainer}>
-          <TouchableOpacity onPress={skipBackward}>
-            <MaterialIcons name="replay-10" size={30} color="#ff9000" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={skipToPrevious}>
-            <Ionicons name="play-skip-back-outline" size={35} color="#ff9000" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => togglePlayBack(playBackState)}>
-            <Ionicons
-              name={
-                playBackState === State.Playing
-                  ? 'ios-pause-circle'
-                  : 'ios-play-circle'
-              }
-              size={75}
-              color="#ff9000"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={skipToNext}>
-            <Ionicons
-              name="play-skip-forward-outline"
-              size={35}
-              color="#ff9000"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={skipForward}>
-            <MaterialIcons name="forward-10" size={30} color="#ff9000" />
-          </TouchableOpacity>
-        </View>
-      </View>
+        {/* <MiniPlayer ref={refMiniRBSheet} /> */}
+        {/* bottom section */}
+        <View
+          style={{...style.bottomSection, backgroundColor: backgroundColor}}>
+          <View style={style.bottomIconContainer}>
+            <TouchableOpacity onPress={() => addFavourite()}>
+              {isFavourite ? (
+                <Ionicons name="heart-sharp" size={30} color="red" />
+              ) : (
+                <Ionicons name="heart-outline" size={30} color="#888888" />
+              )}
+            </TouchableOpacity>
 
-      {/* <MiniPlayer ref={refMiniRBSheet} /> */}
-       {/* bottom section */}
-       <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
-        <View style={style.bottomIconContainer}>
-          <TouchableOpacity onPress={() => addFavourite()}>
-            {isFavourite ? (
-              <Ionicons name="heart-sharp" size={30} color="red" />
-            ) : (
-              <Ionicons name="heart-outline" size={30} color="#888888" />
-            )}
-          </TouchableOpacity>
+            <TouchableOpacity onPress={changeRepeatMode}>
+              <MaterialCommunityIcons
+                name={`${repeatIcon()}`}
+                size={30}
+                color={repeatMode !== 'off' ? '#ff9000' : '#888888'}
+              />
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={changeRepeatMode}>
-            <MaterialCommunityIcons
-              name={`${repeatIcon()}`}
-              size={30}
-              color={repeatMode !== 'off' ? '#ff9000' : '#888888'}
-            />
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('Comment', {id: route.params.id})
+              }>
+              <Fontisto
+                style={{marginTop: 4}}
+                name="commenting"
+                size={26}
+                color="#888888"
+              />
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Comment', {id:route.params.id})}>
-            <Fontisto
-              style={{marginTop:4}}
-              name="commenting"
-              size={26}
-              color="#888888"
-            />
-          </TouchableOpacity>
-
-          {/* <TouchableOpacity onPress={() => refRBSheet.current.open()}>
+            {/* <TouchableOpacity onPress={() => refRBSheet.current.open()}>
             <Fontisto
               style={{marginTop:4}}
               name="commenting"
@@ -945,57 +1010,70 @@ const MusicPlayer = ({route, navigation}) => {
             />
           </TouchableOpacity> */}
 
-          <TouchableOpacity onPress={() => setSpeedModalVisible(true)}>
-            <MaterialCommunityIcons
-              name="speedometer"
-              size={30}
-              color="#888888"
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                textAlign: 'center',
-                marginTop: -12,
-                fontWeight: '800',
-                color: '#888888',
-              }}>
-              {speed}x
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => setSpeedModalVisible(true)}>
+              <MaterialCommunityIcons
+                name="speedometer"
+                size={30}
+                color="#888888"
+              />
+              <Text
+                style={{
+                  fontSize: 12,
+                  textAlign: 'center',
+                  marginTop: -12,
+                  fontWeight: '800',
+                  color: '#888888',
+                }}>
+                {speed}x
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      <View style={{...style.bottomSection,backgroundColor: backgroundColor,}}>
-        <View style={style.bottomIconContainer}>
-        <TouchableOpacity>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
-        
-          <TouchableOpacity onPress={onShare}>
-            <MaterialCommunityIcons
-              name="share"
-              size={30}
-              color="#888888"
-            />
-          </TouchableOpacity>
+        <View
+          style={{...style.bottomSection, backgroundColor: backgroundColor}}>
+          <View style={style.bottomIconContainer}>
+            <TouchableOpacity>
+              <MaterialCommunityIcons
+                name="download"
+                size={30}
+                color="#888888"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity>
+              <MaterialCommunityIcons
+                onPress={() => setTimerModalVisible(true)}
+                name="timer-outline"
+                size={30}
+                color="#888888"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onShare}>
+              <MaterialCommunityIcons name="share" size={30} color="#888888" />
+            </TouchableOpacity>
           </View>
         </View>
 
-      {
-        route.params.chapters.length > 1 && <View style={{ width: width, backgroundColor:backgroundColor,padding:15}}>
-        <FlatList 
-        data={chapter}
-        renderItem={showChapters}
-        keyExtractor={(item, index) => index}
-        />
-      </View>
-      }
+        {route.params.chapters.length > 1 && (
+          <View
+            style={{
+              width: width,
+              backgroundColor: backgroundColor,
+              padding: 15,
+            }}>
+            <FlatList
+              data={chapter}
+              renderItem={showChapters}
+              keyExtractor={(item, index) => index}
+            />
+          </View>
+        )}
 
-      
-
-      {buySubscriptionModel()}
-      {speedModal()}
-    </ScrollView>
-         
+        {timerBS()}
+        {buySubscriptionModel()}
+        {speedModal()}
+      </ScrollView>
     </>
   );
 };

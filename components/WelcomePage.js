@@ -3,12 +3,14 @@ import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Image,
-  ToastAndroid,
+  StatusBar,
+  Alert,
 } from 'react-native';
 import NetInfo from "@react-native-community/netinfo";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import { postData } from './FetchApi';
+import { checkSyncData, getSyncData } from './AsyncStorage';
 
 
 export const WelcomePage = ({navigation}) => {
@@ -18,11 +20,110 @@ export const WelcomePage = ({navigation}) => {
   const [show, setShow] = useState(false);
 
   const fetch = async () => {
-    var body = {type: 1};
+    let fcmToken = await getSyncData('fcmToken');
+    var body = {type: 1, token_no_id: fcmToken};
     var data = await postData('api/getHome', body);
-
+    
     dispatch({type: 'SET_HOME', payload: data});
+    fetchProfile();
     setShow(true);
+  };
+
+  const fetchProfile = async () => {
+    var key = await checkSyncData();
+
+    if (key[0]) {
+      var userData = await getSyncData(key[0]);
+      // setUserData(userData);
+      if (userData === null) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('Login'),
+            },
+          ],
+        );
+      } else {
+        fetchUserData(userData);
+      }
+    }
+  };
+
+  const fetchUserData = async userData => {
+    if (userData.usertype === 'individual') {
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: 'individual',
+      };
+      var result = await postData('api/getProfile', body);
+
+      if (
+        result.data[0].username === '' ||
+        result.data[0].address === '' ||
+        result.data[0].zip_pin === '' ||
+        result.state[0].name === '' ||
+        result.city[0].name === '' ||
+        result.data[0].telephone === '' ||
+        result.data[0].email === ''
+      ) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('EditProfile'),
+            },
+          ],
+        );
+      }
+    } else if (userData.usertype === 'organisation') {
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: 'organisation',
+      };
+      var result = await postData('api/getProfile', body);
+      if (
+        result.data[0].orgnisationname === '' ||
+        result.data[0].address === '' ||
+        result.data[0].postalcode === '' ||
+        result.city[0].name === '' ||
+        result.state[0].name === '' ||
+        result.data[0].orgnisationcontact === '' ||
+        result.data[0].orgnisationemail === ''
+      ) {
+        Alert.alert(
+          'Update Your Profile & Activate Free Trial',
+          'Without Adding Any Debit or Credit Card',
+          [
+            {
+              text: 'Ask me later',
+              // onPress: () => console.log("Cancel Pressed"),
+              style: 'cancel',
+            },
+            {
+              text: 'Proceed',
+              onPress: () => navigation.navigate('EditProfile'),
+            },
+          ],
+        );
+      }
+    }
   };
 
   
@@ -41,8 +142,8 @@ export const WelcomePage = ({navigation}) => {
       }
       else
       {
-         let error_msg =  'Please connect your device with internet and try again.';
-         ToastAndroid.show(error_msg, ToastAndroid.SHORT);
+        navigation.navigate('OfflineScreen')
+        unsubscribe()
       }
    
      });
@@ -57,6 +158,7 @@ export const WelcomePage = ({navigation}) => {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: '#e30047'}]}>
+      <StatusBar barStyle='dark-content' translucent backgroundColor='#bf6d01' />
       <Image
         style={{width: 150, height: 150, borderRadius: 0,marginTop:100,marginBottom:40}}
         source={require('../images/logo.jpg')}

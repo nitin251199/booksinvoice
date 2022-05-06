@@ -3,7 +3,9 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   ToastAndroid,
@@ -19,6 +21,7 @@ import {useDrawerStatus} from '@react-navigation/drawer';
 import {ThemeContext} from './ThemeContext';
 import {Badge, List} from 'react-native-paper';
 import {useSelector} from 'react-redux';
+import pkg from '../package.json';
 
 const {width, height} = Dimensions.get('window');
 
@@ -81,6 +84,27 @@ export const DrawerContent = ({navigation}) => {
           key={index}></List.Item>
       </View>
     );
+  };
+
+  const onShare = async () => {
+    try {
+      const result = await Share.share({
+        message:
+          `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+          
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -449,8 +473,9 @@ export const DrawerContent = ({navigation}) => {
       </ListItem>
 
       <ListItem
-        // onPress={() => {navigation.navigate('FAQ')
-        // navigation.closeDrawer();}}
+        onPress={() => {
+        Linking.openURL("https://play.google.com/store/apps/details?id=com.booksinvoice")
+        navigation.closeDrawer();}}
         containerStyle={{backgroundColor: backgroundColor}}>
         <MaterialIcons name="star-rate" size={23} color={textColor} />
         <ListItem.Content style={{paddingLeft: 15}}>
@@ -463,8 +488,8 @@ export const DrawerContent = ({navigation}) => {
       </ListItem>
 
       <ListItem
-        // onPress={() => {navigation.navigate('FAQ')
-        // navigation.closeDrawer();}}
+        onPress={() => {onShare()
+        navigation.closeDrawer();}}
         containerStyle={{backgroundColor: backgroundColor}}>
         <MaterialCommunityIcons
           name="share-variant"
@@ -490,7 +515,7 @@ export const DrawerContent = ({navigation}) => {
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>
-              App Version V1.1
+              App Version v{pkg.version}
             </Text>
           </ListItem.Title>
         </ListItem.Content>

@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "410965554876-gos1mfq2c0r6v96nhf5uuousubecmp0h.apps.googleusercontent.com",
+          "client_id": "410965554876-38aqip71o6gfn8fu32i9cffvbfk8cm7l.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.booksinvoice",
-            "certificate_hash": "04159176a5e2a756969747ede20ce1bf66a541d8"
+            "certificate_hash": "5f7af443e242f0cefa61536c760d9b571d49d670"
           }
         },
         {
@@ -37,6 +37,13 @@
             {
               "client_id": "410965554876-ch8hsnb43ud3amvr0toq0om7374vag70.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "410965554876-8mrqqilj9rh966j37sb66taip2rd0urg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.booksinvoice"
+              }
             }
           ]
         }

@@ -73,9 +73,11 @@ export const PaymentSummary = ({route, navigation}) => {
       let d = subtotal*(percentage/100);
        d = d.toFixed(2)
        setDiscount(d)
-        setSubTotal(subtotal - d)
+        let s = (subtotal - d).toFixed(2);
+       setSubTotal(s)
         gst = ((subtotal - d) * 0.18).toFixed(2);
         total = (parseFloat(subtotal - d) + parseFloat(gst)).toFixed(2);
+        couponid = result.data[0].id;
         setCouponStatus(true);
         fetchDetails()  
     }

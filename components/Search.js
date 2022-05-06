@@ -1,3 +1,4 @@
+import { useFocusEffect } from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
   Dimensions,
@@ -26,9 +27,11 @@ export const Search = ({navigation}) => {
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
 
   const searchBook = async text => {
     setLoading(true);
+    setSearchText(text);
     var body = {global_search: text};
     var result = await postData('api/getSearch', body);
     if (result.msg === 'Success') {
@@ -39,6 +42,19 @@ export const Search = ({navigation}) => {
       setLoading(false);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // alert('Screen was focused');
+      // Do something when the screen is focused
+      return () => {
+        setBooks([]);
+        setSearchText('');
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, [])
+  );
 
   const renderItem = ({item}) => {
     return (
@@ -117,6 +133,7 @@ export const Search = ({navigation}) => {
         <View style={styles.inputContainer}>
           <Icon type="materialicons" name="search" color={textColor} />
           <TextInput
+            value={searchText}
             style={[styles.input, {color: textColor}]}
             placeholder="Search your books"
             placeholderTextColor={textColor}
