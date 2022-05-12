@@ -20,8 +20,7 @@ export const WelcomePage = ({navigation}) => {
   const [show, setShow] = useState(false);
 
   const fetch = async () => {
-    let fcmToken = await getSyncData('fcmToken');
-    var body = {type: 1, token_no_id: fcmToken};
+    var body = {type: 1 };
     var data = await postData('api/getHome', body);
     
     dispatch({type: 'SET_HOME', payload: data});
@@ -32,28 +31,9 @@ export const WelcomePage = ({navigation}) => {
   const fetchProfile = async () => {
     var key = await checkSyncData();
 
-    if (key[0]) {
+    if (key[0] != 'fcmToken') {
       var userData = await getSyncData(key[0]);
-      // setUserData(userData);
-      if (userData === null) {
-        Alert.alert(
-          'Update Your Profile & Activate Free Trial',
-          'Without Adding Any Debit or Credit Card',
-          [
-            {
-              text: 'Ask me later',
-              // onPress: () => console.log("Cancel Pressed"),
-              style: 'cancel',
-            },
-            {
-              text: 'Proceed',
-              onPress: () => navigation.navigate('Login'),
-            },
-          ],
-        );
-      } else {
         fetchUserData(userData);
-      }
     }
   };
 
@@ -127,12 +107,6 @@ export const WelcomePage = ({navigation}) => {
   };
 
   
-  const unsubscribe = NetInfo.addEventListener(state => {
-    if( state.isConnected == true )
-    {
-       fetch();
-    }
-  });
 
   useEffect(() => {
     NetInfo.fetch().then(state => {
@@ -143,7 +117,6 @@ export const WelcomePage = ({navigation}) => {
       else
       {
         navigation.navigate('OfflineScreen')
-        unsubscribe()
       }
    
      });
@@ -152,7 +125,6 @@ export const WelcomePage = ({navigation}) => {
   useEffect(()=> {
     if(show){
         navigation.navigate('MyTabs')
-        unsubscribe()
     }
   },[show])
 

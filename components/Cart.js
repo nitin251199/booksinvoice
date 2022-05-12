@@ -38,7 +38,7 @@ export const Cart = ({navigation}) => {
   var carts = useSelector(state => state?.cart);
   var cartItems = Object.values(carts);
   var keys = Object.keys(carts);
-  const [cart, setCart] = useState(cartItems);
+  const [user,setUser] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [coupon, setCoupon] = useState('');
@@ -63,12 +63,30 @@ export const Cart = ({navigation}) => {
 		return (a + b)
 	}
 
-  const removeBook = (item) => {
+  const getUser = async() =>{
+    var key = await checkSyncData()
+    if (key[0] !== 'fcmToken') {
+      var userData = await getSyncData(key[0]).then(async(res) => {
+        setUser(res)
+      })
+  }
+}
+
+useEffect(()=>{
+  getUser()
+},[])
+
+useEffect(()=>{
+  setTotal(cartItems.reduce(calculateAmount, 0));
+},[cartItems])
+
+  const removeBook = async(item) => {
     dispatch({type: 'REMOVE_CART', payload: item.id});
     setRefresh(!refresh);
     ToastAndroid.show('Book Removed from Cart', ToastAndroid.SHORT);
     navigation.setParams({y:''})
-    setCart(cartItems);
+    var body = {type:1, book_id:item.id, user_id:user.id, user_type:user.usertype};
+    var res = await postData('api/getRemovecart',body);
   };
 
   const handleCouponProceed = async() => {
@@ -96,7 +114,7 @@ export const Cart = ({navigation}) => {
   const fetchDetails = async () => {
     var key = await checkSyncData();
 
-    if (key) {
+    if (key[0] !== 'fcmToken') {
       await getSyncData(key[0]).then(async res => {
         await fetchUserData(res).then(async result => {
           var body = {
@@ -136,7 +154,7 @@ export const Cart = ({navigation}) => {
   }, []);
 
   const fetchUserData = async res => {
-    if (res.usertype === 'Individual') {
+    if (res.usertype === 'individual') {
       var body = {
         type: 1,
         user_id: res.id,
@@ -150,7 +168,7 @@ export const Cart = ({navigation}) => {
       country = result.country[0].name;
       state = result.state[0].name;
       city = result.city[0].name;
-    } else if (res.usertype === 'Organisation') {
+    } else if (res.usertype === 'organisation') {
       var body = {
         type: 1,
         user_id: res.id,
@@ -381,7 +399,7 @@ export const Cart = ({navigation}) => {
     );
   };
 
-  if (carts.length === 0) {
+  if (keys.length === 0) {
     return (
       <View
         style={{
@@ -415,7 +433,7 @@ export const Cart = ({navigation}) => {
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
-      <ScrollView >
+      <ScrollView contentContainerStyle={{paddingBottom: 60}}>
       <View style={{flexDirection:'row',justifyContent:'space-between'}}>
       <Text
         style={{
@@ -452,7 +470,7 @@ export const Cart = ({navigation}) => {
       labelStyle={{fontSize:16,letterSpacing:0}} 
       mode="contained"
       style={{backgroundColor: '#ff9000',borderRadius:0}}
-      contentStyle={{width:width*0.5,paddingVertical:5}}
+      contentStyle={{width:width*0.5}}
       onPress={() => handleProceed()}
       >
        Checkout</Button>
@@ -462,8 +480,8 @@ export const Cart = ({navigation}) => {
               title={couponStatus ? 'Coupon Applied' : 'Apply Coupon'}
               type="outline"
               titleStyle={{color: 'red'}}
-              buttonStyle={{borderColor: 'red',borderRadius:0,paddingBottom:10}}
-              disabledStyle={{borderColor: 'green',borderRadius:0}}
+              buttonStyle={{borderColor: 'red',borderRadius:0,paddingBottom:10, backgroundColor:backgroundColor}}
+              disabledStyle={{borderColor: 'green',borderRadius:0, backgroundColor:backgroundColor}}
               disabledTitleStyle={{color: 'green'}}
               containerStyle={{width: width * 0.5}}
             />

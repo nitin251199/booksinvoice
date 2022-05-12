@@ -53,7 +53,7 @@ export const Comment = ({route, navigation}) => {
   const fetchUser = async () => {
     var key = await checkSyncData();
 
-    if (key[0]) {
+    if (key[0] != 'fcmToken') {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
       setName(userData?.user_name);
@@ -300,6 +300,7 @@ export const Comment = ({route, navigation}) => {
             fontSize: 20,
             fontWeight: '800',
             width: width * 0.85,
+            color: textColor,
           }}>
           {comments.length} Comments
         </Text>

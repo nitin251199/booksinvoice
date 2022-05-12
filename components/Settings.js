@@ -1,11 +1,11 @@
 import {Picker} from '@react-native-picker/picker';
 import React from 'react';
-import {ActivityIndicator, StyleSheet, Switch, Text, View} from 'react-native';
+import {ActivityIndicator, Share, StyleSheet, Switch, Text, TouchableOpacity, View} from 'react-native';
 import { ThemeContext } from './ThemeContext';
 import pkg from '../package.json';
 
 
-export const Settings = () => {
+export const Settings = ({navigation}) => {
     
     const { theme, toggleTheme, darkMode } = React.useContext(ThemeContext);
     const [loading, setLoading ] = React.useState(false)
@@ -25,6 +25,28 @@ export const Settings = () => {
   //       setLoading(false)
   // }
 //
+
+const onShare = async () => {
+  try {
+    const result = await Share.share({
+      message:
+        `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+        
+    });
+    if (result.action === Share.sharedAction) {
+      if (result.activityType) {
+        // shared with activity type of result.activityType
+      } else {
+        // shared
+      }
+    } else if (result.action === Share.dismissedAction) {
+      // dismissed
+    }
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
   return (
     <View style={[styles.container,{backgroundColor: backgroundColor}]}>
       <Text style={[styles.title,{color: textColor}]}>Settings</Text>
@@ -79,18 +101,22 @@ export const Settings = () => {
             </View>
             <Text style={[styles.itemText,{color: textColor}]}>{pkg.version}</Text>
           </View>
-          <View style={[styles.menu, {paddingTop: 20}]}>
+          <TouchableOpacity onPress={onShare} style={[styles.menu, {paddingTop: 20}]}>
+          <View >
             <View>
               <Text style={[styles.itemText,{color: textColor}]}>Share</Text>
               <Text style={{fontSize: 12,color: textColor}}>Let your friends know about us</Text>
             </View>
           </View>
-          <View style={[styles.menu, {paddingTop: 20}]}>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.menu, {paddingTop: 20}]} onPress={()=>navigation.navigate('Legal', {page: 'Support'})}>
+          <View >
             <View>
               <Text style={[styles.itemText,{color: textColor}]}>Contact Us</Text>
               <Text style={{fontSize: 12,color: textColor}}>Feedback</Text>
             </View>
           </View>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

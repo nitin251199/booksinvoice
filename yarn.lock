@@ -1270,6 +1270,13 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-8.3.0.tgz#e3d19381c7d9f885b44ea1785ed892bc39c4b0f1"
   integrity sha512-VlmjD7Vg1BacbNhwuJCel1eeD8N2Ps6BEcZe9qoSoeIptpCbC86o4ZqD0meSjJzioKSvgalrkmPgMaVYsVipKw==
 
+"@react-native-community/push-notification-ios@^1.10.1":
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/@react-native-community/push-notification-ios/-/push-notification-ios-1.10.1.tgz#d52a6d69ac1112df0f79e1d17978077629b76784"
+  integrity sha512-k6bZWUKLif4GjenyTD3aQLwA2VT3bNmt22INO/34lexnpmqkPDZF7nreqbckTHG0Zso9wDTe4N/AZJUC/d8iRg==
+  dependencies:
+    invariant "^2.2.4"
+
 "@react-native-community/slider@^4.2.0":
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/@react-native-community/slider/-/slider-4.2.0.tgz#47fa146b2f2c92e45c35c154b1df8a66e71b8048"
@@ -6188,6 +6195,11 @@ react-native-print@^0.10.0:
   resolved "https://registry.yarnpkg.com/react-native-print/-/react-native-print-0.10.0.tgz#803b28592c1605d2bdba80fc909fcdbced0d069f"
   integrity sha512-jXFIeTLiQeC9rTduRjMGXWzGEaslx69U64tsw851+v2fbfNwn4SP53uEIhCCc0ly3VxGCFxseafrZjfuMyVXNg==
 
+react-native-push-notification@^8.1.1:
+  version "8.1.1"
+  resolved "https://registry.yarnpkg.com/react-native-push-notification/-/react-native-push-notification-8.1.1.tgz#a41d20c70ea5a7709417e96261b225461f8dc73a"
+  integrity sha512-XpBtG/w+a6WXTxu6l1dNYyTiHnbgnvjoc3KxPTxYkaIABRmvuJZkFxqruyGvfCw7ELAlZEAJO+dthdTabCe1XA==
+
 react-native-ratings@8.0.4:
   version "8.0.4"
   resolved "https://registry.yarnpkg.com/react-native-ratings/-/react-native-ratings-8.0.4.tgz#efd5ebad8acc08bf98d34d39b18fb7a6813ef991"
@@ -6254,11 +6266,6 @@ react-native-skeleton-content-nonexpo@^1.0.13:
   integrity sha512-aHku9Av12ySvSBhIt1xh/DwdHpsWfV9Xi8y1egg3HFd25JCDAg6YBOSrsQD+cJW2Dei0v8UkcnCn5ULSrgqRzQ==
   dependencies:
     react-native-redash "^16.0.11"
-
-react-native-swipe-up-down@^1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/react-native-swipe-up-down/-/react-native-swipe-up-down-1.1.6.tgz#aefc779964e4bf3c27ef832049336ac7db605ada"
-  integrity sha512-i7MtBPmVC1Wztto3YjYDliHqq4nM346gHZ/hIJqzBoNZgjvh5Ie4ey2fauwa9pZytnkMz1nIoXle8XVxpp01oA==
 
 react-native-tab-view@^3.1.1:
   version "3.1.1"

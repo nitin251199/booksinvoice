@@ -258,10 +258,9 @@ export default function InfoPage({route, navigation}) {
   };
 
   const addToCart = async () => {
-    setLoading(true);
     var key = await checkSyncData();
-
-    if (key[0]) {
+    if (key[0] != 'fcmToken') {
+      setLoading(true);
       var userData = await getSyncData(key[0]);
       if (userData !== null) {
         dispatch({type: 'ADD_CART', payload: [book.id, book]});
@@ -278,6 +277,8 @@ export default function InfoPage({route, navigation}) {
       } else {
         navigation.navigate('Login');
       }
+    } else {
+      navigation.navigate('Login');
     }
   };
 
@@ -503,7 +504,7 @@ export default function InfoPage({route, navigation}) {
                     Description :{' '}
                   </Text>
                   {showMoreButton ? (
-                    <TouchableOpacity onPress={toggleTextShown}>
+                    <TouchableOpacity onPress={() => toggleTextShown()}>
                       <Text style={{color: '#FFD369'}}>
                         {textShown ? 'Read Less' : 'Read More'}
                       </Text>

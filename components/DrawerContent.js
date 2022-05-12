@@ -62,7 +62,7 @@ export const DrawerContent = ({navigation}) => {
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key[0]) {
+    if (key[0] !== 'fcmToken') {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
     } else {
@@ -152,7 +152,7 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-          if (userData) {
+          if (userData && userData.length != 0) {
             navigation.navigate('EditProfile');
             navigation.closeDrawer();
           } else {
@@ -165,7 +165,7 @@ export const DrawerContent = ({navigation}) => {
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>
-              {userData ? 'Dashboard' : 'Log In'}
+              {userData && userData.length != 0 ? 'Dashboard' : 'Log In'}
             </Text>
           </ListItem.Title>
           <ListItem.Subtitle style={{fontSize: 12, color: '#999'}}>
@@ -190,7 +190,7 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-          if (userData) {
+          if (userData && userData.length != 0) {
             navigation.navigate('FavouriteBooks');
             navigation.closeDrawer();
           } else {

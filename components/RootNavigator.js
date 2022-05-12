@@ -32,6 +32,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Comment } from './Comment';
 import { Cart } from './Cart';
 import { OfflineScreen } from './OfflineScreen';
+import { MyBooks } from './MyBooks';
 
 export default function RootNavigator() {
 
@@ -58,9 +59,10 @@ export default function RootNavigator() {
         // screenOptions={{
         //   swipeEnabled: false,
         // }}
-        initialRouteName="Homepage"
+        // initialRouteName="Homepage"
         tabBarPosition="bottom"
-        tabBar={props => <BottomSheet {...props} />}>
+        tabBar={props => <BottomSheet {...props} />}
+        >
         <Tab.Screen
           name="HomeComponent"
           component={HomepageComponent}
@@ -195,6 +197,11 @@ export default function RootNavigator() {
             component={UserSubscriptions}
             options={{header: AppHeader}}
           />
+        <Stack.Screen
+          name="MyBooks"
+          component={MyBooks}
+          options={{header: AppHeader}}
+        />
       </Stack.Navigator>
     );
   };

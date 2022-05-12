@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { ActivityIndicator, Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, ToastAndroid, TouchableOpacity, useColorScheme, View } from 'react-native'
 import { AirbnbRating, Divider } from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import { checkSyncData, getSyncData } from './AsyncStorage';
@@ -16,6 +16,7 @@ export const FavouriteBooks = ({navigation}) => {
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const checkLogin = async() => {
     var key = await checkSyncData()
@@ -56,6 +57,12 @@ export const FavouriteBooks = ({navigation}) => {
           </TouchableOpacity>
           <View style={{width: width * 0.65, justifyContent: 'flex-start'}}>
             <TextTicker
+            onPress={() =>
+              navigation.navigate('InfoPage', {
+                state: item.id,
+                category: item.bookcategoryid,
+              })
+            }
               style={{
                 fontSize: 17,
                 color: textColor,
@@ -88,16 +95,24 @@ export const FavouriteBooks = ({navigation}) => {
   };
 
   const fetchFavourites = async(res) => {
+    setLoading(true);
     var body =  { "type": "1", "user_id": res.id, "user_type": res.usertype}
     var result = await postData('api/getFavourite', body)
     if(result.msg === 'Success'){
+      setLoading(false);
     setBooks(result.data)
+    }
+    else{
+      setLoading(false);
+      ToastAndroid.show('No Favourites Added', ToastAndroid.SHORT);
     }
   }
 
   useEffect(() => {
     checkLogin()
   } , [])
+
+
 
   return (
     <View style={[styles.container,{backgroundColor:backgroundColor}]}>
@@ -111,7 +126,7 @@ export const FavouriteBooks = ({navigation}) => {
             data={books}
             renderItem={renderItem}
             keyExtractor={item => item.id}
-            ListEmptyComponent={() => <ActivityIndicator size='large' />}
+            ListEmptyComponent={() => <ActivityIndicator size='large' animating={loading}/>}
           />
         </ScrollView>
     </View>

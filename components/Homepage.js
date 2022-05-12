@@ -7,13 +7,13 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  
+  Image
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StyleSheet, View, Dimensions} from 'react-native';
-import {AirbnbRating, Divider, Tile,Image} from 'react-native-elements';
+import {AirbnbRating, Divider, Tile} from 'react-native-elements';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
@@ -55,22 +55,6 @@ export default function Homepage({navigation, route}) {
 
   const [advertise, setAdvertise] = useState(setad);
 
-  const [refreshing, setRefreshing] = React.useState(false);
-
-  var dispatch = useDispatch();
-
-  const fetch = async () => {
-    var body = {type: 1};
-    var data = await postData('api/getHome', body);
-    setRefreshing(false);
-
-    dispatch({type: 'SET_HOME', payload: data});
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    fetch();
-  };
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -297,17 +281,21 @@ export default function Homepage({navigation, route}) {
     );
   };
 
+  // const handleScroll = (event) => {
+  //   console.log(event.nativeEvent.contentOffset.y);
+  //   let offset = event.nativeEvent.contentOffset.y;
+  //   if(offset == 151)
+  //   {
+  //     alert('x')
+  //   }
+  // }
 
   return (
     <View>
       <ScrollView
+        // onScroll={handleScroll}
+        // scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        // refreshControl={
-        //     <RefreshControl
-        //       refreshing={refreshing}
-        //       onRefresh={onRefresh}
-        //     />
-        //   }
       >
         <View
           style={[
@@ -619,7 +607,7 @@ export default function Homepage({navigation, route}) {
                     paddingRight: 15,
                     color: '#999',
                   }}>
-                  View Allll
+                  View All
                 </Text>
               </TouchableOpacity>
             </View>

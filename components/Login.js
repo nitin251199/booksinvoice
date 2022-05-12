@@ -12,7 +12,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native'
+import {useFocusEffect} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Button, ButtonGroup} from 'react-native-elements';
 import {postData} from './FetchApi';
@@ -25,7 +25,7 @@ import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import {LoginManager} from 'react-native-fbsdk-next';
+import {LoginManager, Profile} from 'react-native-fbsdk-next';
 
 const {width, height} = Dimensions.get('window');
 
@@ -42,6 +42,7 @@ export const Login = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loading1, setLoading1] = useState(false);
+  const [loading2, setLoading2] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [country, setCountry] = useState('');
   const [showSignup, setShowSignup] = useState(false);
@@ -56,11 +57,11 @@ export const Login = ({navigation}) => {
       // alert('Screen was focused');
       // Do something when the screen is focused
       return () => {
-       setShowSignup(false);
+        setShowSignup(false);
         // Do something when the screen is unfocused
         // Useful for cleanup functions
       };
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export const Login = ({navigation}) => {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       saveGoogleInfo(userInfo);
-      console.log('User Info --> ', userInfo);
+      // console.log('User Info --> ', userInfo);
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
@@ -139,20 +140,72 @@ export const Login = ({navigation}) => {
   };
 
   const fbLogin = () => {
-    LoginManager.logInWithPermissions(['public_profile']).then(
+    setLoading2(true);
+    LoginManager.logInWithPermissions(['public_profile', 'email']).then(
       function (result) {
         if (result.isCancelled) {
         } else {
-          console.log(
-            'Login success with permissions: ' +
-              result.grantedPermissions.toString(),
-          );
+          const currentProfile = Profile.getCurrentProfile().then(function (
+            currentProfile,
+          ) {
+            if (currentProfile) {
+              saveFbInfo(currentProfile);
+            } else {
+              LoginManager.logInWithPermissions([
+                'public_profile',
+                'email',
+              ]).then(function (result) {
+                if (result.isCancelled) {
+                } else {
+                  const currentProfile = Profile.getCurrentProfile().then(
+                    function (currentProfile) {
+                      if (currentProfile) {
+                        saveFbInfo(currentProfile);
+                        console.log(currentProfile);
+                      }
+                    },
+                  );
+                }
+              });
+            }
+          });
         }
       },
       function (error) {
         console.log('Login fail with error: ' + error);
       },
     );
+  };
+
+  const saveFbInfo = async user => {
+    var body = {
+      email:
+        user.name.replace(/ /g, '').toLowerCase() +
+        user.userID.substring(user.userID.length - 5) +
+        '@biv.com',
+      username: user.name,
+      type: '1',
+      user_type: selectedIndex === 0 ? 'individual' : 'organisation',
+    };
+    console.log('body', body);
+    var result = await postData('api/getAddfacebookuser', body);
+    if (result !== null) {
+      var sub = await checkSubscription(result.data);
+      setLoading2(false);
+      navigation.navigate('Homepage');
+      storeDatasync(result.data.id, result.data);
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: sub},
+      });
+      storeDatasync('isSubscribed', sub);
+      dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
+      dispatch({type: 'SET_LOGIN', payload: true});
+      storeDatasync('isLogin', true);
+      ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
+    } else {
+      alert('Invalid Creditentials');
+    }
   };
 
   const getLocation = () => {
@@ -173,7 +226,7 @@ export const Login = ({navigation}) => {
 
   const checkSubscription = async res => {
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
-    var result = await postData('api/getSubscription', body)
+    var result = await postData('api/getSubscription', body);
     if (result.msg === 'Subscribed') {
       return true;
     } else {
@@ -314,7 +367,7 @@ export const Login = ({navigation}) => {
       type: 1,
     };
     var result = await postData('api/getLogin', body);
-    
+
     if (result.msg === 'Login') {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
@@ -391,36 +444,26 @@ export const Login = ({navigation}) => {
           {otpLogin()}
           <View
             style={{
-              width: width * 0.90,
+              width: width * 0.9,
               marginBottom: 20,
               alignItems: 'flex-end',
               flexDirection: 'row',
             }}>
-            <Text
-              style={{color: textColor,  textAlign: 'left'}}>
+            <Text style={{color: textColor, textAlign: 'left'}}>
               Continue, if you agree to the
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'TermAndConditions'})
               }>
-              <Text style={{ color: '#ff9000', }}>
-                {' '}
-                T & C{' '}
-              </Text>
+              <Text style={{color: '#ff9000'}}> T & C </Text>
             </TouchableOpacity>
-            <Text
-              style={{color: textColor,textAlign: 'left'}}>
-              and
-            </Text>
+            <Text style={{color: textColor, textAlign: 'left'}}>and</Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'PrivacyPolicy'})
               }>
-              <Text style={{ color: '#ff9000'}}>
-                {' '}
-                Privacy Policy{' '}
-              </Text>
+              <Text style={{color: '#ff9000'}}> Privacy Policy </Text>
             </TouchableOpacity>
           </View>
           <View
@@ -445,7 +488,7 @@ export const Login = ({navigation}) => {
               />
             </TouchableOpacity>
           </View>
-          
+
           <TouchableOpacity onPress={() => setShowSignup(false)}>
             <View style={{width: width * 0.85, marginTop: 10}}>
               <Text
@@ -515,36 +558,26 @@ export const Login = ({navigation}) => {
           </View>
           <View
             style={{
-              width: width * 0.90,
+              width: width * 0.9,
               marginBottom: 0,
               alignItems: 'flex-end',
               flexDirection: 'row',
             }}>
-            <Text
-              style={{color: textColor,textAlign: 'left'}}>
+            <Text style={{color: textColor, textAlign: 'left'}}>
               Continue, if you agree to the
             </Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'TermAndConditions'})
               }>
-              <Text style={{ color: '#ff9000'}}>
-                {' '}
-                T & C{' '}
-              </Text>
+              <Text style={{color: '#ff9000'}}> T & C </Text>
             </TouchableOpacity>
-            <Text
-              style={{color: textColor, textAlign: 'left'}}>
-              and
-            </Text>
+            <Text style={{color: textColor, textAlign: 'left'}}>and</Text>
             <TouchableOpacity
               onPress={() =>
                 navigation.navigate('Legal', {page: 'PrivacyPolicy'})
               }>
-              <Text style={{ color: '#ff9000'}}>
-                {' '}
-                Privacy Policy{' '}
-              </Text>
+              <Text style={{color: '#ff9000'}}> Privacy Policy </Text>
             </TouchableOpacity>
           </View>
           <Button
@@ -612,22 +645,25 @@ export const Login = ({navigation}) => {
         size={'large'}
         style={{position: 'absolute', width: '100%', height: '100%'}}
       />
+      <ActivityIndicator
+        animating={loading2}
+        size={'large'}
+        style={{position: 'absolute', width: '100%', height: '100%'}}
+      />
       <View>
         <Image source={require('../../images/logo.jpg')} style={styles.logo} />
       </View>
       <View style={styles.textContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Homepage')}
-        >
-        <Text
-          style={[
-            styles.text,
-            {
-              color: '#ff9000',
-            },
-          ]}>
-          BooksInVoice
-        </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Homepage')}>
+          <Text
+            style={[
+              styles.text,
+              {
+                color: '#ff9000',
+              },
+            ]}>
+            BooksInVoice
+          </Text>
         </TouchableOpacity>
         <Text style={[styles.subText, {color: '#ff9000'}]}>
           World's first online audio library

@@ -1,4 +1,5 @@
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {LoginManager} from 'react-native-fbsdk-next'
 import {Picker} from '@react-native-picker/picker';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -14,7 +15,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  NativeModules,
 } from 'react-native';
 import {Avatar, Button, Card, Divider, ListItem} from 'react-native-elements';
 import {useDispatch} from 'react-redux';
@@ -73,6 +73,15 @@ export const EditProfile = ({navigation}) => {
     }
   };
 
+  const signOutFb = () => {
+    try {
+      LoginManager.logOut();
+      // this.setState({ user: null }); // Remember to remove the user from your app's state as well
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const takePhotoFromCamera = () => {
     ImagePicker.openCamera({
       compressImageMaxWidth: 300,
@@ -101,61 +110,66 @@ export const EditProfile = ({navigation}) => {
     });
   };
 
-  const uploadImage = async(image) => {
+  const uploadImage = async image => {
     var body = {
-      image: Platform.OS === 'ios' ? 
-      image.path.replace('file://', '')
-      : image.path,
+      image:
+        Platform.OS === 'ios' ? image.path.replace('file://', '') : image.path,
       user_id: userData.id,
       user_type: userData.usertype,
       img_string2: image.data,
-    }
+    };
     await postData('api/getProfileimg', body).then(res => {
       console.log(res);
     });
-  }
+  };
 
   const bottomSheet = () => {
-   return <RBSheet
-      ref={refProfilepic}
-      closeOnDragDown={true}
-      closeOnPressMask={true}
-      customStyles={{
-        wrapper: {
-          backgroundColor: 'transparent',
-        },
-        draggableIcon: {
-          backgroundColor: textColor,
-        },
-        container: {
-          backgroundColor: backgroundColor,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        },
-      }}
-      height={height * 0.45}>
-      <View style={{...styles.panel,backgroundColor:backgroundColor}}>
-        <View style={{alignItems: 'center'}}>
-          <Text style={{...styles.panelTitle,color:textColor}}>Upload Photo</Text>
-          <Text style={styles.panelSubtitle}>Choose Your Profile Picture</Text>
+    return (
+      <RBSheet
+        ref={refProfilepic}
+        closeOnDragDown={true}
+        closeOnPressMask={true}
+        customStyles={{
+          wrapper: {
+            backgroundColor: 'transparent',
+          },
+          draggableIcon: {
+            backgroundColor: textColor,
+          },
+          container: {
+            backgroundColor: backgroundColor,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          },
+        }}
+        height={height * 0.45}>
+        <View style={{...styles.panel, backgroundColor: backgroundColor}}>
+          <View style={{alignItems: 'center'}}>
+            <Text style={{...styles.panelTitle, color: textColor}}>
+              Upload Photo
+            </Text>
+            <Text style={styles.panelSubtitle}>
+              Choose Your Profile Picture
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{...styles.panelButton, backgroundColor: '#ff9000'}}
+            onPress={takePhotoFromCamera}>
+            <Text style={styles.panelButtonTitle}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{...styles.panelButton, backgroundColor: '#ff9000'}}
+            onPress={choosePhotoFromLibrary}>
+            <Text style={styles.panelButtonTitle}>Choose From Library</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{...styles.panelButton, backgroundColor: '#ff9000'}}
+            onPress={() => refProfilepic.current.close()}>
+            <Text style={styles.panelButtonTitle}>Cancel</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={{...styles.panelButton,backgroundColor:'#ff9000'}}
-          onPress={takePhotoFromCamera}>
-          <Text style={styles.panelButtonTitle}>Take Photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{...styles.panelButton,backgroundColor:'#ff9000'}}
-          onPress={choosePhotoFromLibrary}>
-          <Text style={styles.panelButtonTitle}>Choose From Library</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{...styles.panelButton,backgroundColor:'#ff9000'}}
-          onPress={() => refProfilepic.current.close()}>
-          <Text style={styles.panelButtonTitle}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </RBSheet>;
+      </RBSheet>
+    );
   };
 
   const fetchProfile = async () => {
@@ -186,7 +200,9 @@ export const EditProfile = ({navigation}) => {
       setPhone(result.data[0].telephone);
       setEmail(result.data[0].email);
       setCurrentPassword(result.data[0].password);
-      setImage(`${ServerURL}/upload/userprofile_ind/${result.data[0].profile_img}`)
+      setImage(
+        `${ServerURL}/upload/userprofile_ind/${result.data[0].profile_img}`,
+      );
       blinkingText(result);
     } else if (userData.usertype === 'organisation') {
       var body = {
@@ -206,7 +222,10 @@ export const EditProfile = ({navigation}) => {
       setPhone(result.data[0].orgnisationcontact);
       setEmail(result.data[0].orgnisationemail);
       setCurrentPassword(result.data[0].password);
-      setImage(`${ServerURL}/upload/userprofile_org/${result.data[0].profile_img}`)
+      setImage(
+        `${ServerURL}/upload/userprofile_org/${result.data[0].profile_img}`,
+      );
+      blinkingText(result);
     }
   };
 
@@ -221,9 +240,9 @@ export const EditProfile = ({navigation}) => {
         result.data[0].telephone === '' ||
         result.data[0].email === ''
       ) {
-        setShowText(true);
+       return setShowText(true);
       } else {
-        setShowText(false);
+        return setShowText(false);
       }
     } else if (userData.usertype === 'organisation') {
       if (
@@ -235,9 +254,9 @@ export const EditProfile = ({navigation}) => {
         result.data[0].orgnisationcontact === '' ||
         result.data[0].orgnisationemail === ''
       ) {
-        setShowText(true);
+        return setShowText(true);
       } else {
-        setShowText(false);
+        return setShowText(false);
       }
     }
   };
@@ -312,110 +331,74 @@ export const EditProfile = ({navigation}) => {
   }
 
   const editUser = async () => {
-    if (currentPassword === '' && newPassword === '') {
-      if (newPassword !== confirmPassword) {
-        alert('Password not match with confirm password');
-      } else {
-        var body = {
-          type: 1,
-          user_id: userData.id,
-          user_type: capitalizeFirstLetter(userData.usertype),
-          name: name,
-          address: address,
-          email: email,
-          country_id: country,
-          state_id: state,
-          city_id: city,
-          contact: phone,
-          pincode: pinCode,
-          old_password: currentPassword,
-          new_password: newPassword,
-        };
-        var result = await postData('api/getProfileedit', body);
-        alert(userData.usertype);
-        if (result.data == 1) {
-          Alert.alert(
-            'Profile Updated Successfully',
-            'Your trial pack is active now!',
-          );
-          fetchProfile();
-          fetchUserData();
-          toggleOverlay();
-          storeDatasync(userData.id, {
-            id: userData.id,
-            user_name: name,
-            useremail: email,
-            usertype: userData.usertype,
-          });
-          dispatch({
-            type: 'ADD_USER',
-            payload: [
-              userData.id,
-              {
-                id: userData.id,
-                user_name: name,
-                useremail: email,
-                usertype: userData.usertype,
-              },
-            ],
-          });
-        } else {
-          alert('Something went wrong');
-        }
-      }
-    } else if (currentPassword !== '' && newPassword !== '') {
-      if (newPassword !== confirmPassword) {
-        alert('Password not match with confirm password');
-      } else {
-        var body = {
-          type: 1,
-          user_id: userData.id,
-          user_type: capitalizeFirstLetter(userData.usertype),
-          name: name,
-          address: address,
-          email: email,
-          country_id: country,
-          state_id: state,
-          city_id: city,
-          contact: phone,
-          pincode: pinCode,
-          old_password: currentPassword,
-          new_password: newPassword,
-        };
-        var result = await postData('api/getProfileedit', body);
-        // alert(userData.id)
-        if (result.data == 1) {
-          Alert.alert(
-            'Profile Updated Successfully',
-            'Your trial pack is active now!',
-          );
-          fetchProfile();
-          fetchUserData();
-          toggleOverlay();
-          storeDatasync(userData.id, {
-            id: userData.id,
-            user_name: name,
-            useremail: email,
-            usertype: userData.usertype,
-          });
-          dispatch({
-            type: 'ADD_USER',
-            payload: [
-              userData.id,
-              {
-                id: userData.id,
-                user_name: name,
-                useremail: email,
-                usertype: userData.usertype,
-              },
-            ],
-          });
-        } else {
-          alert('Something went wrong');
-        }
-      }
+    if (newPassword !== confirmPassword) {
+      alert('Password not match with confirm password');
     } else {
-      alert('Please enter new password');
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: capitalizeFirstLetter(userData.usertype),
+        name: name,
+        address: address,
+        email: email,
+        country_id: country,
+        state_id: state,
+        city_id: city,
+        contact: phone,
+        pincode: pinCode,
+        old_password: currentPassword,
+        new_password: newPassword,
+      };
+      var result = await postData('api/getProfileedit', body);
+      console.log('body', body);
+      console.log('result.msg', result);
+      if (result.data == 1) {
+        if(
+          name === "" 
+          || address === ""
+          || email === ""
+          || phone === ""
+          || pinCode === ""
+          || country === ""
+          || state === ""
+          || city === ""
+        )
+        {
+          Alert.alert(
+            'Profile Updated Successfully',
+            'Please update all details to activate trial pack!',
+          );
+        }
+        else{
+          Alert.alert(
+            'Profile Updated Successfully',
+            'Your trial pack is active now!',
+          );
+        }
+        fetchProfile();
+        fetchUserData();
+        toggleOverlay();
+        storeDatasync(userData.id, {
+          id: userData.id,
+          user_name: name,
+          useremail: email,
+          usertype: userData.usertype,
+        });
+        dispatch({
+          type: 'ADD_USER',
+          payload: [
+            userData.id,
+            {
+              id: userData.id,
+              user_name: name,
+              useremail: email,
+              usertype: userData.usertype,
+            },
+          ],
+        });
+      } else {
+        alert('Something went wrong');
+      }
     }
   };
 
@@ -645,6 +628,7 @@ export const EditProfile = ({navigation}) => {
   const handleLogout = async () => {
     setShow(true);
     signOut();
+    signOutFb();
     await removeDatasync(userData.id);
     storeDatasync('isLogin', false);
     dispatch({
@@ -680,8 +664,10 @@ export const EditProfile = ({navigation}) => {
             <Avatar
               size={120}
               rounded
-              source={image ? {uri: image} : require('../images/tempProfile.jpg')}
-              containerStyle={{borderColor: '#ff9000',borderWidth:1}}>
+              source={
+                image ? {uri: image} : require('../images/tempProfile.jpg')
+              }
+              containerStyle={{borderColor: '#ff9000', borderWidth: 1}}>
               <Avatar.Accessory
                 size={44}
                 color="black"
@@ -738,7 +724,7 @@ export const EditProfile = ({navigation}) => {
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={()=>navigation.navigate('MyBooks')}>
           <ListItem
             containerStyle={[
               styles.listContainer,

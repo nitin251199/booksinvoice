@@ -1,5 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
-import { getSyncData, storeDatasync } from './AsyncStorage';
+import {getSyncData, storeDatasync} from './AsyncStorage';
+import PushNotification from 'react-native-push-notification';
+import { postData } from './FetchApi';
 
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission({
@@ -26,6 +28,8 @@ const getFcmToken = async () => {
         // user has a device token
         console.log('the new token', fcmToken);
         await storeDatasync('fcmToken', fcmToken);
+        var body = {type: 1, token_no_id: fcmToken};
+        await postData('api/getAddToken',body)
       }
     } catch (error) {
       console.log('error getting token', error);
@@ -50,6 +54,13 @@ export const notificationListener = async navigation => {
 
   messaging().onMessage(async remoteMessage => {
     console.log('received in foreground', remoteMessage);
+    PushNotification.localNotification({
+      channelId: 'fcm_fallback_notification_channel',
+      message: remoteMessage.notification.body,
+      title: remoteMessage.notification.title,
+      bigPictureUrl: remoteMessage.notification.android.imageUrl,
+      smallIcon: remoteMessage.notification.android.imageUrl,
+    });
   });
 
   messaging()
