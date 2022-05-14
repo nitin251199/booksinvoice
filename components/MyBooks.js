@@ -44,7 +44,7 @@ export const MyBooks = ({navigation}) => {
     let expDate = new Date(item.expiry_date);
     return (
       <View>
-        {currentDate > expDate ? (
+        {currentDate >= expDate ? (
           <View
             style={{
               display: 'flex',

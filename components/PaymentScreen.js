@@ -52,6 +52,7 @@ const onMessage = (data) => {
     ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
     setModalVisible(true);
     dispatch({type:'SET_STATUS',payload:{isLogin: true,isSubscribed:true}});
+    dispatch({type:'REMOVE_ALL_CART'})
     storeDatasync('isSubscribed', true);
   }
   else if(data.nativeEvent.data==='failure')
@@ -73,7 +74,7 @@ const thanksModal = () => {
           <View
             style={[styles.modalView, {backgroundColor: modelBackgroundColor}]}>
             <Text style={[styles.modalText, {color: textColor}]}>
-              Thank you for purchasing the subscription
+              Thank you for purchasing.
             </Text>
             <Pressable
               style={[styles.button, {backgroundColor: '#ff9000'}]}
@@ -89,13 +90,23 @@ const thanksModal = () => {
   )
 }
 
+  var url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/'
+  if(route.params.value === undefined || route.params.value === 'Discount Coupons')
+  {
+    url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/'
+  }
+  else 
+  {
+    url = 'https://booksinvoice.com/Cart/getRedirectToPromotion/'
+  }
+
   return (
     <>
     <WebView
       javaScriptEnabled
       originWhitelist={['*']}
       source={{
-        uri: route.params.total == 0 ? 'https://booksinvoice.com/Cart/getRedirectToPromotion/' : 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/',
+        uri: url,
         method: 'POST',
         body: urlEncodedData,
       }}

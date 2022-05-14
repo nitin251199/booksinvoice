@@ -1,3 +1,5 @@
+import { removeDatasync, storeDatasync } from "./AsyncStorage";
+
 const initialState = {
   user: {},
   cart:{},
@@ -10,6 +12,10 @@ const initialState = {
 };
 
 export default function RootReducer(state = initialState, action) {
+  const setCart=(cart)=>{
+    storeDatasync('cart',cart);
+  }
+
   switch (action.type) {
     case 'ADD_USER':
       state.user[action.payload[0]]=action.payload[1]
@@ -44,18 +50,28 @@ export default function RootReducer(state = initialState, action) {
         };
       case 'ADD_CART':
         state.cart[action.payload[0]]=action.payload[1]
+        setCart(state.cart)
+        return {
+          ...state,
+          cart: state.cart
+        };
+      case 'ADD_ALL_CART':
+        state.cart = action.payload
         return {
           ...state,
           cart: state.cart
         };
       case 'REMOVE_CART':
         delete state.cart[action.payload]
+        removeDatasync('cart')
+        setCart(state.cart)
         return {
           ...state,
           cart: state.cart
         };
         case 'REMOVE_ALL_CART':
           state.cart = {}
+          removeDatasync('cart')
           return {
             ...state,
             cart: state.cart

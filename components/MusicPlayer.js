@@ -15,7 +15,6 @@ import {
   ActivityIndicator,
   ScrollView,
   FlatList,
-  Share,
 } from 'react-native';
 import BackgroundTimer from 'react-native-background-timer';
 
@@ -39,6 +38,8 @@ import {ThemeContext} from './ThemeContext';
 import {Slider as SpeedSlider} from 'react-native-elements';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useSelector } from 'react-redux';
+import RNFetchBlob from 'rn-fetch-blob';
+import Share from 'react-native-share';
 
 const {width, height} = Dimensions.get('window');
 
@@ -312,7 +313,6 @@ const MusicPlayer = ({route, navigation}) => {
   const backgroundTimer = async () => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     // Start a timer that runs once after X milliseconds
-    console.log('status', isSub);
     if (!isSub) {
         BackgroundTimer.start();
         const timeoutId = BackgroundTimer.setTimeout(async () => {
@@ -717,49 +717,49 @@ const MusicPlayer = ({route, navigation}) => {
                 {timerValue}s
               </Text>
               <View style={{flexDirection: 'row'}}>
-                <TouchableOpacity onPress={() => setTimerValue(30)}>
+                <TouchableOpacity onPress={() => setTimerValue(600)}>
                   <View
                     style={{
                       width: 40,
                       height: 40,
                       borderRadius: 50,
                       backgroundColor:
-                        timerValue === 30 ? '#ff9000' : '#99999950',
+                        timerValue === 600 ? '#ff9000' : '#99999950',
                       justifyContent: 'center',
                       alignItems: 'center',
                       margin: 20,
                     }}>
-                    <Text style={{color: textColor}}>30s</Text>
+                    <Text style={{color: textColor}}>10m</Text>
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setTimerValue(60)}>
+                <TouchableOpacity onPress={() => setTimerValue(1200)}>
                   <View
                     style={{
                       width: 40,
                       height: 40,
                       borderRadius: 50,
                       backgroundColor:
-                        timerValue === 60 ? '#ff9000' : '#99999950',
+                        timerValue === 1200 ? '#ff9000' : '#99999950',
                       justifyContent: 'center',
                       alignItems: 'center',
                       margin: 20,
                     }}>
-                    <Text style={{color: textColor}}>60s</Text>
+                    <Text style={{color: textColor}}>20m</Text>
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setTimerValue(120)}>
+                <TouchableOpacity onPress={() => setTimerValue(1800)}>
                   <View
                     style={{
                       width: 40,
                       height: 40,
                       borderRadius: 50,
                       backgroundColor:
-                        timerValue === 120 ? '#ff9000' : '#99999950',
+                        timerValue === 1800 ? '#ff9000' : '#99999950',
                       justifyContent: 'center',
                       alignItems: 'center',
                       margin: 20,
                     }}>
-                    <Text style={{color: textColor}}>120s</Text>
+                    <Text style={{color: textColor}}>30m</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -816,7 +816,7 @@ const MusicPlayer = ({route, navigation}) => {
     setTimerModalVisible(false);
     BackgroundTimer.start();
     const timeoutId = BackgroundTimer.setTimeout(async () => {
-      await TrackPlayer.stop();
+      await TrackPlayer.pause();
       // this will be executed once after 10 seconds
       // even when app is the the background
     }, timerValue * 1000);
@@ -824,18 +824,27 @@ const MusicPlayer = ({route, navigation}) => {
 
   const onShare = async () => {
     try {
-      const result = await Share.share({
-        message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+      let imagePath = null;
+      RNFetchBlob.config({
+          fileCache: true
+      })
+      .fetch("GET", 'https://booksinvoice.com/logo.jpg')
+      // the image is now dowloaded to device's storage
+      .then(resp => {
+          // the image path you can use it directly with Image component
+          imagePath = resp.path();
+          return resp.readFile("base64");
+      })
+      .then(async base64Data => {
+          var base64Data = `data:image/png;base64,` + base64Data;
+          // here's base64 encoded image
+          await Share.open({ 
+          // title: `Booksinvoice - Download and listen books for free.`,
+          message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+          url: base64Data });
+          // remove the file from storage
+          return RNFetchBlob.fs.unlink(imagePath);
       });
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // shared with activity type of result.activityType
-        } else {
-          // shared
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-      }
     } catch (error) {
       alert(error.message);
     }

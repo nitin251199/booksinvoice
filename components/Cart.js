@@ -20,9 +20,10 @@ import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
 import {ThemeContext} from './ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Button } from 'react-native-paper';
-import { Button as Button2 } from 'react-native-elements';
-import { checkSyncData, getSyncData } from './AsyncStorage';
+import {Button} from 'react-native-paper';
+import {Button as Button2} from 'react-native-elements';
+import {checkSyncData, getSyncData} from './AsyncStorage';
+import {useFocusEffect} from '@react-navigation/native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -38,16 +39,27 @@ export const Cart = ({navigation}) => {
   var carts = useSelector(state => state?.cart);
   var cartItems = Object.values(carts);
   var keys = Object.keys(carts);
-  const [user,setUser] = useState([]);
+  const [cart, setCart] = useState(cartItems);
+  const [user, setUser] = useState([]);
   const [refresh, setRefresh] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [coupon, setCoupon] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rLoading, setRLoading] = useState(false);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponStatus, setCouponStatus] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState([]);
-  const [subtotal, setSubTotal] = useState(cartItems.reduce(calculateAmount, 0));
-  const [total, setTotal] = useState(cartItems.reduce(calculateAmount, 0));
+  const [subtotal, setSubTotal] = useState(
+    cartItems.reduce(calculateAmount, 0),
+  );
+  const [total, setTotal] = useState();
+  const [netTotal, setNetTotal] = useState();
+
+  var nettotal = 0;
+  cartItems.map(item => {
+    nettotal = nettotal + parseFloat(item.price);
+    // setTotal(nettotal);
+  });
 
   var phone = '';
   var pinCode = '';
@@ -60,60 +72,70 @@ export const Cart = ({navigation}) => {
   function calculateAmount(a, b) {
     a = parseFloat(a);
     b = parseFloat(b.price);
-		return (a + b)
-	}
-
-  const getUser = async() =>{
-    var key = await checkSyncData()
-    if (key[0] !== 'fcmToken') {
-      var userData = await getSyncData(key[0]).then(async(res) => {
-        setUser(res)
-      })
+    return a + b;
   }
-}
 
-useEffect(()=>{
-  getUser()
-},[])
+  const getUser = async () => {
+    var key = await checkSyncData();
+    if (key[0] !== 'fcmToken') {
+      var userData = await getSyncData(key[0]).then(async res => {
+        setUser(res);
+      });
+    }
+  };
 
-useEffect(()=>{
-  setTotal(cartItems.reduce(calculateAmount, 0));
-},[cartItems])
+  useEffect(() => {
+    getUser();
+  }, []);
 
-  const removeBook = async(item) => {
+  useEffect(() => {
+    setNetTotal(cartItems.reduce(calculateAmount, 0));
+    // setNetTotal(total);
+    nettotal = netTotal;
+    // setTotal(nettotal);
+  }, [cartItems]);
+
+  useEffect(() => {
+    fetchDetails();
+  }, [nettotal]);
+
+  const removeBook = async item => {
+    setRLoading(true);
     dispatch({type: 'REMOVE_CART', payload: item.id});
     setRefresh(!refresh);
     ToastAndroid.show('Book Removed from Cart', ToastAndroid.SHORT);
-    navigation.setParams({y:''})
-    var body = {type:1, book_id:item.id, user_id:user.id, user_type:user.usertype};
-    var res = await postData('api/getRemovecart',body);
+    navigation.setParams({y: ''});
+    var body = {
+      type: 1,
+      book_id: item.id,
+      user_id: user.id,
+      user_type: user.usertype,
+    };
+    var res = await postData('api/getRemovecart', body);
   };
 
-  const handleCouponProceed = async() => {
+  const handleCouponProceed = async () => {
     setCouponLoading(true);
-    var body = {"coupons": coupon, coupon_type: 'Discount Coupons'}
+    var body = {coupons: coupon, coupon_type: 'Discount Coupons'};
     var result = await postData('api/getCoupon', body);
-    if(result.msg === 'Success') {
+    if (result.msg === 'Success') {
       let percentage = parseFloat(result.data[0].percentage);
-      let d = subtotal*(percentage/100);
-       d = d.toFixed(2)
-        let s = (subtotal - d).toFixed(2);
-        setTotal(parseFloat(s))
-        couponid = result.data[0].id;
-        setCouponStatus(true);
-        setCouponLoading(false)
-        fetchDetails()  
-    }
-    else
-    {
+      let d = subtotal * (percentage / 100);
+      d = d.toFixed(2);
+      let s = (subtotal - d).toFixed(2);
+      nettotal = parseFloat(s);
+      setNetTotal(parseFloat(s));
+      couponid = result.data[0].id;
+      setCouponStatus(true);
+      await fetchDetails();
+    } else {
       ToastAndroid.show('Invalid Coupon', ToastAndroid.SHORT);
       setCouponLoading(false);
     }
-  }
+  };
 
   const fetchDetails = async () => {
     var key = await checkSyncData();
-
     if (key[0] !== 'fcmToken') {
       await getSyncData(key[0]).then(async res => {
         await fetchUserData(res).then(async result => {
@@ -121,15 +143,15 @@ useEffect(()=>{
             type: '1',
             user_type: res.usertype,
             user_id: res.id,
-            packgesid:"",
-            price: total,
-            forccavenu:  'INR',
+            packgesid: '',
+            price: nettotal,
+            forccavenu: 'INR',
             name: res.user_name,
             address: address,
             postalcode: pinCode,
             usermobile: phone,
             email: res.useremail,
-            copies: "",
+            copies: '',
             coupons: couponid,
             country: country,
             state: state,
@@ -137,21 +159,36 @@ useEffect(()=>{
           };
           var result = await postData('api/getPaymentbooks', body);
           setPaymentDetails(result.data);
+          console.log('payment', result.data);
           setLoading(false);
-          setCouponLoading(false)
-          setShowModal(false)
+          setCouponLoading(false);
+          setRLoading(false);
+          setShowModal(false);
         });
       });
     }
   };
 
-  const handleProceed = () => {
-    navigation.navigate('PaymentScreen', {paymentDetails,total});
+  const handleProceed = async () => {
+    // await fetchDetails();
+    navigation.navigate('PaymentScreen', {paymentDetails});
   };
 
   useEffect(() => {
     fetchDetails();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchDetails();
+      // alert('Screen was focused');
+      // Do something when the screen is focused
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, []),
+  );
 
   const fetchUserData = async res => {
     if (res.usertype === 'individual') {
@@ -183,7 +220,6 @@ useEffect(()=>{
       city = result.city[0].name;
     }
   };
-
 
   const displayBooks = ({item, index}) => {
     return (
@@ -333,7 +369,6 @@ useEffect(()=>{
     );
   };
 
-
   const couponModal = () => {
     return (
       <Modal
@@ -374,7 +409,7 @@ useEffect(()=>{
               placeholder="Coupon Code"
               placeholderTextColor="#999"
             />
-            
+
             <TouchableOpacity onPress={() => handleCouponProceed()}>
               <View
                 style={{
@@ -389,7 +424,11 @@ useEffect(()=>{
                     fontWeight: '800',
                     color: '#FFF',
                   }}>
-                  { couponLoading ? <ActivityIndicator color={'#000'}/> : 'Apply Coupon'}
+                  {couponLoading ? (
+                    <ActivityIndicator color={'#000'} />
+                  ) : (
+                    'Apply Coupon'
+                  )}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -429,62 +468,80 @@ useEffect(()=>{
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
       <ActivityIndicator
+        animating={rLoading}
+        size={'large'}
+        style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
+      />
+      <ActivityIndicator
         animating={loading}
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
       <ScrollView contentContainerStyle={{paddingBottom: 60}}>
-      <View style={{flexDirection:'row',justifyContent:'space-between'}}>
-      <Text
-        style={{
-          fontSize: 20,
-          color: textColor,
-          fontWeight: '800',
-          padding: 20,
-        }}>
-        My Cart ({keys.length})
-      </Text>
-      <Text
-        style={{
-          fontSize: 20,
-          color: textColor,
-          fontWeight: '800',
-          padding: 20,
-        }}>
-        ₹ {total}
-      </Text>
-      </View>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <Text
+            style={{
+              fontSize: 20,
+              color: textColor,
+              fontWeight: '800',
+              padding: 20,
+            }}>
+            My Cart ({keys.length})
+          </Text>
+          <Text
+            style={{
+              fontSize: 20,
+              color: textColor,
+              fontWeight: '800',
+              padding: 20,
+            }}>
+            ₹ {netTotal}
+          </Text>
+        </View>
 
-      <FlatList
-        data={cartItems}
-        renderItem={displayBooks}
-        keyExtractor={item => item.id}
-      />
-
-    </ScrollView>
-    {couponModal()}
-      <View style={{position:'absolute',bottom:0,flexDirection:'row',width:width}}>
-      
-      <Button
-      dark
-      labelStyle={{fontSize:16,letterSpacing:0}} 
-      mode="contained"
-      style={{backgroundColor: '#ff9000',borderRadius:0}}
-      contentStyle={{width:width*0.5}}
-      onPress={() => handleProceed()}
-      >
-       Checkout</Button>
-       <Button2
-              disabled={couponStatus}
-              onPress={() => setShowModal(true)}
-              title={couponStatus ? 'Coupon Applied' : 'Apply Coupon'}
-              type="outline"
-              titleStyle={{color: 'red'}}
-              buttonStyle={{borderColor: 'red',borderRadius:0,paddingBottom:10, backgroundColor:backgroundColor}}
-              disabledStyle={{borderColor: 'green',borderRadius:0, backgroundColor:backgroundColor}}
-              disabledTitleStyle={{color: 'green'}}
-              containerStyle={{width: width * 0.5}}
-            />
+        <FlatList
+          data={cartItems}
+          renderItem={displayBooks}
+          keyExtractor={item => item.id}
+        />
+      </ScrollView>
+      {couponModal()}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          flexDirection: 'row',
+          width: width,
+        }}>
+        <Button
+          dark
+          labelStyle={{fontSize: 16, letterSpacing: 0}}
+          mode="contained"
+          style={{backgroundColor: '#ff9000', borderRadius: 0}}
+          contentStyle={{width: width * 0.5}}
+          onPress={() => handleProceed()}>
+          Checkout
+        </Button>
+        <Button2
+          disabled={couponStatus}
+          onPress={() => setShowModal(true)}
+          title={couponStatus ? 'Coupon Applied' : 'Apply Coupon'}
+          type="outline"
+          titleStyle={{color: 'red'}}
+          buttonStyle={{
+            borderColor: 'red',
+            borderRadius: 0,
+            paddingBottom: 10,
+            backgroundColor: backgroundColor,
+          }}
+          disabledStyle={{
+            borderColor: 'green',
+            borderRadius: 0,
+            backgroundColor: backgroundColor,
+          }}
+          disabledTitleStyle={{color: 'green'}}
+          containerStyle={{width: width * 0.5}}
+        />
       </View>
     </View>
   );

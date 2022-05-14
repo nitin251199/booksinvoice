@@ -1,8 +1,10 @@
 import {Picker} from '@react-native-picker/picker';
 import React from 'react';
-import {ActivityIndicator, Share, StyleSheet, Switch, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Switch, Text, TouchableOpacity, View} from 'react-native';
 import { ThemeContext } from './ThemeContext';
 import pkg from '../package.json';
+import RNFetchBlob from 'rn-fetch-blob';
+import Share from 'react-native-share';
 
 
 export const Settings = ({navigation}) => {
@@ -28,20 +30,27 @@ export const Settings = ({navigation}) => {
 
 const onShare = async () => {
   try {
-    const result = await Share.share({
-      message:
-        `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
-        
+    let imagePath = null;
+    RNFetchBlob.config({
+        fileCache: true
+    })
+    .fetch("GET", 'https://booksinvoice.com/logo.jpg')
+    // the image is now dowloaded to device's storage
+    .then(resp => {
+        // the image path you can use it directly with Image component
+        imagePath = resp.path();
+        return resp.readFile("base64");
+    })
+    .then(async base64Data => {
+        var base64Data = `data:image/png;base64,` + base64Data;
+        // here's base64 encoded image
+        await Share.open({ 
+        // title: `Booksinvoice - Download and listen books for free.`,
+        message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+        url: base64Data });
+        // remove the file from storage
+        return RNFetchBlob.fs.unlink(imagePath);
     });
-    if (result.action === Share.sharedAction) {
-      if (result.activityType) {
-        // shared with activity type of result.activityType
-      } else {
-        // shared
-      }
-    } else if (result.action === Share.dismissedAction) {
-      // dismissed
-    }
   } catch (error) {
     alert(error.message);
   }

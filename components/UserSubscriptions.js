@@ -20,6 +20,7 @@ import {Button} from 'react-native-paper';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 // Import RNPrint
 import RNPrint from 'react-native-print';
+import { useFocusEffect } from '@react-navigation/native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -46,10 +47,10 @@ export const UserSubscriptions = ({navigation}) => {
 
   const printInvoice =async (data) => {
     setLoading(true);
-    const percentage = parseFloat(data.d_percentage);
+    const percentage = data.d_percentage === "" ? 0 : parseFloat(data.d_percentage);
   var discount = data.packageprice*(percentage/100);
   discount = discount.toFixed(2)
-  var tax = (parseFloat(data.packageprice) - discount)*0.18;
+  var tax = data.d_percentage === "" ? parseFloat(data.price)*0.18 : (parseFloat(data.packageprice) - discount)*0.18;
   tax = tax.toFixed(2)
   var price = parseFloat(data.price).toFixed(2);
 
@@ -419,6 +420,19 @@ const HTMLView = `
   useEffect(() => {
     checkLogin();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      checkLogin();
+      // alert('Screen was focused');
+      // Do something when the screen is focused
+      return () => {
+        setSubs([]);
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+      };
+    }, []),
+  );
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>

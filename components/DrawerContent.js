@@ -5,12 +5,12 @@ import {
   Image,
   Linking,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   ToastAndroid,
   View,
 } from 'react-native';
+import Share from 'react-native-share';
 import {ListItem, Icon} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
@@ -22,6 +22,7 @@ import {ThemeContext} from './ThemeContext';
 import {Badge, List} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import pkg from '../package.json';
+import RNFetchBlob from 'rn-fetch-blob';
 
 const {width, height} = Dimensions.get('window');
 
@@ -88,20 +89,27 @@ export const DrawerContent = ({navigation}) => {
 
   const onShare = async () => {
     try {
-      const result = await Share.share({
-        message:
-          `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
-          
+      let imagePath = null;
+      RNFetchBlob.config({
+          fileCache: true
+      })
+      .fetch("GET", 'https://booksinvoice.com/logo.jpg')
+      // the image is now dowloaded to device's storage
+      .then(resp => {
+          // the image path you can use it directly with Image component
+          imagePath = resp.path();
+          return resp.readFile("base64");
+      })
+      .then(async base64Data => {
+          var base64Data = `data:image/png;base64,` + base64Data;
+          // here's base64 encoded image
+          await Share.open({ 
+          // title: `Booksinvoice - Download and listen books for free.`,
+          message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+          url: base64Data });
+          // remove the file from storage
+          return RNFetchBlob.fs.unlink(imagePath);
       });
-      if (result.action === Share.sharedAction) {
-        if (result.activityType) {
-          // shared with activity type of result.activityType
-        } else {
-          // shared
-        }
-      } else if (result.action === Share.dismissedAction) {
-        // dismissed
-      }
     } catch (error) {
       alert(error.message);
     }

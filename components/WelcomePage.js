@@ -34,6 +34,18 @@ export const WelcomePage = ({navigation}) => {
     if (key[0] != 'fcmToken') {
       var userData = await getSyncData(key[0]);
         fetchUserData(userData);
+        var body1 = {type: 1, user_id: userData.id, user_type: userData.usertype};
+        //  var cart = await postData('api/getShowcart', body1);
+        //  console.log('cart', cart);
+        //  if(cart.msg === 'Success'){
+        //   cart.data.map(item => {
+        //     dispatch({type: 'ADD_CART', payload: [item.id, item]});
+        //   })
+        // }
+      var cartData = await getSyncData('cart');
+      if (cartData != null) {
+        dispatch({type: 'ADD_ALL_CART', payload: cartData});
+      }
     }
   };
 

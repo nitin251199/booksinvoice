@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  Image
+  Image,
+  ImageBackground,
+  TouchableWithoutFeedback
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -20,7 +22,6 @@ import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
 import {ThemeContext} from './ThemeContext';
 import {useFocusEffect} from '@react-navigation/native';
-import {checkSyncData, getSyncData} from './AsyncStorage';
 
 const BannerWidth = Dimensions.get('window').width;
 const BannerHeight = 140;
@@ -635,7 +636,21 @@ export default function Homepage({navigation, route}) {
               />
             </View>
           </View>
-          <Tile
+          <TouchableWithoutFeedback onPress={() => navigation.navigate('Subscriptions')}>
+          <ImageBackground 
+            style={{height: height*0.2, width: width,marginVertical:10,
+            display:'flex',justifyContent:'center',alignItems:'center',
+          }}
+          imageStyle={{resizeMode: 'stretch',}}
+            source={{
+              uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
+            }}
+          >
+            <Text style={{fontSize: 20, fontWeight: '800',color:'#FFF'}}>Buy Subscription Plans</Text>
+            <Text style={{fontSize: 15,marginVertical:10,color:'#FFF'}}>{`${advertise[0]?.title}`}</Text>
+          </ImageBackground>
+          </TouchableWithoutFeedback>
+          {/* <Tile
             onPress={() => navigation.navigate('Subscriptions')}
             imageSrc={{
               uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
@@ -652,7 +667,7 @@ export default function Homepage({navigation, route}) {
               resizeMode: 'stretch',
             }}
             containerStyle={{marginVertical: 10}}
-          />
+          /> */}
           <View style={{paddingLeft: 20}}>
             <FlatList
               data={otherCategory}

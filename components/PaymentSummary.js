@@ -42,8 +42,9 @@ export const PaymentSummary = ({route, navigation}) => {
   const [subtotal, setSubTotal] = useState(
     selected.packageprice * copies || selected.packagepricedoller * copies,
   );
-  var gst = (subtotal * 0.18).toFixed(2);
-  const sgst = (subtotal * 0.09).toFixed(2);
+  const [gst, setGst] = useState((subtotal * 0.18).toFixed(2));
+  const [sgst, setSgst] = useState((subtotal * 0.09).toFixed(2));
+
   var total = (parseFloat(subtotal) + parseFloat(gst)).toFixed(2);
   var phone = '';
   var pinCode = '';
@@ -54,7 +55,7 @@ export const PaymentSummary = ({route, navigation}) => {
   var couponid = '';
 
   const handleProceed = () => {
-    navigation.navigate('PaymentScreen', {paymentDetails, total});
+    navigation.navigate('PaymentScreen', {paymentDetails, value});
   };
 
   const handleCouponProceed = async () => {
@@ -63,12 +64,26 @@ export const PaymentSummary = ({route, navigation}) => {
     var result = await postData('api/getCoupon', body);
     if (result.msg === 'Success') {
       if (
-        result.data[0].coupons_type === 'Promotional Coupons' ||
-        result.data[0].coupons_type === 'Recharge Coupons'
+        result.data[0].coupons_type === 'Promotional Coupons' 
       ) {
         setSubTotal(0);
+        selected.packagedays = result.data[0].days;
         // copies = '1';
+        setGst(0);
+        setSgst(0);
         total = 0;
+        couponid = result.data[0].id;
+        setCouponStatus(true);
+        return fetchDetails();
+      }
+      else if(result.data[0].coupons_type === 'Recharge Coupons')
+      {
+        let val = result.data[0].couponsvalue;
+        let sTotal = (val - (val * 0.18)).toFixed(2);
+        setSubTotal(sTotal);
+        setGst((val * 0.18).toFixed(2))
+        setSgst((val * 0.09).toFixed(2))
+        // total = 1999
         couponid = result.data[0].id;
         setCouponStatus(true);
         return fetchDetails();
@@ -79,8 +94,9 @@ export const PaymentSummary = ({route, navigation}) => {
       setDiscount(d);
       let s = (subtotal - d).toFixed(2);
       setSubTotal(s);
-      gst = ((subtotal - d) * 0.18).toFixed(2);
-      total = (parseFloat(subtotal - d) + parseFloat(gst)).toFixed(2);
+      setGst(((subtotal - d) * 0.18).toFixed(2))
+      setSgst(((subtotal - d) * 0.09).toFixed(2))
+      total = (parseFloat(subtotal - d) + parseFloat(((subtotal - d) * 0.18).toFixed(2))).toFixed(2);
       couponid = result.data[0].id;
       setCouponStatus(true);
       fetchDetails();
@@ -110,13 +126,13 @@ export const PaymentSummary = ({route, navigation}) => {
             email: res.useremail,
             copies: copies,
             coupons: couponid,
+            coupons_codes: coupon,
             country: country,
             state: state,
             city: city,
           };
           var result = await postData('api/getPaymentlink', body);
           setPaymentDetails(result.data);
-          // console.log('payment', result.data);
           setLoading(false);
           setCouponLoading(false);
           setShowModal(false);
@@ -137,7 +153,6 @@ export const PaymentSummary = ({route, navigation}) => {
         user_type: 'individual',
       };
       var result = await postData('api/getProfile', body);
-
       address = result.data[0].address;
       pinCode = result.data[0].zip_pin;
       phone = result.data[0].telephone;
