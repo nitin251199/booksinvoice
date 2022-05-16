@@ -50,16 +50,12 @@ export const Cart = ({navigation}) => {
   const [couponStatus, setCouponStatus] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [subtotal, setSubTotal] = useState(
-    cartItems.reduce(calculateAmount, 0),
+    cartItems.reduce(calculateAmount, 0)
   );
-  const [total, setTotal] = useState();
-  const [netTotal, setNetTotal] = useState();
+  const [total, setTotal] = useState(cartItems.reduce(calculateAmount, 0));
+  const [netTotal, setNetTotal] = useState(total);
 
-  var nettotal = 0;
-  cartItems.map(item => {
-    nettotal = nettotal + parseFloat(item.price);
-    // setTotal(nettotal);
-  });
+  var nettotal = netTotal;
 
   var phone = '';
   var pinCode = '';
@@ -89,29 +85,35 @@ export const Cart = ({navigation}) => {
   }, []);
 
   useEffect(() => {
-    setNetTotal(cartItems.reduce(calculateAmount, 0));
+     setSubTotal(cartItems.reduce(calculateAmount, 0));
+     setNetTotal(cartItems.reduce(calculateAmount, 0));
+     setCouponStatus(false);
     // setNetTotal(total);
-    nettotal = netTotal;
+    // nettotal = netTotal;
     // setTotal(nettotal);
-  }, [cartItems]);
+  }, [cart]);
 
   useEffect(() => {
     fetchDetails();
-  }, [nettotal]);
+  }, [netTotal]);
 
   const removeBook = async item => {
     setRLoading(true);
     dispatch({type: 'REMOVE_CART', payload: item.id});
     setRefresh(!refresh);
     ToastAndroid.show('Book Removed from Cart', ToastAndroid.SHORT);
+    setCart(cartItems)
     navigation.setParams({y: ''});
     var body = {
       type: 1,
-      book_id: item.id,
+      book_id: item.book_id,
       user_id: user.id,
       user_type: user.usertype,
     };
     var res = await postData('api/getRemovecart', body);
+    console.log('remove cart', item);
+    console.log('body cart', body);
+    setRLoading(false);
   };
 
   const handleCouponProceed = async () => {
@@ -135,6 +137,7 @@ export const Cart = ({navigation}) => {
   };
 
   const fetchDetails = async () => {
+    
     var key = await checkSyncData();
     if (key[0] !== 'fcmToken') {
       await getSyncData(key[0]).then(async res => {
@@ -159,10 +162,8 @@ export const Cart = ({navigation}) => {
           };
           var result = await postData('api/getPaymentbooks', body);
           setPaymentDetails(result.data);
-          console.log('payment', result.data);
           setLoading(false);
           setCouponLoading(false);
-          setRLoading(false);
           setShowModal(false);
         });
       });
@@ -178,17 +179,17 @@ export const Cart = ({navigation}) => {
     fetchDetails();
   }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchDetails();
-      // alert('Screen was focused');
-      // Do something when the screen is focused
-      return () => {
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
-      };
-    }, []),
-  );
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     fetchDetails('CAllback');
+  //     // alert('Screen was focused');
+  //     // Do something when the screen is focused
+  //     return () => {
+  //       // Do something when the screen is unfocused
+  //       // Useful for cleanup functions
+  //     };
+  //   }, []),
+  // );
 
   const fetchUserData = async res => {
     if (res.usertype === 'individual') {
@@ -477,7 +478,7 @@ export const Cart = ({navigation}) => {
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
-      <ScrollView contentContainerStyle={{paddingBottom: 60}}>
+      <View style={{paddingBottom: 100}}>
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <Text
             style={{
@@ -504,7 +505,7 @@ export const Cart = ({navigation}) => {
           renderItem={displayBooks}
           keyExtractor={item => item.id}
         />
-      </ScrollView>
+      </View>
       {couponModal()}
       <View
         style={{

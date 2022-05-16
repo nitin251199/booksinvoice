@@ -675,6 +675,25 @@ const MusicPlayer = ({route, navigation}) => {
     );
   };
 
+  function fancyTimeFormat(duration)
+{   
+    // Hours, minutes and seconds
+    var hrs = ~~(duration / 3600);
+    var mins = ~~((duration % 3600) / 60);
+    var secs = ~~duration % 60;
+
+    // Output like "1:01" or "4:03:59" or "123:03:59"
+    var ret = "";
+
+    if (hrs > 0) {
+        ret += "" + hrs + ":" + (mins < 10 ? "0" : "");
+    }
+
+    ret += "" + mins + ":" + (secs < 10 ? "0" : "");
+    ret += "" + secs;
+    return ret;
+}
+
   const timerBS = () => {
     {
       return (
@@ -714,7 +733,7 @@ const MusicPlayer = ({route, navigation}) => {
                   fontWeight: '800',
                   padding: 10,
                 }}>
-                {timerValue}s
+                {fancyTimeFormat(timerValue)} min
               </Text>
               <View style={{flexDirection: 'row'}}>
                 <TouchableOpacity onPress={() => setTimerValue(600)}>

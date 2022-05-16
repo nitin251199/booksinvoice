@@ -227,8 +227,8 @@ export const Login = ({navigation}) => {
   const checkSubscription = async res => {
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
-    // var cart = await postData('api/getShowcart', body);
-    // console.log('cart', cart);
+    var cart = await postData('api/getShowcart', body);
+    // console.log('cart', result);
     // if(cart.msg === 'Success'){
     //   cart.data.map(item => {
     //     dispatch({type: 'ADD_CART', payload: [item.id, item]});
