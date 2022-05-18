@@ -204,7 +204,7 @@ export const PaymentSummary = ({route, navigation}) => {
                 color: textColor,
                 margin: 10,
               }}>
-              Enter Coupon Code
+              Enter Coupon Code / Recharge Code
             </Text>
             <TextInput
               value={coupon}
@@ -216,13 +216,34 @@ export const PaymentSummary = ({route, navigation}) => {
                 paddingLeft: 10,
                 color: textColor,
               }}
-              placeholder="Coupon Code"
+              placeholder="Type Coupon/Recharge Code Here"
               placeholderTextColor="#999"
             />
             <View style={{marginVertical: 10}}>
               <RadioButton.Group
                 onValueChange={newValue => handleCoupon(newValue)}
                 value={value}>
+                  <TouchableWithoutFeedback
+                  onPress={() => setValue('Recharge Coupons')}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}>
+                    <Text style={{color: textColor}}>Buy Subscription Use Recharge Code</Text>
+                    <RadioButton
+                      color="#ff9000"
+                      uncheckedColor={textColor}
+                      value="Recharge Coupons"
+                    />
+                  </View>
+                </TouchableWithoutFeedback>
+                <View style={{margin:10}}>
+                  <Text style={{color: textColor,fontWeight:'800'}}>
+                    OR
+                  </Text>
+                </View>
                 <TouchableWithoutFeedback
                   onPress={() => setValue('Discount Coupons')}>
                   <View
@@ -255,22 +276,7 @@ export const PaymentSummary = ({route, navigation}) => {
                     />
                   </View>
                 </TouchableWithoutFeedback>
-                <TouchableWithoutFeedback
-                  onPress={() => setValue('Recharge Coupons')}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}>
-                    <Text style={{color: textColor}}>Recharge Coupon</Text>
-                    <RadioButton
-                      color="#ff9000"
-                      uncheckedColor={textColor}
-                      value="Recharge Coupons"
-                    />
-                  </View>
-                </TouchableWithoutFeedback>
+                
               </RadioButton.Group>
             </View>
             <TouchableOpacity onPress={() => handleCouponProceed()}>

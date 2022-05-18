@@ -81,7 +81,15 @@ const MusicPlayer = ({route, navigation}) => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     if (currentTrack != null) {
       if (playBackState == State.Paused) {
-        await TrackPlayer.play();
+        if(progress.position == 0)
+        {
+          await TrackPlayer.play();
+          backgroundTimer()
+        }
+        else {
+          await TrackPlayer.play();
+        }
+       
       } else {
         await TrackPlayer.pause();
         setSelected({index: ''});
@@ -317,7 +325,8 @@ const MusicPlayer = ({route, navigation}) => {
         BackgroundTimer.start();
         const timeoutId = BackgroundTimer.setTimeout(async () => {
           if (currentTrack != null) {
-            await TrackPlayer.stop();
+            await TrackPlayer.seekTo(0);
+            await TrackPlayer.pause();
             setModalVisible(true);
           }
           // this will be executed once after 10 seconds
