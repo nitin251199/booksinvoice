@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {AirbnbRating, Divider, Icon } from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
+import { getSyncData } from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import { ThemeContext } from './ThemeContext';
 
@@ -28,20 +29,34 @@ export const Search = ({navigation}) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [lang, setLang] = useState('');
 
   const searchBook = async text => {
     setLoading(true);
     setSearchText(text);
-    var body = {global_search: text};
+    var body = {global_search: text, languageid: lang};
     var result = await postData('api/getSearch', body);
     if (result.msg === 'Success') {
       setBooks(result.data);
       setLoading(false);
-    } else if (result.msg === 'Parameter not match') {
+    } else if (result.msg === 'Data Not Found') {
+      setBooks([]);
+      setLoading(false);
+    } 
+      else if (result.msg === 'Parameter not match') {
       setBooks([]);
       setLoading(false);
     }
   };
+
+  const getLang = async() => {
+    var lang = await getSyncData('languageid');
+    setLang(lang);
+  }
+
+  useEffect(()=>{
+    getLang();
+  },[])
 
   useFocusEffect(
     React.useCallback(() => {

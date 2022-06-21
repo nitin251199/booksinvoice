@@ -27,12 +27,14 @@ import { UserSubscriptions } from './UserSubscriptions';
 import { PaymentScreen } from './PaymentScreen';
 import { PaymentSummary } from './PaymentSummary';
 import { Download } from './Download';
-import { notificationListener, requestUserPermission } from './NotificationServices';
+import { fetchProfile, notificationListener, requestUserPermission } from './NotificationServices';
 import { useNavigation } from '@react-navigation/native';
 import { Comment } from './Comment';
 import { Cart } from './Cart';
 import { OfflineScreen } from './OfflineScreen';
 import { MyBooks } from './MyBooks';
+import AssignSub from './AssignSub';
+import ActivationLink from './ActivationLink';
 
 export default function RootNavigator() {
 
@@ -47,6 +49,7 @@ export default function RootNavigator() {
   useEffect(()=>{
     requestUserPermission();
     notificationListener(navigation);
+    fetchProfile(dispatch);
   },[])
 
   function MyTabs() {
@@ -141,7 +144,11 @@ export default function RootNavigator() {
           component={PaymentSummary}
           options={{header: AppHeader}}
         />
-       
+       <Stack.Screen
+          name="AssignSub"
+          component={AssignSub}
+          options={{header: AppHeader}}
+        />
       </Stack.Navigator>
     );
   }
@@ -200,6 +207,16 @@ export default function RootNavigator() {
         <Stack.Screen
           name="MyBooks"
           component={MyBooks}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="AssignSub"
+          component={AssignSub}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="ActivationLink"
+          component={ActivationLink}
           options={{header: AppHeader}}
         />
       </Stack.Navigator>

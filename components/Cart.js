@@ -111,8 +111,6 @@ export const Cart = ({navigation}) => {
       user_type: user.usertype,
     };
     var res = await postData('api/getRemovecart', body);
-    console.log('remove cart', item);
-    console.log('body cart', body);
     setRLoading(false);
   };
 

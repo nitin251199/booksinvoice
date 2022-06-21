@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Image,
   ImageBackground,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -40,22 +40,34 @@ export default function Homepage({navigation, route}) {
   const setother = useSelector(state => state?.home?.books_by_cate) || [];
   const setad = useSelector(state => state?.home?.advertise) || [];
 
-  const [data, setData] =  useState(Object.values(setdata))
+  const [data, setData] = useState(Object.values(setdata));
 
-  const [banner, setBanner] = useState(Object.values(setbanner))
+  const [banner, setBanner] = useState(Object.values(setbanner));
 
-  const [topRated, setTopRated] = useState(Object.values(settop))
+  const [topRated, setTopRated] = useState(Object.values(settop));
 
-  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular))
+  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular));
 
-  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium))
+  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium));
 
-  const [category, setCategory] = useState(Object.values(setcategory))
+  const [category, setCategory] = useState(Object.values(setcategory));
 
   const [otherCategory, setOtherCategory] = useState(setother);
 
   const [advertise, setAdvertise] = useState(setad);
 
+  useEffect(() => {
+    setData(Object.values(setdata));
+    setBanner(Object.values(setbanner));
+    setTopRated(Object.values(settop));
+    setPopularBooks(Object.values(setpopular));
+    setPremiumBooks(Object.values(setpremium));
+    // setCategory(Object.values(setcategory));
+    setOtherCategory(setother);
+    setAdvertise(setad);
+  }, [
+    setdata
+  ]);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -73,6 +85,19 @@ export default function Homepage({navigation, route}) {
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     }, []),
   );
+
+  // React.useEffect(() => {
+  //   const unsubscribe = navigation.addListener('tabPress', (e) => {
+  //     // Prevent default behavior
+  //     e.preventDefault();
+
+  //     alert('Default behavior prevented');
+  //     // Do something manually
+  //     // ...
+  //   });
+
+  //   return unsubscribe;
+  // }, [navigation]);
 
   const DisplayBanner = ({item}) => {
     return (
@@ -125,6 +150,11 @@ export default function Homepage({navigation, route}) {
   };
 
   const DisplayOtherCategory = ({item, index, categoryname}) => {
+    mainCategoryArr = category.filter(
+      item => item.id === categoryname.bookcategoryid,
+    );
+    let mCat = [];
+    mCat.push(mainCategoryArr[0]);
     return (
       <View style={{display: 'flex', flexDirection: 'column'}} key={index}>
         <Divider />
@@ -135,12 +165,12 @@ export default function Homepage({navigation, route}) {
             alignItems: 'center',
           }}>
           <TouchableOpacity
-            onPress={() =>
+            onPress={() => {
               navigation.navigate('CategoryPage', {
-                item: categoryname,
-                category: category[index],
-              })
-            }>
+                item: mCat[0],
+                category: mCat[0],
+              });
+            }}>
             <Text
               style={[
                 styles.categoryTitle,
@@ -148,14 +178,14 @@ export default function Homepage({navigation, route}) {
                   color: textColor,
                 },
               ]}>
-              {categoryname.bookcategory}
+              {mainCategoryArr[0].bookcategory}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('CategoryPage', {
-                item: categoryname,
-                category: category[index],
+                item: mCat[0],
+                category: mCat[0],
               })
             }>
             <Text
@@ -296,8 +326,7 @@ export default function Homepage({navigation, route}) {
       <ScrollView
         // onScroll={handleScroll}
         // scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         <View
           style={[
             styles.container,
@@ -636,19 +665,31 @@ export default function Homepage({navigation, route}) {
               />
             </View>
           </View>
-          <TouchableWithoutFeedback onPress={() => navigation.navigate('Subscriptions')}>
-          <ImageBackground 
-            style={{height: height*0.2, width: width,marginVertical:10,
-            display:'flex',justifyContent:'center',alignItems:'center',
-          }}
-          imageStyle={{resizeMode: 'stretch',}}
-            source={{
-              uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
-            }}
-          >
-            <Text style={{fontSize: 20, fontWeight: '800',color:'#FFF'}}>Buy Subscription Plans</Text>
-            <Text style={{fontSize: 15,marginVertical:10,color:'#FFF'}}>{`${advertise[0]?.title}`}</Text>
-          </ImageBackground>
+          <TouchableWithoutFeedback
+            onPress={() => navigation.navigate('Subscriptions')}>
+            <ImageBackground
+              style={{
+                height: height * 0.2,
+                width: width,
+                marginVertical: 10,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              imageStyle={{resizeMode: 'stretch'}}
+              source={{
+                uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
+              }}>
+              <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
+                Buy Subscription Plans
+              </Text>
+              <Text
+                style={{
+                  fontSize: 15,
+                  marginVertical: 10,
+                  color: '#FFF',
+                }}>{`${advertise[0]?.title}`}</Text>
+            </ImageBackground>
           </TouchableWithoutFeedback>
           {/* <Tile
             onPress={() => navigation.navigate('Subscriptions')}
@@ -688,7 +729,7 @@ export default function Homepage({navigation, route}) {
                 <DisplayOtherCategory
                   item={item}
                   index={index}
-                  categoryname={category[index]}
+                  categoryname={item[0]}
                 />
               )}
             />

@@ -37,7 +37,7 @@ import {checkSyncData, getSyncData} from './AsyncStorage';
 import {ThemeContext} from './ThemeContext';
 import {Slider as SpeedSlider} from 'react-native-elements';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { useSelector } from 'react-redux';
+import {useSelector} from 'react-redux';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 
@@ -63,6 +63,8 @@ const MusicPlayer = ({route, navigation}) => {
   const [timerModalVisible, setTimerModalVisible] = useState(false);
   const [chapter, setChapter] = useState([]);
   const [timerValue, setTimerValue] = useState(0);
+  const [likeCount, setLikeCount] = useState('');
+  const [isLike, setIsLike] = useState(false);
 
   var isSub = useSelector(state => state.isSubscribed);
 
@@ -81,15 +83,12 @@ const MusicPlayer = ({route, navigation}) => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     if (currentTrack != null) {
       if (playBackState == State.Paused) {
-        if(progress.position == 0)
-        {
+        if (progress.position == 0) {
           await TrackPlayer.play();
-          backgroundTimer()
-        }
-        else {
+          backgroundTimer();
+        } else {
           await TrackPlayer.play();
         }
-       
       } else {
         await TrackPlayer.pause();
         setSelected({index: ''});
@@ -274,28 +273,41 @@ const MusicPlayer = ({route, navigation}) => {
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key[0] !== 'isLogin') {
-      var userData = await getSyncData(key[0]).then(async res => {
+    if (key[0] !== 'fcmToken') {
+      await getSyncData(key[0]).then(async res => {
         checkFavourite(res);
-        // var body = {
-        //   type: 1,
-        //   user_id: res.id,
-        //   user_type: res.usertype.toLowerCase(),
-        // };
-        // var result = await postData('api/getSubscription', body);
-        // if (result.msg === 'Subscribed') {
-        //   setStatus(false);
-        // }
+        var body = {
+          type: 1,
+          user_id: res.id,
+          user_type: res.usertype.toLowerCase(),
+          book_id: route.params.state.id,
+        };
+        var result = await postData('api/getActivebook', body);
+        if (result.msg == true) {
+          setStatus(false);
+        }
         var {id, usertype} = res;
         setUserData({id, usertype});
       });
     }
   };
 
-
-
   const skipForward = async () => {
-    await TrackPlayer.seekTo(progress.position + 10);
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    if (!isSub) {
+      if (Math.floor(progress.position) >= temp[currentTrack].duration) {
+        console.log('end', temp[currentTrack].duration, Math.floor(progress.position));
+        await TrackPlayer.seekTo(0);
+        await TrackPlayer.pause();
+        setModalVisible(true);
+      } else {
+        console.log('starts', temp[currentTrack].duration, Math.floor(progress.position));
+        await TrackPlayer.seekTo(progress.position + 10);
+      }
+    } else {
+      
+      await TrackPlayer.seekTo(progress.position + 10);
+    }
   };
 
   const skipBackward = async () => {
@@ -321,7 +333,8 @@ const MusicPlayer = ({route, navigation}) => {
   const backgroundTimer = async () => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     // Start a timer that runs once after X milliseconds
-    if (!isSub) {
+    if (status) {
+      if (!isSub) {
         BackgroundTimer.start();
         const timeoutId = BackgroundTimer.setTimeout(async () => {
           if (currentTrack != null) {
@@ -332,6 +345,7 @@ const MusicPlayer = ({route, navigation}) => {
           // this will be executed once after 10 seconds
           // even when app is the the background
         }, temp[currentTrack].duration * 1000);
+      }
     }
     // Cancel the timeout if necessary
     // BackgroundTimer.clearTimeout(timeoutId);
@@ -595,10 +609,38 @@ const MusicPlayer = ({route, navigation}) => {
     if (result.msg === 'Success') {
       setIsFavourite(true);
     }
+    var likes = await postData('api/getLikebook', body);
+    setLikeCount(likes.count);
+    if (likes.msg === 'Success') {
+      setIsLike(true);
+    }
+  };
+
+  const addLike = async () => {
+    if (userData.id !== '' && userData.id !== undefined) {
+      var body = {
+        type: '1',
+        user_id: userData.id,
+        user_type: userData.usertype,
+        books_id: route.params.state.id,
+      };
+      var result = await postData('api/getLikeadd', body);
+      if (result.msg === 'Added') {
+        setIsLike(true);
+        setLikeCount(parseInt(likeCount) + 1);
+        ToastAndroid.show('You liked the book !', ToastAndroid.SHORT);
+      } else if (result.msg === 'Deleted') {
+        setIsLike(false);
+        setLikeCount(parseInt(likeCount) - 1);
+        ToastAndroid.show('You disliked the book !', ToastAndroid.SHORT);
+      }
+    } else {
+      ToastAndroid.show('Please Log in to like the book !', ToastAndroid.SHORT);
+    }
   };
 
   const addFavourite = async () => {
-    if (userData.id !== '') {
+    if (userData.id !== '' && userData.id !== undefined) {
       var body = {
         type: '1',
         user_id: userData.id,
@@ -684,24 +726,23 @@ const MusicPlayer = ({route, navigation}) => {
     );
   };
 
-  function fancyTimeFormat(duration)
-{   
+  function fancyTimeFormat(duration) {
     // Hours, minutes and seconds
     var hrs = ~~(duration / 3600);
     var mins = ~~((duration % 3600) / 60);
     var secs = ~~duration % 60;
 
     // Output like "1:01" or "4:03:59" or "123:03:59"
-    var ret = "";
+    var ret = '';
 
     if (hrs > 0) {
-        ret += "" + hrs + ":" + (mins < 10 ? "0" : "");
+      ret += '' + hrs + ':' + (mins < 10 ? '0' : '');
     }
 
-    ret += "" + mins + ":" + (secs < 10 ? "0" : "");
-    ret += "" + secs;
+    ret += '' + mins + ':' + (secs < 10 ? '0' : '');
+    ret += '' + secs;
     return ret;
-}
+  }
 
   const timerBS = () => {
     {
@@ -853,26 +894,29 @@ const MusicPlayer = ({route, navigation}) => {
   const onShare = async () => {
     try {
       let imagePath = null;
+      let currentTrack = await TrackPlayer.getCurrentTrack();
+      console.log('onShare',temp[currentTrack].artwork);
       RNFetchBlob.config({
-          fileCache: true
+        fileCache: true,
       })
-      .fetch("GET", 'https://booksinvoice.com/logo.jpg')
-      // the image is now dowloaded to device's storage
-      .then(resp => {
+        .fetch('GET', temp[currentTrack].artwork)
+        // the image is now dowloaded to device's storage
+        .then(resp => {
           // the image path you can use it directly with Image component
           imagePath = resp.path();
-          return resp.readFile("base64");
-      })
-      .then(async base64Data => {
+          return resp.readFile('base64');
+        })
+        .then(async base64Data => {
           var base64Data = `data:image/png;base64,` + base64Data;
           // here's base64 encoded image
-          await Share.open({ 
-          // title: `Booksinvoice - Download and listen books for free.`,
-          message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
-          url: base64Data });
+          await Share.open({
+            // title: `Booksinvoice - Download and listen books for free.`,
+            message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on Booksinvoice.com\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            url: base64Data,
+          });
           // remove the file from storage
           return RNFetchBlob.fs.unlink(imagePath);
-      });
+        });
     } catch (error) {
       alert(error.message);
     }
@@ -940,7 +984,18 @@ const MusicPlayer = ({route, navigation}) => {
               minimumTrackTintColor="#ff9000"
               maximumTrackTintColor={textColor}
               onSlidingComplete={async value => {
-                await TrackPlayer.seekTo(value);
+                const currentTrack = await TrackPlayer.getCurrentTrack();
+                if (!isSub) {
+                  if (Math.floor(value) >= temp[currentTrack].duration) {
+                    await TrackPlayer.seekTo(0);
+                    await TrackPlayer.pause();
+                    setModalVisible(true);
+                  } else {
+                    await TrackPlayer.seekTo(value);
+                  }
+                } else {
+                  await TrackPlayer.seekTo(value);
+                }
               }}
             />
 
@@ -1010,12 +1065,22 @@ const MusicPlayer = ({route, navigation}) => {
         <View
           style={{...style.bottomSection, backgroundColor: backgroundColor}}>
           <View style={style.bottomIconContainer}>
-            <TouchableOpacity onPress={() => addFavourite()}>
-              {isFavourite ? (
+            <TouchableOpacity onPress={() => addLike()}>
+              {isLike ? (
                 <Ionicons name="heart-sharp" size={30} color="red" />
               ) : (
                 <Ionicons name="heart-outline" size={30} color="#888888" />
               )}
+              <Text
+                style={{
+                  fontSize: 14,
+                  position: 'absolute',
+                  top: -9,
+                  right: -10,
+                  fontWeight: '500',
+                }}>
+                {likeCount}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={changeRepeatMode}>
@@ -1075,6 +1140,14 @@ const MusicPlayer = ({route, navigation}) => {
                 size={30}
                 color="#888888"
               />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => addFavourite()}>
+              {isFavourite ? (
+                <Ionicons name="bookmark" size={28} color="#0652DD" />
+              ) : (
+                <Ionicons name="bookmark-outline" size={28} color="#888888" />
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity>

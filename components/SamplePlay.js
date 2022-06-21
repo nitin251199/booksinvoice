@@ -46,17 +46,17 @@ export const SamplePlay = ({item, propsStyles, navigation}) => {
       if (s >= time) {
         await TrackPlayer.stop();
         dispatch({type: 'SET_CURRENT_SONG', payload: {id: ''}});
-        Alert.alert(
-          'Booksinvoice',
-          'Please subscribe to listen further!',
-          [{
-            text: 'Cancel',
-            // onPress: () => console.log("Cancel Pressed"),
-            style: 'cancel',
-          },
-            {text: 'OK', onPress: () => navigation.navigate('Subscriptions')}],
-          {cancelable: true},
-        );
+        // Alert.alert(
+        //   'Booksinvoice',
+        //   'Please subscribe to listen further!',
+        //   [{
+        //     text: 'Cancel',
+        //     // onPress: () => console.log("Cancel Pressed"),
+        //     style: 'cancel',
+        //   },
+        //     {text: 'OK', onPress: () => navigation.navigate('Subscriptions')}],
+        //   {cancelable: true},
+        // );
         clearTimeout(timeout);
       }
     }

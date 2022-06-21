@@ -11,6 +11,8 @@ import {
   ToastAndroid,
   Alert,
   ActivityIndicator,
+  Platform,
+  NativeModules,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -46,6 +48,9 @@ export const Login = ({navigation}) => {
   const [showPass, setShowPass] = useState(false);
   const [country, setCountry] = useState('');
   const [showSignup, setShowSignup] = useState(false);
+
+  let resendOtpTimerInterval;
+  const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(0);
 
   const {theme} = React.useContext(ThemeContext);
 
@@ -227,13 +232,14 @@ export const Login = ({navigation}) => {
   const checkSubscription = async res => {
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
+    
     var cart = await postData('api/getShowcart', body);
     // console.log('cart', result);
-    // if(cart.msg === 'Success'){
-    //   cart.data.map(item => {
-    //     dispatch({type: 'ADD_CART', payload: [item.id, item]});
-    //   })
-    // }
+    if(cart.msg === 'Success'){
+      cart.data.map(item => {
+        dispatch({type: 'ADD_CART', payload: [item.id, item]});
+      })
+    }
     if (result.msg === 'Subscribed') {
       return true;
     } else {
@@ -254,6 +260,31 @@ export const Login = ({navigation}) => {
         {text: 'Proceed', onPress: () => validateOTP()},
       ],
     );
+
+    useEffect(() => {
+      
+        startResendOtpTimer();
+     
+  
+      return () => {
+        if (resendOtpTimerInterval) {
+          clearInterval(resendOtpTimerInterval);
+        }
+      };
+    }, [resendButtonDisabledTime]);
+
+    const startResendOtpTimer = () => {
+      if (resendOtpTimerInterval) {
+        clearInterval(resendOtpTimerInterval);
+      }
+      resendOtpTimerInterval = setInterval(() => {
+        if (resendButtonDisabledTime <= 0) {
+          clearInterval(resendOtpTimerInterval);
+        } else {
+          setResendButtonDisabledTime(resendButtonDisabledTime - 1);
+        }
+      }, 1000);
+    };
 
   const otpLogin = () => {
     return (
@@ -312,18 +343,31 @@ export const Login = ({navigation}) => {
                 color="#ff9000"
               />
               <TextInput
-                autoFocus
+                // autoFocus
                 style={{width: '90%', color: textColor}}
                 placeholder="OTP"
                 placeholderTextColor={textColor}
                 onChangeText={text => setOtp(text)}
               />
             </View>
+              <View style={{paddingVertical:10,width:width*0.85}}>
+                 <View style={{flexDirection:'row', justifyContent:'space-between'}}>
+                 {resendButtonDisabledTime > 0 ? (
+            <Text>Resend OTP in {resendButtonDisabledTime}s</Text>
+          ) : (
+            <TouchableOpacity onPress={() => {
+              generateOTP();
+            }}>
+              <Text style={{color:'#ff9000'}}>Resend OTP</Text>
+              </TouchableOpacity>
+          )}
+                  </View>
+              </View>
             <TouchableOpacity onPress={() => createAlert()}>
               <View
                 style={[
                   styles.btn,
-                  {backgroundColor: '#ff9000', marginVertical: 20},
+                  {backgroundColor: '#ff9000', marginVertical: 10},
                 ]}>
                 <Text
                   style={[
@@ -336,6 +380,7 @@ export const Login = ({navigation}) => {
                 </Text>
               </View>
             </TouchableOpacity>
+            
           </View>
         ) : (
           <TouchableOpacity
@@ -372,6 +417,7 @@ export const Login = ({navigation}) => {
       email: email,
       password: password,
       type: 1,
+      device_id : Platform.OS === 'android' ? NativeModules.PlatformConstants.getAndroidID() : NativeModules.SettingsManager.clientUniqueId,
     };
     var result = await postData('api/getLogin', body);
 
@@ -404,6 +450,7 @@ export const Login = ({navigation}) => {
       };
       var result = await postData('api/getGenerate', body);
       if (result.reaction === 'success') {
+        setResendButtonDisabledTime(30);
         ToastAndroid.show(
           'OTP has been sent to your mobile no. successfully!',
           ToastAndroid.LONG,
@@ -424,6 +471,7 @@ export const Login = ({navigation}) => {
       usermobile: mobileNo,
       user_type: selectedIndex === 0 ? 'individual' : 'organisation',
       otp: otp,
+      mobile: plainMobileNo,
     };
     var result = await postData('api/getValidateuserotp', body);
     if (result.msg === 'Login') {

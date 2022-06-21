@@ -1,6 +1,6 @@
 {
   "name": "booksinvoice",
-  "version": "5.0.0",
+  "version": "6.1.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -26,7 +26,8 @@
     "lottie-react-native": "^5.0.1",
     "react": "17.0.2",
     "react-native": "0.67.2",
-    "react-native-autocomplete-input": "^5.0.2",
+    "react-native-autocomplete-dropdown": "^2.0.6",
+    "react-native-autocomplete-input": "^5.1.0",
     "react-native-background-timer": "^2.4.1",
     "react-native-banner-carousel": "^1.0.3",
     "react-native-device-country": "^1.0.2",

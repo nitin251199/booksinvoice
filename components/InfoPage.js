@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import {AirbnbRating} from 'react-native-elements';
 import {Button} from 'react-native-paper';
+import { set } from 'react-native-reanimated';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -51,46 +52,79 @@ export default function InfoPage({route, navigation}) {
   const [popularBooks, setPopularBooks] = useState([]);
   const [premiumBooks, setPremiumBooks] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [status, setStatus] = useState(true)
+  const [userData, setUserData] = useState({id: '', usertype: ''});
+  
 
+  
   const fetchBook = async id => {
-    var body = {type: '1', books_id: id};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', books_id: id, languageid: languageid};
     var result = await postData('api/getBooksid', body);
     setBook(result.data[0]);
     setChapters(result.chapters);
   };
 
   const fetchSimilarBooks = async id => {
-    var body = {type: '1', category_id: id};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', category_id: id, languageid: languageid};
     var result = await postData('api/getSimiler', body);
     setSimilar(result.data);
   };
 
   const fetchNewArrivals = async () => {
-    var body = {type: '1', skip: 0};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', skip: 0, languageid: languageid};
     var result = await postData('api/getNewarrival', body);
     setNewArrivals(result.data);
   };
 
   const fetchTopRated = async () => {
-    var body = {type: '1', skip: 0};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', skip: 0, languageid: languageid};
     var result = await postData('api/getToprated', body);
     setTopRated(result.data);
   };
 
   const fetchPopularBooks = async () => {
-    var body = {type: '1', skip: 0};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', skip: 0, languageid: languageid};
     var result = await postData('api/getPopulerbooks', body);
     setPopularBooks(result.data);
   };
 
   const fetchPremiumBooks = async () => {
-    var body = {type: '1', skip: 0};
+    const languageid = await getSyncData('languageid');
+    var body = {type: '1', skip: 0, languageid: languageid};  
     var result = await postData('api/getPremiumbooks', body);
     setPremiumBooks(result.data);
   };
 
+  const checkLogin = async () => {
+    var key = await checkSyncData();
+
+    if (key[0] !== 'fcmToken') {
+      await getSyncData(key[0]).then(async res => {
+        var body = {
+          type: 1,
+          user_id: res.id,
+          user_type: res.usertype.toLowerCase(),
+          book_id: route.params.state,
+        };
+        var result = await postData('api/getActivebook', body);
+      
+        if (result.msg == true) {
+          setStatus(false);
+        }
+        var {id, usertype} = res;
+        setUserData({id, usertype});
+      });
+    }
+  };
+
   useEffect(() => {
     fetchBook(id);
+    checkLogin();
     fetchSimilarBooks(categoryid);
     fetchNewArrivals();
     fetchTopRated();
@@ -258,10 +292,7 @@ export default function InfoPage({route, navigation}) {
   };
 
   const addToCart = async () => {
-    var key = await checkSyncData();
-    if (key[0] != 'fcmToken') {
-      setLoading(true);
-      var userData = await getSyncData(key[0]);
+    setLoading(true);
       if (userData !== null) {
         dispatch({type: 'ADD_CART', payload: [book.id, book]});
         var body = {
@@ -277,9 +308,6 @@ export default function InfoPage({route, navigation}) {
       } else {
         navigation.navigate('Login');
       }
-    } else {
-      navigation.navigate('Login');
-    }
   };
 
   // const onRefresh = () => {
@@ -557,65 +585,65 @@ export default function InfoPage({route, navigation}) {
             </TouchableOpacity>
           </View>
           {book.premiumtype === 'Premium' || book.premiumtype === 'Both' ? (
-            <View
-              style={{
-                ...styles.btnContainer,
-                paddingHorizontal: 0,
-                paddingVertical: 0,
-              }}>
-              {keys.includes(book.id) ? (
-                <View
-                  style={[
-                    styles.btn,
-                    {
-                      width: width * 0.92,
-                      marginBottom: 10,
-                      backgroundColor: backgroundColor,
-                      borderColor: textColor,
-                      borderWidth: 1,
-                    },
-                  ]}>
-                  <Text
-                    style={{
-                      fontSize: 18,
-                      fontWeight: '800',
-                      color: '#fff',
-                      marginRight: 10,
-                    }}>
-                    ADDED TO CART
-                  </Text>
-                  <MaterialCommunityIcons name="cart" size={20} color="#fff" />
-                </View>
-              ) : (
-                <Button
-                  onPress={() => addToCart()}
-                  style={{backgroundColor: '#ff9000', marginBottom: 10}}
-                  mode="contained"
-                  loading={loading}
-                  dark
-                  icon="cart"
-                  labelStyle={{
+            status && <View
+            style={{
+              ...styles.btnContainer,
+              paddingHorizontal: 0,
+              paddingVertical: 0,
+            }}>
+            { keys.includes(book.id) ? (
+              <View
+                style={[
+                  styles.btn,
+                  {
+                    width: width * 0.92,
+                    marginBottom: 10,
+                    backgroundColor: backgroundColor,
+                    borderColor: textColor,
+                    borderWidth: 1,
+                  },
+                ]}>
+                <Text
+                  style={{
                     fontSize: 18,
                     fontWeight: '800',
                     color: '#fff',
-                  }}
-                  contentStyle={[
-                    // styles.btn,
-                    {
-                      width: width * 0.92,
-                      padding: 2,
-                      display: 'flex',
-                      flexDirection: 'row-reverse',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      // margin: 5,
-                      borderRadius: 5,
-                    },
-                  ]}>
-                  ADD TO CART
-                </Button>
-              )}
-            </View>
+                    marginRight: 10,
+                  }}>
+                  ADDED TO CART
+                </Text>
+                <MaterialCommunityIcons name="cart" size={20} color="#fff" />
+              </View>
+            ) : (
+              <Button
+                onPress={() => addToCart()}
+                style={{backgroundColor: '#ff9000', marginBottom: 10}}
+                mode="contained"
+                loading={loading}
+                dark
+                icon="cart"
+                labelStyle={{
+                  fontSize: 18,
+                  fontWeight: '800',
+                  color: '#fff',
+                }}
+                contentStyle={[
+                  // styles.btn,
+                  {
+                    width: width * 0.92,
+                    padding: 2,
+                    display: 'flex',
+                    flexDirection: 'row-reverse',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    // margin: 5,
+                    borderRadius: 5,
+                  },
+                ]}>
+                ADD TO CART
+              </Button>
+            )}
+          </View>
           ) : (
             <></>
           )}

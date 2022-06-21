@@ -4877,7 +4877,7 @@ locate-path@^6.0.0:
   dependencies:
     p-locate "^5.0.0"
 
-lodash.debounce@^4.0.8:
+lodash.debounce@*, lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
   integrity sha1-gteb/zCmfEAF/9XiUVMArZyk168=
@@ -5978,6 +5978,15 @@ prompts@^2.0.1, prompts@^2.4.0, prompts@^2.4.1:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
+prop-types@*, prop-types@^15.5.10, prop-types@^15.7.2:
+  version "15.8.1"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
+  integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
+  dependencies:
+    loose-envify "^1.4.0"
+    object-assign "^4.1.1"
+    react-is "^16.13.1"
+
 prop-types@15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
@@ -5986,15 +5995,6 @@ prop-types@15.7.2:
     loose-envify "^1.4.0"
     object-assign "^4.1.1"
     react-is "^16.8.1"
-
-prop-types@^15.5.10, prop-types@^15.7.2:
-  version "15.8.1"
-  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
-  integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
-  dependencies:
-    loose-envify "^1.4.0"
-    object-assign "^4.1.1"
-    react-is "^16.13.1"
 
 psl@^1.1.33:
   version "1.8.0"
@@ -6057,10 +6057,20 @@ react-is@^16.13.0, react-is@^16.13.1, react-is@^16.7.0, react-is@^16.8.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
-react-native-autocomplete-input@^5.0.2:
-  version "5.0.2"
-  resolved "https://registry.yarnpkg.com/react-native-autocomplete-input/-/react-native-autocomplete-input-5.0.2.tgz#82556823b534dd1a9aabe222fda8579b3a14d011"
-  integrity sha512-CL20a5Rg/jsiuavlG6cm8MRFyH1nICXFrvtlVMrJ3IKUa6AW/Ge4QqCFa7AjZKzEus1uDeMzcHC+bOhcgSudUQ==
+react-native-autocomplete-dropdown@^2.0.6:
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/react-native-autocomplete-dropdown/-/react-native-autocomplete-dropdown-2.0.6.tgz#6a48b1b9e41c9301740191dc4258238f1fdb3b6b"
+  integrity sha512-rij0nVTmgZwmGuEWi39MOj5lLdqsprh6MBVgInSUj674zQ9YxhXbs451JURonBSKACAj07W5cziwGcPSbthwrQ==
+  dependencies:
+    lodash.debounce "*"
+    prop-types "*"
+    react-native-size-matters "^0.3.0"
+    react-native-vector-icons ">=7.0.0"
+
+react-native-autocomplete-input@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-autocomplete-input/-/react-native-autocomplete-input-5.1.0.tgz#01bb16873a4b2589ad47cda4ad69ae67dcf3c793"
+  integrity sha512-y6gIBm189hcsJO+6a4Hn8lNdy1qmY7yw1NAA6Bgvg8rznZk0r+35xXd1tu81aOZYJo9/LxGNlNL6Zblo3N1kGw==
 
 react-native-background-timer@^2.4.1:
   version "2.4.1"
@@ -6260,7 +6270,7 @@ react-native-share@^7.4.1:
   resolved "https://registry.yarnpkg.com/react-native-share/-/react-native-share-7.4.1.tgz#0fa79a8748e0f268f8398b3433119a0bdf98bf4b"
   integrity sha512-NFYkq9ytOP2kAAa33ZVOfBQLrpcBqwsNHsuDgU9DUcFpAlu2hYsjBy0MgLyJk8+uTzCBa5UCIlFFjZDwqFOKuw==
 
-react-native-size-matters@^0.3.1:
+react-native-size-matters@^0.3.0, react-native-size-matters@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/react-native-size-matters/-/react-native-size-matters-0.3.1.tgz#24d0cfc335a2c730f6d58bd7b43ea5a41be4b49f"
   integrity sha512-mKOfBLIBFBcs9br1rlZDvxD5+mAl8Gfr5CounwJtxI6Z82rGrMO+Kgl9EIg3RMVf3G855a85YVqHJL2f5EDRlw==
@@ -6287,7 +6297,7 @@ react-native-track-player@^2.1.2:
   resolved "https://registry.yarnpkg.com/react-native-track-player/-/react-native-track-player-2.1.2.tgz#34d387b8c1b2e6895f569d35137d2bc6524a9f85"
   integrity sha512-tZw9/4Ft7EtKtWDZuregBEXjXv++7WT7BvaXDk+lKCL/e3FQI5zyiwECfM18sk6raeMs7ItBxNsDKryCf9mMUA==
 
-react-native-vector-icons@^9.0.0:
+react-native-vector-icons@>=7.0.0, react-native-vector-icons@^9.0.0:
   version "9.1.0"
   resolved "https://registry.yarnpkg.com/react-native-vector-icons/-/react-native-vector-icons-9.1.0.tgz#52eaa205f5954d567b7048eb93d58ac854a2c59e"
   integrity sha512-2AHZ/h9d/+rC0odz+OwbGNlc1Lik/pHhSixn4HfC8RtQ8CxfSBZ6gg7bTLcZhdSvZN+ZEGi30Fj+ZnOSQy+smg==

@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import Share from 'react-native-share';
 import {ListItem, Icon} from 'react-native-elements';
-import {checkSyncData, getSyncData} from './AsyncStorage';
+import {checkSyncData, getSyncData, storeDatasync} from './AsyncStorage';
 import {postData} from './FetchApi';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -20,7 +21,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useDrawerStatus} from '@react-navigation/drawer';
 import {ThemeContext} from './ThemeContext';
 import {Badge, List} from 'react-native-paper';
-import {useSelector} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import pkg from '../package.json';
 import RNFetchBlob from 'rn-fetch-blob';
 
@@ -38,6 +39,11 @@ export const DrawerContent = ({navigation}) => {
   const [languageExpanded, setLanguageExpanded] = React.useState(false);
   const [lexpanded, setLExpanded] = React.useState(false);
   const [userData, setUserData] = React.useState([]);
+  const [languages, setLanguages] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [language, setLanguage] = React.useState();
+
+  var dispatch = useDispatch();
 
   var cart = useSelector(state => state?.cart);
   var isSub = useSelector(state => state.isSubscribed);
@@ -47,6 +53,10 @@ export const DrawerContent = ({navigation}) => {
     var body = {type: 1};
     var result = await postData('api/getCategory', body);
     setCategory(result.data);
+    var languageList = await postData('api/getChangelanguage', body);
+    if (languageList.msg === 'language') {
+      setLanguages(languageList.data);
+    }
   };
 
   useEffect(() => {
@@ -55,6 +65,7 @@ export const DrawerContent = ({navigation}) => {
 
   useEffect(() => {
     checkLogin();
+    getLanguage();
     setExpanded(false);
     setLanguageExpanded(false);
     setLExpanded(false);
@@ -87,29 +98,64 @@ export const DrawerContent = ({navigation}) => {
     );
   };
 
+  const getLanguage = async () => {
+    let lang = await getSyncData('languageid');
+    if (lang) {
+      setLanguage(lang);
+    }
+  }
+
+
+
+  const DisplayLanguage = ({item, index}) => {
+    return (
+      <View style={{paddingVertical: 0}}>
+        <List.Item
+          title={item.name}
+          titleStyle={{
+            fontSize: 12,
+            color: item.id === language ? '#ff9000' : textColor,
+          }}
+          onPress={async() => {
+            setLoading(true);
+            var body = {type: 1, languageid: item.id};
+            var data = await postData('api/getHome', body);
+            storeDatasync('languageid', item.id);
+            dispatch({type: 'SET_HOME', payload: data});
+            navigation.closeDrawer();
+            navigation.navigate('Homepage')
+            setLoading(false);
+          }}
+          style={{backgroundColor: backgroundColor}}
+          key={index}></List.Item>
+      </View>
+    );
+  };
+
   const onShare = async () => {
     try {
       let imagePath = null;
       RNFetchBlob.config({
-          fileCache: true
+        fileCache: true,
       })
-      .fetch("GET", 'https://booksinvoice.com/logo.jpg')
-      // the image is now dowloaded to device's storage
-      .then(resp => {
+        .fetch('GET', 'https://booksinvoice.com/logo.jpg')
+        // the image is now dowloaded to device's storage
+        .then(resp => {
           // the image path you can use it directly with Image component
           imagePath = resp.path();
-          return resp.readFile("base64");
-      })
-      .then(async base64Data => {
+          return resp.readFile('base64');
+        })
+        .then(async base64Data => {
           var base64Data = `data:image/png;base64,` + base64Data;
           // here's base64 encoded image
-          await Share.open({ 
-          // title: `Booksinvoice - Download and listen books for free.`,
-          message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
-          url: base64Data });
+          await Share.open({
+            // title: `Booksinvoice - Download and listen books for free.`,
+            message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            url: base64Data,
+          });
           // remove the file from storage
           return RNFetchBlob.fs.unlink(imagePath);
-      });
+        });
     } catch (error) {
       alert(error.message);
     }
@@ -124,6 +170,7 @@ export const DrawerContent = ({navigation}) => {
           backgroundColor: backgroundColor,
         },
       ]}>
+        
       <View
         style={{
           display: 'flex',
@@ -254,7 +301,7 @@ export const DrawerContent = ({navigation}) => {
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>
-              { isSub ? 'My Subscription' : 'Buy Subscription'}
+              {isSub ? 'My Subscription' : 'Buy Subscription'}
             </Text>
           </ListItem.Title>
         </ListItem.Content>
@@ -326,11 +373,18 @@ export const DrawerContent = ({navigation}) => {
           />
         )}
         right={props => (
+          <View style={{flexDirection:'row'}}>
+          <ActivityIndicator
+        animating={loading}
+        size={'small'}
+        
+      />
           <Icon
             name="keyboard-arrow-down"
             type="materialicons"
             color={textColor}
           />
+          </View>
         )}
         expanded={languageExpanded}
         titleStyle={{
@@ -343,30 +397,13 @@ export const DrawerContent = ({navigation}) => {
         onPress={() => {
           setLanguageExpanded(!languageExpanded);
         }}>
-        <List.Item
-          title="Hindi"
-          titleStyle={{
-            fontSize: 12,
-            color: '#ff9000',
-          }}
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          style={{backgroundColor: backgroundColor}}></List.Item>
-        <List.Item
-          title="English"
-          titleStyle={{
-            fontSize: 12,
-            color: '#ff9000',
-          }}
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          style={{backgroundColor: backgroundColor}}></List.Item>
-        <List.Item
-          title="Marathi"
-          titleStyle={{
-            fontSize: 12,
-            color: '#ff9000',
-          }}
-          // onPress={() => navigation.navigate('CategoryPage', {item: item})}
-          style={{backgroundColor: backgroundColor}}></List.Item>
+        <FlatList
+          data={languages}
+          nestedScrollEnabled
+          persistentScrollbar
+          renderItem={({item}) => <DisplayLanguage item={item} />}
+          keyExtractor={item => item.id}
+        />
       </List.Accordion>
 
       <List.Accordion
@@ -482,8 +519,11 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-        Linking.openURL("https://play.google.com/store/apps/details?id=com.booksinvoice")
-        navigation.closeDrawer();}}
+          Linking.openURL(
+            'https://play.google.com/store/apps/details?id=com.booksinvoice',
+          );
+          navigation.closeDrawer();
+        }}
         containerStyle={{backgroundColor: backgroundColor}}>
         <MaterialIcons name="star-rate" size={23} color={textColor} />
         <ListItem.Content style={{paddingLeft: 15}}>
@@ -496,8 +536,10 @@ export const DrawerContent = ({navigation}) => {
       </ListItem>
 
       <ListItem
-        onPress={() => {onShare()
-        navigation.closeDrawer();}}
+        onPress={() => {
+          onShare();
+          navigation.closeDrawer();
+        }}
         containerStyle={{backgroundColor: backgroundColor}}>
         <MaterialCommunityIcons
           name="share-variant"

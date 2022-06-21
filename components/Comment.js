@@ -305,15 +305,14 @@ export const Comment = ({route, navigation}) => {
           {comments.length} Comments
         </Text>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
         <FlatList
-          nestedScrollEnabled
           data={comments}
           ListEmptyComponent={renderLoader()}
+          ListFooterComponentStyle={{paddingBottom:60}}
+          ListFooterComponent={<View></View>}
           renderItem={renderComments}
           keyExtractor={item => item.id}
         />
-      </ScrollView>
       <FAB
         style={styles.fab}
         icon="plus"

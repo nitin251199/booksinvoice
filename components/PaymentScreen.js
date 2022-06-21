@@ -1,4 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
+import AnimatedLottieView from 'lottie-react-native';
 import React from 'react';
 import { BackHandler, Dimensions, Modal, Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
 import WebView from 'react-native-webview';
@@ -69,6 +70,8 @@ const thanksModal = () => {
         transparent
         onRequestClose={() => {
           setModalVisible(!modalVisible);
+           navigation.navigate('Homepage');
+          // navigation.popToTop();
         }}>
         <View style={styles.centeredView}>
           <View
@@ -76,10 +79,16 @@ const thanksModal = () => {
             <Text style={[styles.modalText, {color: textColor}]}>
               Thank you for purchasing.
             </Text>
+            <AnimatedLottieView
+	        source={require("../images/check2.json")}
+	        style={{ width: 100, height: 100 }}
+	        autoPlay
+            loop={false}
+	      />
             <Pressable
               style={[styles.button, {backgroundColor: '#ff9000'}]}
               onPress={() => {
-                navigation.popToTop();
+                navigation.navigate('Homepage');
                 setModalVisible(false);
               }}>
               <Text style={[styles.textStyle, {color: textColor}]}>Enjoy</Text>
@@ -127,7 +136,7 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     borderRadius: 20,
-    height: height*0.3,
+    height: height*0.35,
     padding: 35,
     alignItems: 'center',
     shadowColor: '#000',
@@ -154,7 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modalText: {
-    marginBottom: 15,
     fontSize: 20,
     fontWeight:'800',
     textAlign: 'center',

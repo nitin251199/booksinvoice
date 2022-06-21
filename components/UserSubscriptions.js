@@ -3,8 +3,6 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,6 +11,7 @@ import {
 import {Divider} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {postData} from './FetchApi';
 import {ThemeContext} from './ThemeContext';
 import {Button} from 'react-native-paper';
@@ -20,7 +19,7 @@ import {Button} from 'react-native-paper';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 // Import RNPrint
 import RNPrint from 'react-native-print';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -31,47 +30,113 @@ export const UserSubscriptions = ({navigation}) => {
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const [subs, setSubs] = useState([]);
-  const [expired, setExpired] = useState(false);
   const [notSubText, setNotSubText] = useState('');
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState([]);
 
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key) {
-      var userData = await getSyncData(key[0]).then(async res => {
+    if (key !== 'fcmToken') {
+     await getSyncData(key[0]).then(async res => {
         fetchSubscriptions(res);
+        setUserData(res);
       });
     }
   };
 
-  const printInvoice =async (data) => {
+  const printInvoice = async data => {
     setLoading(true);
-    const percentage = data.d_percentage === "" ? 0 : parseFloat(data.d_percentage);
-  var discount = data.packageprice*(percentage/100);
-  discount = discount.toFixed(2)
-  var tax = data.d_percentage === "" ? parseFloat(data.price)*0.18 : (parseFloat(data.packageprice) - discount)*0.18;
-  tax = tax.toFixed(2)
-  var price = parseFloat(data.price).toFixed(2);
+    const percentage =
+      data.d_percentage === '' || data.d_percentage === null ? 0 : parseFloat(data.d_percentage);
+    var discount = data.packageprice * (percentage / 100);
+    discount = discount.toFixed(2);
+    var tax =
+      data.d_percentage === ''
+        ? parseFloat(data.price) * 0.18
+        : (parseFloat(data.packageprice) - discount) * 0.18;
+    tax = tax.toFixed(2);
+    var price = parseFloat(data.price).toFixed(2);
 
-  var a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-  var b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
-  
-  function inWords (num) {
-      if ((num = num.toString()).length > 9) return num;
-      n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-      if (!n) return; var str = '';
-      str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore ' : '';
-      str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh ' : '';
-      str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand ' : '';
-      str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred ' : '';
-      str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'only ' : '';
+    function inWords(price) {
+      //console.log(price);
+      var a = [
+        '',
+        'One ',
+        'Two ',
+        'Three ',
+        'Four ',
+        'Five ',
+        'Six ',
+        'Seven ',
+        'Eight ',
+        'Nine ',
+        'Ten ',
+        'Eleven ',
+        'Twelve ',
+        'Thirteen ',
+        'Fourteen ',
+        'Fifteen ',
+        'Sixteen ',
+        'Seventeen ',
+        'Eighteen ',
+        'Nineteen ',
+      ];
+      var b = [
+        '',
+        '',
+        'Twenty',
+        'Thirty',
+        'Forty',
+        'Fifty',
+        'Sixty',
+        'Seventy',
+        'Eighty',
+        'Ninety',
+      ];
+      var number = parseFloat(price).toFixed(2).split('.');
+      var num = parseInt(number[0]);
+      var digit = parseInt(number[1]);
+      //console.log(num);
+      if (num.toString().length > 9) return 'overflow';
+      var n = ('000000000' + num)
+        .substr(-9)
+        .match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+      var d = ('00' + digit).substr(-2).match(/^(\d{2})$/);
+      if (!n) return;
+      var str = '';
+      str +=
+        n[1] != 0
+          ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'crore '
+          : '';
+      str +=
+        n[2] != 0
+          ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'lakh '
+          : '';
+      str +=
+        n[3] != 0
+          ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'thousand '
+          : '';
+      str +=
+        n[4] != 0
+          ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'hundred '
+          : '';
+      str +=
+        n[5] != 0
+          ? (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees '
+          : '';
+      str +=
+        d[1] != 0
+          ? (str != '' ? 'and ' : '') +
+            (a[Number(d[1])] || b[d[1][0]] + ' ' + a[d[1][1]]) +
+            'Paise Only'
+          : 'Only';
       return str;
-  }
+    }
 
-const RsInWords = inWords(parseInt(data.price));
+    const RsInWords = inWords(parseFloat(data.price));
 
-const HTMLView = `
+    const HTMLView = `
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -255,7 +320,13 @@ const HTMLView = `
               <div class="email"><a href="#">Order No.: ${data.oid}</a></div>
           </div>
           <div class="col invoice-details">
-              <div class="date">Date of Invoice: ${data.valid_from}</div>
+              <div class="date">Date of Invoice: ${
+                new Date(data.valid_from).getDate() +
+                '-' +
+                (new Date(data.valid_from).getMonth() + 1) +
+                '-' +
+                new Date(data.valid_from).getFullYear()
+              }</div>
               <div class="date">Invoice No: ${data.id}</div>
           </div>
       </div>
@@ -267,7 +338,9 @@ const HTMLView = `
                   <p style='margin-bottom: 0rem;'>${data.address}</p>
                   
                   <p style='margin-bottom: 0rem;'>${data.zip_pin}</p>
-                  <p style='margin-bottom: 0rem;'>${data.email} ${data.telephone}</p>
+                  <p style='margin-bottom: 0rem;'>${data.email} ${
+      data.telephone
+    }</p>
               </div>
           </div>
           
@@ -281,39 +354,49 @@ const HTMLView = `
                   <th class="text-right">Validity</th>
                   <th class="text-right">Discount Price</th>
                   ${
-                    parseInt(data.no_of_copies) > 1 && `<th class="text-right">Copies</th>`
+                    parseInt(data.no_of_copies) > 1 ?
+                    `<th class="text-right">Copies</th>`
+                    :
+                    ``
                   }
                   <th class="text-right">Taxable Value</th>
                   ${
-                    data.currency === 'INR' ?
-                    `<th class="text-right">CGST</th>
+                    data.currency === 'INR'
+                      ? `<th class="text-right">CGST</th>
                     <th class="text-right">SGST</th>`
-                    :
-                    `<th class="text-right">IGST</th>`
+                      : `<th class="text-right">IGST</th>`
                   }
                   <th class="text-right">Amount (Rs)</th>
               </tr>
           </thead>
           <tbody>
               <tr>
-                  <td class="unit" style='text-transform: capitalize;'>${data.user_type}</td>
+                  <td class="unit" style='text-transform: capitalize;'>${
+                    data.user_type
+                  }</td>
                   
                   <td class="unit">${data.packagename}</td>	
-                  <td class="unit">${data.currency === 'INR' ? 'Rs.' : '$'} ${data.packageprice}</td>
+                  <td class="unit">${data.currency === 'INR' ? 'Rs.' : '$'} ${
+      data.packageprice
+    }</td>
                   <td class="unit">${data.days} Days</td>
                   
                   <td class="unit">Rs ${discount}</td>
                   ${
-                    parseInt(data.no_of_copies) > 1 && `<td class="unit">${data.no_of_copies}</td>`
+                    parseInt(data.no_of_copies) > 1 ?
+                    `<td class="unit">${data.no_of_copies}</td>`
+                    : ``
                   }
                   <td class="unit">Rs ${tax}</td>
                   ${
-                    data.currency === 'INR' ?
-                    `<td class="unit">9 %</td>
-                  <td class="qty">9 %</td>`:
-                  `<td class="unit">18 %</td>`
+                    data.currency === 'INR'
+                      ? `<td class="unit">9 %</td>
+                  <td class="qty">9 %</td>`
+                      : `<td class="unit">18 %</td>`
                   }
-                  <td class="total">${data.currency === 'INR' ? 'Rs.' : '$'} ${price}</td>
+                  <td class="total">${
+                    data.currency === 'INR' ? 'Rs.' : '$'
+                  } ${price}</td>
               </tr>
           </tbody>
           <tfoot>
@@ -333,7 +416,9 @@ const HTMLView = `
               <br>
               Subscriber Acknowledgement.
               <br>
-              I, <b>${data.username}</b> confirm that the said services are being subscribed for my personal use and not for re-subscribe.
+              I, <b>${
+                data.username
+              }</b> confirm that the said services are being subscribed for my personal use and not for re-subscribe.
           </div>
       </div>
       <div class="notices" style='width: 15%;border-left: none;'>
@@ -352,17 +437,14 @@ const HTMLView = `
         </body>
         `;
 
-
-        const results = await RNHTMLtoPDF.convert({
-          html: HTMLView,
-          fileName: 'invoice',
-          base64: true,
-        });
-        setLoading(false);
-        await RNPrint.print({filePath: results.filePath});
-  }
-
-
+    const results = await RNHTMLtoPDF.convert({
+      html: HTMLView,
+      fileName: 'invoice',
+      base64: true,
+    });
+    setLoading(false);
+    await RNPrint.print({filePath: results.filePath});
+  };
 
   const renderItem = ({item, index}) => {
     return (
@@ -395,26 +477,40 @@ const HTMLView = `
             <Text style={{color: textColor}}>Valid To : {item.valid_to}</Text>
             <Text style={{color: textColor}}>Order Id: {item.oid}</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => printInvoice(item)}>
+          <View>
+          <TouchableOpacity onPress={() => printInvoice(item)} style={{marginBottom:15}}>
             <View>
               <FontAwesome5 name="file-invoice" size={21} color={textColor} />
             </View>
           </TouchableOpacity>
+          {
+            userData.usertype === 'organisation' ?
+            <TouchableOpacity style={{marginLeft:-3}} onPress={()=>navigation.navigate('AssignSub',{ packagename:item.packagename, packageid: item.id })}>
+            <View>
+              <MaterialIcons name="assignment-ind" size={25} color={textColor} />
+            </View>
+          </TouchableOpacity>
+          : null
+          }
+          </View>
         </View>
         <Divider />
       </View>
     );
   };
 
+
   const fetchSubscriptions = async res => {
+    
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
-    if (result.data === 'Not Subscribed yet') {
+    if (result.data === 0) {
       setNotSubText('Not Subscribed yet');
-    } else {
-      setSubs(result?.data);
+    } else  {
+      let sortedData = result?.data.sort((a, b) => new Date(Date.parse(b.valid_from)) - new Date(Date.parse(a.valid_from)))
+      setSubs(sortedData);
     }
+
   };
 
   useEffect(() => {
@@ -441,7 +537,7 @@ const HTMLView = `
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={{paddingBottom:60}}>
         <View style={styles.header}>
           <Text style={[styles.headerContent, {color: textColor}]}>
             Your Subscriptions
@@ -451,17 +547,17 @@ const HTMLView = `
           <View>
             <Text style={{color: textColor, padding: 20}}>{notSubText}</Text>
 
-            <View style={{justifyContent:'center'}}>
-            <Button
-              onPress={() => navigation.navigate('Subscriptions')}
-              color={textColor}
-              contentStyle={styles.button}
-              dark
-              labelStyle={{fontSize:16,letterSpacing:0}} 
-              mode="contained"
-              style={{backgroundColor: '#ff9000',marginHorizontal:20}}>
-              Buy Subscription
-            </Button>
+            <View style={{justifyContent: 'center'}}>
+              <Button
+                onPress={() => navigation.navigate('Subscriptions')}
+                color={textColor}
+                contentStyle={styles.button}
+                dark
+                labelStyle={{fontSize: 16, letterSpacing: 0}}
+                mode="contained"
+                style={{backgroundColor: '#ff9000', marginHorizontal: 20}}>
+                Buy Subscription
+              </Button>
             </View>
           </View>
         ) : (
@@ -472,7 +568,7 @@ const HTMLView = `
             ListEmptyComponent={() => <ActivityIndicator size="large" />}
           />
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -505,4 +601,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
   },
+  
+ 
 });

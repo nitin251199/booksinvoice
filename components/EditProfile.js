@@ -1,5 +1,5 @@
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {LoginManager} from 'react-native-fbsdk-next'
+import {LoginManager} from 'react-native-fbsdk-next';
 import {Picker} from '@react-native-picker/picker';
 import React, {useEffect, useRef, useState} from 'react';
 import {
@@ -19,6 +19,8 @@ import {
 import {Avatar, Button, Card, Divider, ListItem} from 'react-native-elements';
 import {useDispatch} from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import {AutocompleteDropdown} from 'react-native-autocomplete-dropdown';
+import Autocomplete from 'react-native-autocomplete-input';
 import {
   checkSyncData,
   getSyncData,
@@ -49,6 +51,7 @@ export const EditProfile = ({navigation}) => {
   const [stateName, setStateName] = useState('');
   const [stateList, setStateList] = useState([]);
   const [country, setCountry] = useState('');
+  const [countryName, setCountryName] = useState('');
   const [countryList, setCountryList] = useState([]);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -58,8 +61,10 @@ export const EditProfile = ({navigation}) => {
   const [show, setShow] = useState(false);
   const [showText, setShowText] = useState(false);
   const [showPass, setShowPass] = useState(true);
-  const [image, setImage] = useState();
+  const [image, setImage] = useState('');
   const refProfilepic = useRef(null);
+  const [tempCountryList, setTempCountryList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
@@ -193,6 +198,7 @@ export const EditProfile = ({navigation}) => {
       setAddress(result.data[0].address);
       setPinCode(result.data[0].zip_pin);
       setCountry(result.data[0].country_id);
+      setCountryName(result.country[0].name);
       setState(result.data[0].state_id);
       setStateName(result.state[0].name);
       setCity(result.data[0].district_id);
@@ -204,6 +210,9 @@ export const EditProfile = ({navigation}) => {
         `${ServerURL}/upload/userprofile_ind/${result.data[0].profile_img}`,
       );
       blinkingText(result);
+      await fetchAllCountry();
+      await fetchAllStates(result.data[0].state_id);
+      await fetchAllCity(result.data[0].district_id);
     } else if (userData.usertype === 'organisation') {
       var body = {
         type: 1,
@@ -219,6 +228,7 @@ export const EditProfile = ({navigation}) => {
       setState(result.data[0].state);
       setStateName(result.state[0].name);
       setCountry(result.data[0].country_id);
+      setCountryName(result.country[0].name);
       setPhone(result.data[0].orgnisationcontact);
       setEmail(result.data[0].orgnisationemail);
       setCurrentPassword(result.data[0].password);
@@ -226,6 +236,9 @@ export const EditProfile = ({navigation}) => {
         `${ServerURL}/upload/userprofile_org/${result.data[0].profile_img}`,
       );
       blinkingText(result);
+      await fetchAllCountry();
+      await fetchAllStates(result.data[0].state);
+      await fetchAllCity(result.data[0].district);
     }
   };
 
@@ -240,7 +253,7 @@ export const EditProfile = ({navigation}) => {
         result.data[0].telephone === '' ||
         result.data[0].email === ''
       ) {
-       return setShowText(true);
+        return setShowText(true);
       } else {
         return setShowText(false);
       }
@@ -265,29 +278,28 @@ export const EditProfile = ({navigation}) => {
     var body = {type: 1};
     var result = await postData('api/getCountry', body);
     setCountryList(result.data);
-  };
-
-  const fillCountry = () => {
-    return countryList.map((item, index) => {
-      return <Picker.Item label={item.name} value={item.id} />;
+    let tempArr = [];
+    result.data.map(item => {
+      tempArr.push({
+        id: item.id,
+        title: item.name,
+      });
     });
+    setTempCountryList(tempArr);
   };
 
   const fetchAllStates = async id => {
     var body = {type: 1, country_id: id};
     var result = await postData('api/getState', body);
     if (result.msg !== 'Profile Not Available') {
-      setStateList(result.data);
-    }
-  };
-
-  const fillState = () => {
-    if (stateList.length) {
-      return stateList.map((item, index) => {
-        return <Picker.Item label={item.name} value={item.id} />;
+      let tempArr = [];
+      result.data.map(item => {
+        tempArr.push({
+          id: item.id,
+          title: item.name,
+        });
       });
-    } else {
-      return <Picker.Item label={stateName} value={state} />;
+      setStateList(tempArr);
     }
   };
 
@@ -295,23 +307,20 @@ export const EditProfile = ({navigation}) => {
     var body = {type: 1, state_id: id};
     var result = await postData('api/getCity', body);
     if (result.msg !== 'Profile Not Available') {
-      setCityList(result.data);
-    }
-  };
-
-  const fillCity = () => {
-    if (cityList.length) {
-      return cityList.map((item, index) => {
-        return <Picker.Item label={item.name} value={item.id} />;
+      let tempArr = [];
+      result.data.map(item => {
+        tempArr.push({
+          id: item.id,
+          title: item.name,
+        });
       });
-    } else {
-      return <Picker.Item label={cityName} value={city} />;
+      setCityList(tempArr);
     }
   };
 
   useEffect(() => {
     fetchProfile();
-    fetchAllCountry();
+    fetchAllCountry()
   }, []);
 
   useEffect(() => {
@@ -350,29 +359,26 @@ export const EditProfile = ({navigation}) => {
         new_password: newPassword,
       };
       var result = await postData('api/getProfileedit', body);
-      console.log('body', body);
-      console.log('result.msg', result);
       if (result.data == 1) {
-        if(
-          name === "" 
-          || address === ""
-          || email === ""
-          || phone === ""
-          || pinCode === ""
-          || country === ""
-          || state === ""
-          || city === ""
-        )
-        {
+        if (
+          name === '' ||
+          address === '' ||
+          email === '' ||
+          phone === '' ||
+          pinCode === '' ||
+          country === '' ||
+          state === '' ||
+          city === ''
+        ) {
           Alert.alert(
             'Profile Updated Successfully',
-            'Please update all details to activate trial pack!',
+            result.free_id !== null &&
+              'Please update all details to activate trial pack!',
           );
-        }
-        else{
+        } else {
           Alert.alert(
             'Profile Updated Successfully',
-            'Your trial pack is active now!',
+            result.free_id !== null && 'Your trial pack is active now!',
           );
         }
         fetchProfile();
@@ -402,13 +408,30 @@ export const EditProfile = ({navigation}) => {
     }
   };
 
+  const getLocation = async text => {
+    setPinCode(text);
+    // if (text.length == 6) {
+    //   const response = await fetch(
+    //     `https://api.postalpincode.in/pincode/${text}`,
+    //   );
+    //   const data = await response.json();
+    //   if (data[0].Status == 'Success') {
+    //     console.log(data[0].PostOffice[0].Name);
+    //     console.log(data[0].PostOffice[0].District);
+    //     console.log(data[0].PostOffice[0].State);
+    //     console.log(data[0].PostOffice[0].Pincode);
+    //   }
+    // }
+  };
+
   const editProfile = () => {
     return (
       <Modal
         statusBarTranslucent
         animationType="slide"
         transparent={true}
-        visible={visible}>
+        visible={visible}
+        onRequestClose={() => setVisible(false)}>
         <View style={styles.centeredView}>
           <KeyboardAvoidingView behavior="padding">
             <View
@@ -457,7 +480,7 @@ export const EditProfile = ({navigation}) => {
                   />
                   <TextInput
                     value={pinCode}
-                    onChangeText={text => setPinCode(text)}
+                    onChangeText={text => getLocation(text)}
                     style={[
                       styles.textInput,
                       {
@@ -470,61 +493,137 @@ export const EditProfile = ({navigation}) => {
                     placeholderTextColor="#999"
                   />
                 </View>
-                <Picker
-                  selectedValue={country}
-                  style={[
+                <AutocompleteDropdown
+                  clearOnFocus={false}
+                  // closeOnBlur={true}
+                  closeOnSubmit={false}
+                  initialValue={{id: country, title: countryName}} // or just '2'
+                  dataSet={tempCountryList}
+                  textInputProps={{
+                    placeholder: '-Select Country-',
+                    placeholderTextColor: '#999',
+                    fontSize: 14,
+                    // value: countryName,
+                  }}
+                  suggestionsListContainerStyle={{
+                    backgroundColor: backgroundColor,
+                  }}
+                  suggestionsListTextStyle={{
+                    color: textColor,
+                  }}
+                  inputContainerStyle={[
                     styles.textInput,
-                    {borderWidth: 1, marginVertical: 10, color: textColor},
+                    {
+                      backgroundColor: backgroundColor,
+                      color: textColor,
+                      borderBottomColor: '#999',
+                      borderRadius: 0,
+                      justifyContent: 'flex-end',
+                    },
                   ]}
-                  mode="dropdown"
-                  onValueChange={(itemValue, itemIndex) => {
-                    setCountry(itemValue);
-                    fetchAllStates(itemValue);
-                  }}>
-                  <Picker.Item
-                    label="-Select Country-"
-                    value="0"
-                    // enabled={false}
-                  />
-                  {fillCountry()}
-                </Picker>
+                  onFocus={()=>{
+                    setStateName('')
+                  }}
+                  onChangeText={item => {
+                    setCountryName(item);
+                  }}
+                  onSelectItem={itemValue => {
+                    
+                    if (itemValue !== null) {
+                      setCountry(itemValue.id);
+                      fetchAllStates(itemValue.id);
+                    }
+                  }}
+                />
                 <View style={{flexDirection: 'row'}}>
-                  <Picker
-                    selectedValue={state}
-                    style={[
+                  <AutocompleteDropdown
+                    clearOnFocus={true}
+                    showClear={false}
+                    closeOnSubmit={false}
+                    initialValue={{id: state, title: stateName}} // or just '2'
+                    dataSet={stateList}
+                    textInputProps={{
+                      placeholder: '-Select State-',
+                      placeholderTextColor: '#999',
+                      fontSize: 14,
+                      value: stateName,
+                    }}
+                    suggestionsListContainerStyle={{
+                      backgroundColor: backgroundColor,
+                    }}
+                    suggestionsListTextStyle={{
+                      color: textColor,
+                    }}
+                    inputContainerStyle={[
                       styles.textInput,
                       {
-                        borderWidth: 1,
+                        backgroundColor: backgroundColor,
                         width: width * 0.4,
                         marginRight: 10,
                         color: textColor,
+                        borderBottomColor: '#999',
+                        borderRadius: 0,
+                        justifyContent: 'flex-end',
                       },
                     ]}
-                    mode="dropdown"
-                    onValueChange={(itemValue, itemIndex) => {
-                      setState(itemValue);
-                      fetchAllCity(itemValue);
-                    }}>
-                    <Picker.Item label="-Select State-" value="0" />
-                    {fillState()}
-                  </Picker>
-                  <Picker
-                    selectedValue={city}
-                    style={[
+                    onFocus={()=>{
+                      setCityName('')
+                    }}
+                    onChangeText={item => {
+                      setStateName(item);
+                    }}
+                    onSelectItem={itemValue => {
+                      if (itemValue !== null) {
+                        setState(itemValue.id);
+                        setStateName(itemValue.title);
+                        fetchAllCity(itemValue.id);
+                      }
+                    }}
+                  />
+                  <AutocompleteDropdown
+                    clearOnFocus={true}
+                    showClear={false}
+                    closeOnSubmit={false}
+                    initialValue={{id: city, title: cityName}} // or just '2'
+                    dataSet={cityList}
+                    textInputProps={{
+                      placeholder: '-Select City-',
+                      placeholderTextColor: '#999',
+                      fontSize: 14,
+                      value: cityName,
+                    }}
+                    suggestionsListContainerStyle={{
+                      backgroundColor: backgroundColor,
+                    }}
+                    suggestionsListTextStyle={{
+                      color: textColor,
+                    }}
+                    inputContainerStyle={[
                       styles.textInput,
-                      {borderWidth: 1, width: width * 0.4, color: textColor},
+                      {
+                        backgroundColor: backgroundColor,
+                        width: width * 0.4,
+                        color: textColor,
+                        borderBottomColor: '#999',
+                        borderRadius: 0,
+                        justifyContent: 'flex-end',
+                      },
                     ]}
-                    mode="dropdown"
-                    onValueChange={(itemValue, itemIndex) => {
-                      setCity(itemValue);
-                    }}>
-                    <Picker.Item label="-Select City-" value="" />
-                    {fillCity()}
-                  </Picker>
+                    onChangeText={item => {
+                      setCityName(item);
+                    }}
+                    onSelectItem={itemValue => {
+                      if (itemValue !== null) {
+                        setCity(itemValue.id);
+                        setCityName(itemValue.title);
+                      }
+                    }}
+                  />
                 </View>
 
                 <TextInput
                   value={phone}
+                  editable={false}
                   onChangeText={text => setPhone(text)}
                   style={[
                     styles.textInput,
@@ -665,7 +764,7 @@ export const EditProfile = ({navigation}) => {
               size={120}
               rounded
               source={
-                image ? {uri: image} : require('../images/tempProfile.jpg')
+                image.substring(image.length - 4) !== `null` ? {uri: image} : require('../images/tempProfile.jpg')
               }
               containerStyle={{borderColor: '#ff9000', borderWidth: 1}}>
               <Avatar.Accessory
@@ -724,7 +823,7 @@ export const EditProfile = ({navigation}) => {
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
-        <TouchableOpacity onPress={()=>navigation.navigate('MyBooks')}>
+        <TouchableOpacity onPress={() => navigation.navigate('MyBooks')}>
           <ListItem
             containerStyle={[
               styles.listContainer,
@@ -732,7 +831,7 @@ export const EditProfile = ({navigation}) => {
             ]}>
             <ListItem.Title
               style={{fontSize: 18, fontWeight: '800', color: textColor}}>
-              My Books
+              My Purchased Books
             </ListItem.Title>
             <ListItem.Subtitle
               style={{fontSize: 12, fontWeight: '300', color: textColor}}>
@@ -748,11 +847,11 @@ export const EditProfile = ({navigation}) => {
             ]}>
             <ListItem.Title
               style={{fontSize: 18, fontWeight: '800', color: textColor}}>
-              My Favorites
+              My Playlist
             </ListItem.Title>
             <ListItem.Subtitle
               style={{fontSize: 12, fontWeight: '300', color: textColor}}>
-              View all your favorite books
+              View all your favourite books
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
@@ -773,6 +872,27 @@ export const EditProfile = ({navigation}) => {
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
+        {userData.usertype === 'individual' ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ActivationLink', {userData})}>
+            <ListItem
+              containerStyle={[
+                styles.listContainer,
+                {backgroundColor: backgroundColor},
+              ]}>
+              <ListItem.Title
+                style={{fontSize: 18, fontWeight: '800', color: textColor}}>
+                Received Activation Link
+              </ListItem.Title>
+              <ListItem.Subtitle
+                style={{fontSize: 12, fontWeight: '300', color: textColor}}>
+                Here You Will Get Individual Account Activation Link From Your
+                Organization
+              </ListItem.Subtitle>
+            </ListItem>
+          </TouchableOpacity>
+        ) : null}
+
         <TouchableOpacity>
           <ListItem
             containerStyle={[
@@ -843,7 +963,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'flex-start',
     flexDirection: 'column',
-    height: height * 0.08,
+    height: height * 0.07,
   },
   textInput: {borderBottomWidth: 1, width: width * 0.83},
   centeredView: {
