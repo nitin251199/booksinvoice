@@ -10,18 +10,16 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect} from 'react';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import {Button} from 'react-native-paper';
 import {postData} from './FetchApi';
-import {checkSyncData, getSyncData} from './AsyncStorage';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import {Divider} from 'react-native-elements';
 import AnimatedLottieView from 'lottie-react-native';
 
 const {width, height} = Dimensions.get('window');
 
 export default function ActivationLink({route, navigation}) {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -30,6 +28,7 @@ export default function ActivationLink({route, navigation}) {
   const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
   const [assignData, setAssignData] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
 
   const renderItem = ({item, index}) => {
     return (
@@ -94,13 +93,12 @@ export default function ActivationLink({route, navigation}) {
     );
   };
 
-  const handleActivate = async(item) => {
-    var body ={ type : 1, id : item.aid }
+  const handleActivate = async item => {
+    var body = {type: 1, id: item.aid};
     var result = await postData('api/getActivatedsub', body);
-    if(result.msg === "Success")
-    {
-        setModalVisible(true);
-        fetchAssignedSubs()
+    if (result.msg === 'Success') {
+      setModalVisible(true);
+      fetchAssignedSubs();
     }
     // check.current.play(0, 50)
   };
@@ -141,6 +139,7 @@ export default function ActivationLink({route, navigation}) {
   };
 
   const fetchAssignedSubs = async () => {
+    setLoading(true);
     let userData = route.params.userData;
     var body = {
       type: '1',
@@ -150,13 +149,47 @@ export default function ActivationLink({route, navigation}) {
     };
     var result = await postData('api/getAssignsub', body);
     if (result.msg) {
+      setLoading(false);
       setAssignData(result.myshare);
+    } else {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAssignedSubs();
   }, []);
+
+  if (!loading) {
+    if (assignData.length == 0) {
+      return (
+        <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+          <View style={styles.header}>
+            <Text style={[styles.headerContent, {color: textColor}]}>
+              Received Activation Link
+            </Text>
+          </View>
+          <View style={{padding: 20, paddingTop: 0}}>
+            <Text style={{fontSize: 14, fontWeight: '400', color: textColor}}>
+              Here You Will Get Individual Account Activation Link From Your
+              Organization
+            </Text>
+          </View>
+          <View style={{padding: 20}}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '400',
+                color: textColor,
+                textAlign: 'center',
+              }}>
+              No Activation link shared
+            </Text>
+          </View>
+        </View>
+      );
+    }
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
@@ -184,7 +217,9 @@ export default function ActivationLink({route, navigation}) {
           data={assignData}
           renderItem={renderItem}
           keyExtractor={item => item.aid}
-          ListEmptyComponent={() => <ActivityIndicator size="large" />}
+          ListEmptyComponent={() => (
+            <ActivityIndicator animating={loading} size="large" />
+          )}
         />
       </ScrollView>
     </View>

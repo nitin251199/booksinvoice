@@ -19,7 +19,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useDrawerStatus} from '@react-navigation/drawer';
-import {ThemeContext} from './ThemeContext';
 import {Badge, List} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
 import pkg from '../package.json';
@@ -28,7 +27,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 const {width, height} = Dimensions.get('window');
 
 export const DrawerContent = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -103,9 +102,7 @@ export const DrawerContent = ({navigation}) => {
     if (lang) {
       setLanguage(lang);
     }
-  }
-
-
+  };
 
   const DisplayLanguage = ({item, index}) => {
     return (
@@ -116,14 +113,14 @@ export const DrawerContent = ({navigation}) => {
             fontSize: 12,
             color: item.id === language ? '#ff9000' : textColor,
           }}
-          onPress={async() => {
+          onPress={async () => {
             setLoading(true);
             var body = {type: 1, languageid: item.id};
             var data = await postData('api/getHome', body);
             storeDatasync('languageid', item.id);
             dispatch({type: 'SET_HOME', payload: data});
             navigation.closeDrawer();
-            navigation.navigate('Homepage')
+            navigation.navigate('Homepage');
             setLoading(false);
           }}
           style={{backgroundColor: backgroundColor}}
@@ -170,7 +167,6 @@ export const DrawerContent = ({navigation}) => {
           backgroundColor: backgroundColor,
         },
       ]}>
-        
       <View
         style={{
           display: 'flex',
@@ -293,7 +289,7 @@ export const DrawerContent = ({navigation}) => {
 
       <ListItem
         onPress={() => {
-          navigation.navigate('Subscriptions');
+          navigation.navigate(isSub ? 'UserSubscriptions' : 'Subscriptions');
           navigation.closeDrawer();
         }}
         containerStyle={{backgroundColor: backgroundColor}}>
@@ -308,10 +304,10 @@ export const DrawerContent = ({navigation}) => {
       </ListItem>
 
       <ListItem
-        // onPress={() => {
-        //   navigation.navigate('Download');
-        //   navigation.closeDrawer();
-        // }}
+        onPress={() => {
+          navigation.navigate('Download');
+          navigation.closeDrawer();
+        }}
         containerStyle={{backgroundColor: backgroundColor}}>
         <Icon name="file-download" type="materialicons" color={textColor} />
         <ListItem.Content style={{paddingLeft: 15}}>
@@ -373,17 +369,13 @@ export const DrawerContent = ({navigation}) => {
           />
         )}
         right={props => (
-          <View style={{flexDirection:'row'}}>
-          <ActivityIndicator
-        animating={loading}
-        size={'small'}
-        
-      />
-          <Icon
-            name="keyboard-arrow-down"
-            type="materialicons"
-            color={textColor}
-          />
+          <View style={{flexDirection: 'row'}}>
+            <ActivityIndicator animating={loading} size={'small'} />
+            <Icon
+              name="keyboard-arrow-down"
+              type="materialicons"
+              color={textColor}
+            />
           </View>
         )}
         expanded={languageExpanded}

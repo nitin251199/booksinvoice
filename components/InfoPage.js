@@ -1,3 +1,4 @@
+import {useFocusEffect} from '@react-navigation/native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
@@ -13,10 +14,10 @@ import {
   ActivityIndicator,
   Modal,
   ToastAndroid,
+  BackHandler,
 } from 'react-native';
 import {AirbnbRating} from 'react-native-elements';
 import {Button} from 'react-native-paper';
-import { set } from 'react-native-reanimated';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -24,7 +25,6 @@ import {useDispatch, useSelector} from 'react-redux';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
-import {ThemeContext} from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
@@ -32,7 +32,8 @@ export default function InfoPage({route, navigation}) {
   var id = route.params.state;
   var categoryid = route.params.category;
 
-  const {theme} = React.useContext(ThemeContext);
+
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -52,11 +53,28 @@ export default function InfoPage({route, navigation}) {
   const [popularBooks, setPopularBooks] = useState([]);
   const [premiumBooks, setPremiumBooks] = useState([]);
   const [chapters, setChapters] = useState([]);
-  const [status, setStatus] = useState(true)
+  const [status, setStatus] = useState(true);
   const [userData, setUserData] = useState({id: '', usertype: ''});
-  
 
-  
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (route.params.nested) {
+          navigation.replace('Homepage');
+          return true;
+        } else {
+          navigation.goBack();
+          return true;
+        }
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, []),
+  );
+
   const fetchBook = async id => {
     const languageid = await getSyncData('languageid');
     var body = {type: '1', books_id: id, languageid: languageid};
@@ -95,7 +113,7 @@ export default function InfoPage({route, navigation}) {
 
   const fetchPremiumBooks = async () => {
     const languageid = await getSyncData('languageid');
-    var body = {type: '1', skip: 0, languageid: languageid};  
+    var body = {type: '1', skip: 0, languageid: languageid};
     var result = await postData('api/getPremiumbooks', body);
     setPremiumBooks(result.data);
   };
@@ -112,7 +130,7 @@ export default function InfoPage({route, navigation}) {
           book_id: route.params.state,
         };
         var result = await postData('api/getActivebook', body);
-      
+
         if (result.msg == true) {
           setStatus(false);
         }
@@ -293,21 +311,21 @@ export default function InfoPage({route, navigation}) {
 
   const addToCart = async () => {
     setLoading(true);
-      if (userData !== null) {
-        dispatch({type: 'ADD_CART', payload: [book.id, book]});
-        var body = {
-          type: 1,
-          user_id: userData.id,
-          user_type: userData.usertype,
-          book_id: id,
-        };
-        var result = await postData('api/getAddcart', body);
-        ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
-        navigation.setParams({x: ''});
-        setLoading(false);
-      } else {
-        navigation.navigate('Login');
-      }
+    if (userData !== null) {
+      dispatch({type: 'ADD_CART', payload: [book.id, book]});
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: userData.usertype,
+        book_id: id,
+      };
+      var result = await postData('api/getAddcart', body);
+      ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
+      navigation.setParams({x: ''});
+      setLoading(false);
+    } else {
+      navigation.navigate('Login');
+    }
   };
 
   // const onRefresh = () => {
@@ -585,65 +603,71 @@ export default function InfoPage({route, navigation}) {
             </TouchableOpacity>
           </View>
           {book.premiumtype === 'Premium' || book.premiumtype === 'Both' ? (
-            status && <View
-            style={{
-              ...styles.btnContainer,
-              paddingHorizontal: 0,
-              paddingVertical: 0,
-            }}>
-            { keys.includes(book.id) ? (
+            status && (
               <View
-                style={[
-                  styles.btn,
-                  {
-                    width: width * 0.92,
-                    marginBottom: 10,
-                    backgroundColor: backgroundColor,
-                    borderColor: textColor,
-                    borderWidth: 1,
-                  },
-                ]}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: '800',
-                    color: '#fff',
-                    marginRight: 10,
-                  }}>
-                  ADDED TO CART
-                </Text>
-                <MaterialCommunityIcons name="cart" size={20} color="#fff" />
+                style={{
+                  ...styles.btnContainer,
+                  paddingHorizontal: 0,
+                  paddingVertical: 0,
+                }}>
+                {keys.includes(book.id) ? (
+                  <View
+                    style={[
+                      styles.btn,
+                      {
+                        width: width * 0.92,
+                        marginBottom: 10,
+                        backgroundColor: backgroundColor,
+                        borderColor: textColor,
+                        borderWidth: 1,
+                      },
+                    ]}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: '800',
+                        color: '#fff',
+                        marginRight: 10,
+                      }}>
+                      ADDED TO CART
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="cart"
+                      size={20}
+                      color="#fff"
+                    />
+                  </View>
+                ) : (
+                  <Button
+                    onPress={() => addToCart()}
+                    style={{backgroundColor: '#ff9000', marginBottom: 10}}
+                    mode="contained"
+                    loading={loading}
+                    dark
+                    icon="cart"
+                    labelStyle={{
+                      fontSize: 18,
+                      fontWeight: '800',
+                      color: '#fff',
+                    }}
+                    contentStyle={[
+                      // styles.btn,
+                      {
+                        width: width * 0.92,
+                        padding: 2,
+                        display: 'flex',
+                        flexDirection: 'row-reverse',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        // margin: 5,
+                        borderRadius: 5,
+                      },
+                    ]}>
+                    ADD TO CART
+                  </Button>
+                )}
               </View>
-            ) : (
-              <Button
-                onPress={() => addToCart()}
-                style={{backgroundColor: '#ff9000', marginBottom: 10}}
-                mode="contained"
-                loading={loading}
-                dark
-                icon="cart"
-                labelStyle={{
-                  fontSize: 18,
-                  fontWeight: '800',
-                  color: '#fff',
-                }}
-                contentStyle={[
-                  // styles.btn,
-                  {
-                    width: width * 0.92,
-                    padding: 2,
-                    display: 'flex',
-                    flexDirection: 'row-reverse',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    // margin: 5,
-                    borderRadius: 5,
-                  },
-                ]}>
-                ADD TO CART
-              </Button>
-            )}
-          </View>
+            )
           ) : (
             <></>
           )}

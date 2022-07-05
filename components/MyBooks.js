@@ -16,12 +16,12 @@ import {AirbnbRating, Divider} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
 export const MyBooks = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -41,15 +41,16 @@ export const MyBooks = ({navigation}) => {
 
   const renderItem = ({item}) => {
     let currentDate = new Date();
-    let dat = currentDate.getFullYear() +
-    "-" +
-    (currentDate.getMonth() + 1 > 9
-      ? currentDate.getMonth() + 1
-      : "0" + (currentDate.getMonth() + 1)) +
-    "-" +
-    (currentDate.getDate() > 9
-      ? currentDate.getDate()
-      : "0" + currentDate.getDate())
+    let dat =
+      currentDate.getFullYear() +
+      '-' +
+      (currentDate.getMonth() + 1 > 9
+        ? currentDate.getMonth() + 1
+        : '0' + (currentDate.getMonth() + 1)) +
+      '-' +
+      (currentDate.getDate() > 9
+        ? currentDate.getDate()
+        : '0' + currentDate.getDate());
     let cDate = new Date(dat);
     let expDate = new Date(item.expiry_date);
     // console.log('currentDate', cDate > expDate, cDate, expDate);

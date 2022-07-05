@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   Platform,
   NativeModules,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -21,7 +23,7 @@ import {postData} from './FetchApi';
 import {useDispatch} from 'react-redux';
 import {storeDatasync} from './AsyncStorage';
 import PhoneInput from 'react-native-phone-number-input';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import DeviceCountry, {TYPE_TELEPHONY} from 'react-native-device-country';
 import {
   GoogleSignin,
@@ -48,11 +50,12 @@ export const Login = ({navigation}) => {
   const [showPass, setShowPass] = useState(false);
   const [country, setCountry] = useState('');
   const [showSignup, setShowSignup] = useState(false);
+  const [showLogo, setShowLogo] = useState(true);
 
   let resendOtpTimerInterval;
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(0);
 
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#fff' : '#000';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -232,13 +235,13 @@ export const Login = ({navigation}) => {
   const checkSubscription = async res => {
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
-    
+
     var cart = await postData('api/getShowcart', body);
     // console.log('cart', result);
-    if(cart.msg === 'Success'){
+    if (cart.msg === 'Success') {
       cart.data.map(item => {
         dispatch({type: 'ADD_CART', payload: [item.id, item]});
-      })
+      });
     }
     if (result.msg === 'Subscribed') {
       return true;
@@ -261,30 +264,28 @@ export const Login = ({navigation}) => {
       ],
     );
 
-    useEffect(() => {
-      
-        startResendOtpTimer();
-     
-  
-      return () => {
-        if (resendOtpTimerInterval) {
-          clearInterval(resendOtpTimerInterval);
-        }
-      };
-    }, [resendButtonDisabledTime]);
+  useEffect(() => {
+    startResendOtpTimer();
 
-    const startResendOtpTimer = () => {
+    return () => {
       if (resendOtpTimerInterval) {
         clearInterval(resendOtpTimerInterval);
       }
-      resendOtpTimerInterval = setInterval(() => {
-        if (resendButtonDisabledTime <= 0) {
-          clearInterval(resendOtpTimerInterval);
-        } else {
-          setResendButtonDisabledTime(resendButtonDisabledTime - 1);
-        }
-      }, 1000);
     };
+  }, [resendButtonDisabledTime]);
+
+  const startResendOtpTimer = () => {
+    if (resendOtpTimerInterval) {
+      clearInterval(resendOtpTimerInterval);
+    }
+    resendOtpTimerInterval = setInterval(() => {
+      if (resendButtonDisabledTime <= 0) {
+        clearInterval(resendOtpTimerInterval);
+      } else {
+        setResendButtonDisabledTime(resendButtonDisabledTime - 1);
+      }
+    }, 1000);
+  };
 
   const otpLogin = () => {
     return (
@@ -350,19 +351,21 @@ export const Login = ({navigation}) => {
                 onChangeText={text => setOtp(text)}
               />
             </View>
-              <View style={{paddingVertical:10,width:width*0.85}}>
-                 <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-                 {resendButtonDisabledTime > 0 ? (
-            <Text>Resend OTP in {resendButtonDisabledTime}s</Text>
-          ) : (
-            <TouchableOpacity onPress={() => {
-              generateOTP();
-            }}>
-              <Text style={{color:'#ff9000'}}>Resend OTP</Text>
-              </TouchableOpacity>
-          )}
-                  </View>
+            <View style={{paddingVertical: 10, width: width * 0.85}}>
+              <View
+                style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                {resendButtonDisabledTime > 0 ? (
+                  <Text>Resend OTP in {resendButtonDisabledTime}s</Text>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      generateOTP();
+                    }}>
+                    <Text style={{color: '#ff9000'}}>Resend OTP</Text>
+                  </TouchableOpacity>
+                )}
               </View>
+            </View>
             <TouchableOpacity onPress={() => createAlert()}>
               <View
                 style={[
@@ -380,7 +383,6 @@ export const Login = ({navigation}) => {
                 </Text>
               </View>
             </TouchableOpacity>
-            
           </View>
         ) : (
           <TouchableOpacity
@@ -417,7 +419,10 @@ export const Login = ({navigation}) => {
       email: email,
       password: password,
       type: 1,
-      device_id : Platform.OS === 'android' ? NativeModules.PlatformConstants.getAndroidID() : NativeModules.SettingsManager.clientUniqueId,
+      device_id:
+        Platform.OS === 'android'
+          ? NativeModules.PlatformConstants.getAndroidID()
+          : NativeModules.SettingsManager.clientUniqueId,
     };
     var result = await postData('api/getLogin', body);
 
@@ -687,6 +692,28 @@ export const Login = ({navigation}) => {
     }
   };
 
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        // or some other action
+        setShowLogo(false);
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setShowLogo(true);
+        // or some other action
+      },
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaView
       style={[
@@ -705,7 +732,10 @@ export const Login = ({navigation}) => {
         size={'large'}
         style={{position: 'absolute', width: '100%', height: '100%'}}
       />
-      <View>
+      <View
+        style={{
+          display: showLogo ? 'flex' : 'none',
+        }}>
         <Image source={require('../../images/logo.jpg')} style={styles.logo} />
       </View>
       <View style={styles.textContainer}>
@@ -742,7 +772,9 @@ export const Login = ({navigation}) => {
       <Text style={{color: '#ff9000', fontSize: 13, margin: 5}}>
         Your Precious Information is Safe With Us
       </Text>
+      {/* <KeyboardAvoidingView behavior='padding'> */}
       {loginView()}
+      {/* </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 };
@@ -757,7 +789,7 @@ const styles = StyleSheet.create({
     height: height * 0.12,
     width: width * 0.5,
     // borderRadius: 10,
-    margin: 20,
+    marginTop: 20,
   },
   textContainer: {
     width: width * 0.8,
@@ -767,6 +799,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     textAlign: 'center',
     fontWeight: '800',
+    marginTop: 20,
   },
   inputContainer: {
     // marginVertical: 5,

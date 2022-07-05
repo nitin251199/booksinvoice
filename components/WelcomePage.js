@@ -1,16 +1,21 @@
 import LottieView from 'lottie-react-native';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, Image, StatusBar, Alert, NativeModules} from 'react-native';
+import {StyleSheet, Image, StatusBar, Alert, NativeModules, Linking} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch} from 'react-redux';
 import {postData} from './FetchApi';
-import {checkSyncData, getSyncData, removeDatasync, storeDatasync} from './AsyncStorage';
+import {
+  checkSyncData,
+  getSyncData,
+  removeDatasync,
+  storeDatasync,
+} from './AsyncStorage';
 import {Platform} from 'react-native-windows';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { LoginManager } from 'react-native-fbsdk-next';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {LoginManager} from 'react-native-fbsdk-next';
 
-export const WelcomePage = ({navigation}) => {
+export const WelcomePage = ({navigation, route}) => {
   var dispatch = useDispatch();
 
   const [show, setShow] = useState(false);
@@ -63,7 +68,6 @@ export const WelcomePage = ({navigation}) => {
       // }
     }
   };
-
 
   const fetchUserData = async userData => {
     if (userData.usertype === 'individual') {
@@ -150,7 +154,24 @@ export const WelcomePage = ({navigation}) => {
 
   useEffect(() => {
     if (show) {
-      navigation.navigate('MyTabs');
+      const checkLinking = async () => {
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          var matches = initialUrl.match(/\d+/g);
+          // navigation.navigate('InfoPage', { category : matches[0],state : matches[1] });
+          navigation.navigate('MyTabs', {
+            screen: 'HomeComponent',
+            params: {
+              screen: 'InfoPage',
+              params: {category: matches[0], state: matches[1], nested: true},
+            },
+          });
+        }
+        else{
+          navigation.navigate('MyTabs');
+        }
+      };
+      checkLinking();
     }
   }, [show]);
 
@@ -163,11 +184,11 @@ export const WelcomePage = ({navigation}) => {
       />
       <Image
         style={{
-          width: 150,
-          height: 150,
+          width: 300,
+          height: 300,
           borderRadius: 0,
           marginTop: 100,
-          marginBottom: 40,
+          marginBottom: 20,
         }}
         source={require('../images/logo.jpg')}
       />

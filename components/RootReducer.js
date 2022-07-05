@@ -10,6 +10,7 @@ const initialState = {
     isSubscribed: false,
   },
   currentSong: {},
+  theme : 'dark'
 };
 
 export default function RootReducer(state = initialState, action) {
@@ -18,6 +19,12 @@ export default function RootReducer(state = initialState, action) {
   };
 
   switch (action.type) {
+    case 'SET_THEME':
+      state.theme = action.payload
+      return {
+        ...state,
+        theme: state.theme
+      }
     case 'ADD_USER':
       state.user[action.payload[0]] = action.payload[1];
       return {

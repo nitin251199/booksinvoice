@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect} from 'react';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import {Button, RadioButton} from 'react-native-paper';
 import {postData} from './FetchApi';
 import {checkSyncData, getSyncData} from './AsyncStorage';
@@ -23,7 +23,7 @@ import {Divider} from 'react-native-elements';
 const {width, height} = Dimensions.get('window');
 
 export default function AssignSub({route}) {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -75,8 +75,7 @@ export default function AssignSub({route}) {
       id: value.aid,
     };
     var result = await postData('api/getAssignsubtouserstatus', body);
-    if(result.msg === 'Update')
-    {
+    if (result.msg === 'Update') {
       ToastAndroid.show('Status Updated Successfully', ToastAndroid.SHORT);
       getAssigndata();
     }
@@ -117,9 +116,11 @@ export default function AssignSub({route}) {
             </Text>
           </View>
           <View>
-            <TouchableOpacity onPress={() =>{ setStatus(index)
-            setStatusValue(item.astatus)
-            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setStatus(index);
+                setStatusValue(item.astatus);
+              }}>
               <View>
                 {status === index ? (
                   <FontAwesome5Icon
@@ -139,8 +140,7 @@ export default function AssignSub({route}) {
           <View>
             <RadioButton.Group
               onValueChange={newValue => setStatusValue(newValue)}
-              value={statusValue}
-              >
+              value={statusValue}>
               <View
                 style={{
                   flexDirection: 'row',

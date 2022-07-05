@@ -18,12 +18,12 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
 export const Comment = ({route, navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -115,6 +115,12 @@ export const Comment = ({route, navigation}) => {
   }, []);
 
   const postComment = async () => {
+    if (name == '' || email == '') {
+      return ToastAndroid.show(
+        'Name and Email are required!',
+        ToastAndroid.SHORT,
+      );
+    }
     var body = {
       type: 1,
       c_name: name,
@@ -153,42 +159,39 @@ export const Comment = ({route, navigation}) => {
             borderTopRightRadius: 20,
           },
         }}
-        height={userData ? height * 0.25 : height * 0.6}
-        >
-
-        {userData ? (
+        height={userData.length != 0 ? height * 0.25 : height * 0.6}>
+        {userData.length != 0 ? (
           <View
             style={{
               borderWidth: 4,
               borderRadius: 30,
               margin: 10,
               borderColor: '#99999950',
-              height:50
+              height: 50,
             }}>
             <TextInput
               placeholder="Write your comment here"
               placeholderTextColor="#999"
               onChangeText={text => setCommentText(text)}
               autoFocus
-              style={{paddingLeft: 15,color: textColor}}
+              style={{paddingLeft: 15, color: textColor}}
             />
             <TouchableOpacity onPress={() => postComment()}>
-                <View
-                  style={{
-                    backgroundColor: '#ff9000',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: 10,
-                    marginVertical: 15,
-                    borderRadius: 5,
-                    height:50
-                  }}>
-                  <Text
-                    style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
-                    Post Comment
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <View
+                style={{
+                  backgroundColor: '#ff9000',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: 10,
+                  marginVertical: 15,
+                  borderRadius: 5,
+                  height: 50,
+                }}>
+                <Text style={{color: '#FFF', fontWeight: 'bold', fontSize: 18}}>
+                  Post Comment
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
         ) : (
           <View>
@@ -305,14 +308,14 @@ export const Comment = ({route, navigation}) => {
           {comments.length} Comments
         </Text>
       </View>
-        <FlatList
-          data={comments}
-          ListEmptyComponent={renderLoader()}
-          ListFooterComponentStyle={{paddingBottom:60}}
-          ListFooterComponent={<View></View>}
-          renderItem={renderComments}
-          keyExtractor={item => item.id}
-        />
+      <FlatList
+        data={comments}
+        ListEmptyComponent={renderLoader()}
+        ListFooterComponentStyle={{paddingBottom: 60}}
+        ListFooterComponent={<View></View>}
+        renderItem={renderComments}
+        keyExtractor={item => item.id}
+      />
       <FAB
         style={styles.fab}
         icon="plus"

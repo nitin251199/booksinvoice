@@ -1,4 +1,4 @@
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
@@ -11,17 +11,17 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import {AirbnbRating, Divider, Icon } from 'react-native-elements';
+import {AirbnbRating, Divider, Icon} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
-import { getSyncData } from './AsyncStorage';
+import {getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';
-import { ThemeContext } from './ThemeContext';
+import {useSelector} from 'react-redux';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const {width, height} = Dimensions.get('window');
 
 export const Search = ({navigation}) => {
-
-  const { theme } = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -29,6 +29,7 @@ export const Search = ({navigation}) => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [searchMsg, setSearchMsg] = useState('');
   const [lang, setLang] = useState('');
 
   const searchBook = async text => {
@@ -39,27 +40,26 @@ export const Search = ({navigation}) => {
     if (result.msg === 'Success') {
       setBooks(result.data);
       setLoading(false);
+      setSearchMsg('Success');
     } else if (result.msg === 'Data Not Found') {
       setBooks([]);
       setLoading(false);
-    } 
-      else if (result.msg === 'Parameter not match') {
+      setSearchMsg('Data Not Found');
+    } else if (result.msg === 'Parameter not match') {
       setBooks([]);
       setLoading(false);
+      setSearchMsg('Parameter not match');
     }
   };
 
-  const getLang = async() => {
+  const getLang = async () => {
     var lang = await getSyncData('languageid');
     setLang(lang);
-  }
-
-  useEffect(()=>{
-    getLang();
-  },[])
+  };
 
   useFocusEffect(
     React.useCallback(() => {
+      getLang();
       // alert('Screen was focused');
       // Do something when the screen is focused
       return () => {
@@ -68,7 +68,7 @@ export const Search = ({navigation}) => {
         // Do something when the screen is unfocused
         // Useful for cleanup functions
       };
-    }, [])
+    }, []),
   );
 
   const renderItem = ({item}) => {
@@ -136,6 +136,51 @@ export const Search = ({navigation}) => {
       </View>
     ) : null;
   };
+
+  if (
+    searchMsg != 'Success' &&
+    searchMsg != 'Parameter not match' &&
+    searchText != ''
+  ) {
+    return (
+      <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+        <View
+          style={{
+            paddingHorizontal: 20,
+            paddingVertical: 20,
+          }}>
+          <Text style={[styles.title, {color: textColor}]}>Search Books !</Text>
+          <View style={styles.inputContainer}>
+            <Icon type="materialicons" name="search" color={textColor} />
+            <TextInput
+              value={searchText}
+              style={[styles.input, {color: textColor}]}
+              placeholder="Search your books"
+              placeholderTextColor={textColor}
+              onChangeText={text => searchBook(text)}
+            />
+          </View>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <MaterialIcons name="error-outline" size={100} style={{margin: 15}} />
+          <Text
+            style={{
+              color: textColor,
+              fontSize: 16,
+              textAlign: 'center',
+              flexDirection: 'column',
+            }}>
+            {searchMsg}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>

@@ -10,6 +10,7 @@ import {
   Image,
   ImageBackground,
   TouchableWithoutFeedback,
+  Linking,
 } from 'react-native';
 import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
@@ -20,7 +21,6 @@ import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
 import {useDispatch, useSelector} from 'react-redux';
-import {ThemeContext} from './ThemeContext';
 import {useFocusEffect} from '@react-navigation/native';
 
 const BannerWidth = Dimensions.get('window').width;
@@ -29,7 +29,8 @@ const BannerHeight = 140;
 const {width, height} = Dimensions.get('window');
 
 export default function Homepage({navigation, route}) {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
+
 
   const setdata = useSelector(state => state?.home?.new_arrival) || [];
   const setbanner = useSelector(state => state?.home?.Banner_image) || [];
@@ -56,6 +57,8 @@ export default function Homepage({navigation, route}) {
 
   const [advertise, setAdvertise] = useState(setad);
 
+  useEffect(() => {}, []);
+
   useEffect(() => {
     setData(Object.values(setdata));
     setBanner(Object.values(setbanner));
@@ -65,9 +68,7 @@ export default function Homepage({navigation, route}) {
     // setCategory(Object.values(setcategory));
     setOtherCategory(setother);
     setAdvertise(setad);
-  }, [
-    setdata
-  ]);
+  }, [setdata]);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -680,9 +681,9 @@ export default function Homepage({navigation, route}) {
               source={{
                 uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
               }}>
-              <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
+              {/* <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
                 Buy Subscription Plans
-              </Text>
+              </Text> */}
               <Text
                 style={{
                   fontSize: 15,

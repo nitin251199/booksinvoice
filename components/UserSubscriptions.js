@@ -3,17 +3,18 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Divider} from 'react-native-elements';
+import {Divider, ButtonGroup} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {postData} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import {Button} from 'react-native-paper';
 // Import HTML to PDF
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
@@ -21,24 +22,28 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNPrint from 'react-native-print';
 import {useFocusEffect} from '@react-navigation/native';
 
+
 const {width, height} = Dimensions.get('window');
 
 export const UserSubscriptions = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
-  const [subs, setSubs] = useState([]);
+  const [activeSubs, setActiveSubs] = useState([]);
+  const [expiredSubs, setExpiredSubs] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [notSubText, setNotSubText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subLoading, setSubLoading] = useState(true);
   const [userData, setUserData] = useState([]);
 
   const checkLogin = async () => {
     var key = await checkSyncData();
 
     if (key !== 'fcmToken') {
-     await getSyncData(key[0]).then(async res => {
+      await getSyncData(key[0]).then(async res => {
         fetchSubscriptions(res);
         setUserData(res);
       });
@@ -48,7 +53,9 @@ export const UserSubscriptions = ({navigation}) => {
   const printInvoice = async data => {
     setLoading(true);
     const percentage =
-      data.d_percentage === '' || data.d_percentage === null ? 0 : parseFloat(data.d_percentage);
+      data.d_percentage === '' || data.d_percentage === null
+        ? 0
+        : parseFloat(data.d_percentage);
     var discount = data.packageprice * (percentage / 100);
     discount = discount.toFixed(2);
     var tax =
@@ -302,7 +309,7 @@ export const UserSubscriptions = ({navigation}) => {
         <header>
             <div class="row">
                 <div class="col">
-                    <a target="_blank" href="https://lobianijs.com">
+                    <a >
                         <img src="https://booksinvoice.com/logo.jpg" data-holder-rendered="true" style="width: 100;" />
                         </a>
                 </div>
@@ -354,10 +361,9 @@ export const UserSubscriptions = ({navigation}) => {
                   <th class="text-right">Validity</th>
                   <th class="text-right">Discount Price</th>
                   ${
-                    parseInt(data.no_of_copies) > 1 ?
-                    `<th class="text-right">Copies</th>`
-                    :
-                    ``
+                    parseInt(data.no_of_copies) > 1
+                      ? `<th class="text-right">Copies</th>`
+                      : ``
                   }
                   <th class="text-right">Taxable Value</th>
                   ${
@@ -383,9 +389,9 @@ export const UserSubscriptions = ({navigation}) => {
                   
                   <td class="unit">Rs ${discount}</td>
                   ${
-                    parseInt(data.no_of_copies) > 1 ?
-                    `<td class="unit">${data.no_of_copies}</td>`
-                    : ``
+                    parseInt(data.no_of_copies) > 1
+                      ? `<td class="unit">${data.no_of_copies}</td>`
+                      : ``
                   }
                   <td class="unit">Rs ${tax}</td>
                   ${
@@ -407,22 +413,26 @@ export const UserSubscriptions = ({navigation}) => {
               </tr>
           </tfoot>
       </table>
-      <div style="display: flex;">
-      <div class="notices" style='width: 85%;text-align: start;'>
+      <div style="display: flex; justify-content: space-between">
+      <div class="notices" style='text-align: start;'>
           
           <div class="notice">Amount Chargeable (in Words): <b>${RsInWords}</b>
-              <br>
-              Declaration: We declare that this invoice shows the actual Price of the subscription described above that all particulars are true and correct. All disputes are subject to Madhya Pradesh, Jabalpur Jurisdiction only.
-              <br>
-              Subscriber Acknowledgement.
-              <br>
+          <br>
+          Declaration: We declare that this invoice shows the actual Price of the subscription described above that all particulars are true and correct. All disputes are subject to Madhya Pradesh, Jabalpur Jurisdiction only.
+          <br>
+          <br>
+          Subscriber Acknowledgement.
+          <br>
               I, <b>${
                 data.username
               }</b> confirm that the said services are being subscribed for my personal use and not for re-subscribe.
           </div>
       </div>
-      <div class="notices" style='width: 15%;border-left: none;'>
-          <img src='dd' alt='img'>
+      <div class="notices" style='width: 15%;height: 15%;border-left: none;'>
+      <span>Authorized Signature</span>
+        <br>
+        <br>
+          <img src='https://booksinvoice.com/signature.png' alt='img' data-holder-rendered="true" style="width: 100;">
       </div>
       </div>
   </main>
@@ -478,20 +488,38 @@ export const UserSubscriptions = ({navigation}) => {
             <Text style={{color: textColor}}>Order Id: {item.oid}</Text>
           </View>
           <View>
-          <TouchableOpacity onPress={() => printInvoice(item)} style={{marginBottom:15}}>
-            <View>
-              <FontAwesome5 name="file-invoice" size={21} color={textColor} />
-            </View>
-          </TouchableOpacity>
-          {
-            userData.usertype === 'organisation' ?
-            <TouchableOpacity style={{marginLeft:-3}} onPress={()=>navigation.navigate('AssignSub',{ packagename:item.packagename, packageid: item.id })}>
-            <View>
-              <MaterialIcons name="assignment-ind" size={25} color={textColor} />
-            </View>
-          </TouchableOpacity>
-          : null
-          }
+            <TouchableOpacity
+              onPress={() => printInvoice(item)}
+              style={{marginBottom: 15}}>
+              <View>
+                <FontAwesome5 name="file-invoice" size={21} color={textColor} />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Invoice', {data: item})}
+              style={{marginBottom: 15, marginLeft: -3}}>
+              <View>
+                <FontAwesome5 name="eye" size={21} color={textColor} />
+              </View>
+            </TouchableOpacity>
+            {userData.usertype === 'organisation' ? (
+              <TouchableOpacity
+                style={{marginLeft: -3}}
+                onPress={() =>
+                  navigation.navigate('AssignSub', {
+                    packagename: item.packagename,
+                    packageid: item.id,
+                  })
+                }>
+                <View>
+                  <MaterialIcons
+                    name="assignment-ind"
+                    size={25}
+                    color={textColor}
+                  />
+                </View>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
         <Divider />
@@ -499,18 +527,26 @@ export const UserSubscriptions = ({navigation}) => {
     );
   };
 
-
   const fetchSubscriptions = async res => {
-    
     var body = {type: 1, user_id: res.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
     if (result.data === 0) {
       setNotSubText('Not Subscribed yet');
-    } else  {
-      let sortedData = result?.data.sort((a, b) => new Date(Date.parse(b.valid_from)) - new Date(Date.parse(a.valid_from)))
-      setSubs(sortedData);
+      setSubLoading(false);
+    } else {
+      let sortedData = result?.data.sort(
+        (a, b) =>
+          new Date(Date.parse(b.valid_from)) -
+          new Date(Date.parse(a.valid_from)),
+      );
+      let today = new Date();
+      let formatDate = date =>{ return new Date(Date.parse(date)) }
+      let activeSubs = sortedData.filter(item => formatDate(item.valid_to) >= today);
+      setActiveSubs(activeSubs);
+      let expiredSubs = sortedData.filter(item => formatDate(item.valid_to) < today);
+      setExpiredSubs(expiredSubs);
+      setSubLoading(false);
     }
-
   };
 
   useEffect(() => {
@@ -523,12 +559,25 @@ export const UserSubscriptions = ({navigation}) => {
       // alert('Screen was focused');
       // Do something when the screen is focused
       return () => {
-        setSubs([]);
+        setActiveSubs([]);
         // Do something when the screen is unfocused
         // Useful for cleanup functions
       };
     }, []),
   );
+
+  const emptyComponent = (text) => {
+    return (
+      subLoading ?
+      <ActivityIndicator size="large" /> :
+      <Text
+      style={{
+        textAlign: 'center',
+        margin: 30
+      }}
+      >{text}</Text>
+    )
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
@@ -537,12 +586,26 @@ export const UserSubscriptions = ({navigation}) => {
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
-      <View style={{paddingBottom:60}}>
+      <View style={{paddingBottom: 60}}>
         <View style={styles.header}>
           <Text style={[styles.headerContent, {color: textColor}]}>
             Your Subscriptions
           </Text>
         </View>
+        <ButtonGroup
+        buttons={['Active', 'Expired']}
+        selectedIndex={selectedIndex}
+        onPress={value => {
+          setSelectedIndex(value);
+        }}
+        containerStyle={{
+          borderRadius: 10,
+          borderColor: '#212121',
+        }}
+        selectedButtonStyle={{backgroundColor: '#ff9000'}}
+        textStyle={{color: '#000'}}
+        selectedTextStyle={{color: '#000'}}
+      />
         {notSubText === 'Not Subscribed yet' ? (
           <View>
             <Text style={{color: textColor, padding: 20}}>{notSubText}</Text>
@@ -561,11 +624,21 @@ export const UserSubscriptions = ({navigation}) => {
             </View>
           </View>
         ) : (
-          <FlatList
-            data={subs}
+         selectedIndex == 0 ? <FlatList
+            data={activeSubs}
             renderItem={renderItem}
             keyExtractor={item => item.id}
-            ListEmptyComponent={() => <ActivityIndicator size="large" />}
+             ListEmptyComponent={() => 
+              emptyComponent('No Active Subscriptions')
+            } />
+          :
+          <FlatList
+            data={expiredSubs}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            ListEmptyComponent={() =>
+              emptyComponent('No Expired Subscriptions')
+            }
           />
         )}
       </View>
@@ -578,7 +651,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10
   },
   headerContent: {
     fontSize: 22,
@@ -601,6 +676,4 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 10,
   },
-  
- 
 });

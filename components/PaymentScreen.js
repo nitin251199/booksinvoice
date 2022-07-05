@@ -1,76 +1,83 @@
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 import AnimatedLottieView from 'lottie-react-native';
 import React from 'react';
-import { BackHandler, Dimensions, Modal, Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
+import {
+  BackHandler,
+  Dimensions,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+} from 'react-native';
 import WebView from 'react-native-webview';
-import { useDispatch } from 'react-redux';
-import { storeDatasync } from './AsyncStorage';
-import { ThemeContext } from './ThemeContext';
+import {useDispatch} from 'react-redux';
+import {storeDatasync} from './AsyncStorage';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
-export const PaymentScreen = ({route,navigation}) => {
-
+export const PaymentScreen = ({route, navigation}) => {
   const paymentDetails = route.params.paymentDetails;
 
   const [modalVisible, setModalVisible] = React.useState(false);
 
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
 
-  
   let urlEncodedData = '',
-  urlEncodedDataPairs = [],
-  key;
-for (key in paymentDetails) {
-  urlEncodedDataPairs.push(
-    encodeURIComponent(key) + '=' + encodeURIComponent(paymentDetails[key]),
-  );
-}
-urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
-
-
-// useFocusEffect(
-//   React.useCallback(() => {
-//     const onBackPress =() => {
-//       navigation.jumpTo('Subscriptions');
-//         return false;
-//     };
-
-//     BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-//     return () =>
-//       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-//   }, [])
-// );
-
-const onMessage = (data) => {
-  if (data.nativeEvent.data === 'success') {
-    ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
-    setModalVisible(true);
-    dispatch({type:'SET_STATUS',payload:{isLogin: true,isSubscribed:true}});
-    dispatch({type:'REMOVE_ALL_CART'})
-    storeDatasync('isSubscribed', true);
+    urlEncodedDataPairs = [],
+    key;
+  for (key in paymentDetails) {
+    urlEncodedDataPairs.push(
+      encodeURIComponent(key) + '=' + encodeURIComponent(paymentDetails[key]),
+    );
   }
-  else if(data.nativeEvent.data==='failure')
-  {
-    ToastAndroid.show('Payment Failed', ToastAndroid.SHORT);
-  }
-}
+  urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
 
-const thanksModal = () => {
-  return (
-    <Modal
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     const onBackPress =() => {
+  //       navigation.jumpTo('Subscriptions');
+  //         return false;
+  //     };
+
+  //     BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+  //     return () =>
+  //       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+  //   }, [])
+  // );
+
+  const onMessage = data => {
+    if (data.nativeEvent.data === 'success') {
+      ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
+      setModalVisible(true);
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: true},
+      });
+      dispatch({type: 'REMOVE_ALL_CART'});
+      storeDatasync('isSubscribed', true);
+    } else if (data.nativeEvent.data === 'failure') {
+      ToastAndroid.show('Payment Failed', ToastAndroid.SHORT);
+    }
+  };
+
+  const thanksModal = () => {
+    return (
+      <Modal
         animationType="slide"
         visible={modalVisible}
         transparent
         onRequestClose={() => {
           setModalVisible(!modalVisible);
-           navigation.navigate('Homepage');
+          navigation.navigate('Homepage');
           // navigation.popToTop();
         }}>
         <View style={styles.centeredView}>
@@ -80,11 +87,11 @@ const thanksModal = () => {
               Thank you for purchasing.
             </Text>
             <AnimatedLottieView
-	        source={require("../images/check2.json")}
-	        style={{ width: 100, height: 100 }}
-	        autoPlay
-            loop={false}
-	      />
+              source={require('../images/check2.json')}
+              style={{width: 100, height: 100}}
+              autoPlay
+              loop={false}
+            />
             <Pressable
               style={[styles.button, {backgroundColor: '#ff9000'}]}
               onPress={() => {
@@ -96,33 +103,33 @@ const thanksModal = () => {
           </View>
         </View>
       </Modal>
-  )
-}
+    );
+  };
 
-  var url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/'
-  if(route.params.value === undefined || route.params.value === 'Discount Coupons')
-  {
-    url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/'
-  }
-  else 
-  {
-    url = 'https://booksinvoice.com/Cart/getRedirectToPromotion/'
+  var url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/';
+  if (
+    route.params.value === undefined ||
+    route.params.value === 'Discount Coupons'
+  ) {
+    url = 'https://booksinvoice.com/Cart/getRedirectToCcAvenu/';
+  } else {
+    url = 'https://booksinvoice.com/Cart/getRedirectToPromotion/';
   }
 
   return (
     <>
-    <WebView
-      javaScriptEnabled
-      originWhitelist={['*']}
-      source={{
-        uri: url,
-        method: 'POST',
-        body: urlEncodedData,
-      }}
-      startInLoadingState={true}
-      onMessage={onMessage}
-    />
-    {thanksModal()}
+      <WebView
+        javaScriptEnabled
+        originWhitelist={['*']}
+        source={{
+          uri: url,
+          method: 'POST',
+          body: urlEncodedData,
+        }}
+        startInLoadingState={true}
+        onMessage={onMessage}
+      />
+      {thanksModal()}
     </>
   );
 };
@@ -136,7 +143,7 @@ const styles = StyleSheet.create({
   modalView: {
     margin: 20,
     borderRadius: 20,
-    height: height*0.35,
+    height: height * 0.35,
     padding: 35,
     alignItems: 'center',
     shadowColor: '#000',
@@ -147,14 +154,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-    flexDirection:'column',
-    justifyContent:'space-between'
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   button: {
     borderRadius: 20,
     padding: 10,
     elevation: 2,
-    width: width*0.7,
+    width: width * 0.7,
   },
   textStyle: {
     color: 'white',
@@ -164,7 +171,7 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 20,
-    fontWeight:'800',
+    fontWeight: '800',
     textAlign: 'center',
   },
-})
+});

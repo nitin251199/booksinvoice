@@ -2,14 +2,13 @@ import React, { useRef } from 'react'
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import TextTicker from 'react-native-text-ticker'
-import { ThemeContext } from './ThemeContext'
 
 const { width, height } = Dimensions.get('window')
 
 
 export const MiniPlayer = (props) => {
    const reference = useRef(props.ref)
-    const { theme, song } = React.useContext(ThemeContext)
+    // const { theme, song } = React.useContext(ThemeContext)
     
    if(!song)
    {

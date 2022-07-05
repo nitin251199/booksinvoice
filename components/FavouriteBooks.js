@@ -4,13 +4,12 @@ import { AirbnbRating, Divider } from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import { postData, ServerURL } from './FetchApi';
-import { ThemeContext } from './ThemeContext';
 
 const { width, height } = Dimensions.get('window')
 
 export const FavouriteBooks = ({navigation}) => {
 
-  const { theme } = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';

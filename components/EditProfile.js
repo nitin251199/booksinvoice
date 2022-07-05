@@ -15,12 +15,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import {Avatar, Button, Card, Divider, ListItem} from 'react-native-elements';
 import {useDispatch} from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {AutocompleteDropdown} from 'react-native-autocomplete-dropdown';
-import Autocomplete from 'react-native-autocomplete-input';
 import {
   checkSyncData,
   getSyncData,
@@ -28,7 +28,7 @@ import {
   storeDatasync,
 } from './AsyncStorage';
 import {postData, postDataAndImage, ServerURL} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import AnimatedLottieView from 'lottie-react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import RBSheet from 'react-native-raw-bottom-sheet';
@@ -36,7 +36,7 @@ import RBSheet from 'react-native-raw-bottom-sheet';
 const {width, height} = Dimensions.get('window');
 
 export const EditProfile = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -61,10 +61,11 @@ export const EditProfile = ({navigation}) => {
   const [show, setShow] = useState(false);
   const [showText, setShowText] = useState(false);
   const [showPass, setShowPass] = useState(true);
+  const [showPassNew, setShowPassNew] = useState(true);
+  const [showPassConfirm, setShowPassConfirm] = useState(true);
   const [image, setImage] = useState('');
   const refProfilepic = useRef(null);
   const [tempCountryList, setTempCountryList] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   const [userData, setUserData] = useState([]);
   var dispatch = useDispatch();
@@ -320,7 +321,7 @@ export const EditProfile = ({navigation}) => {
 
   useEffect(() => {
     fetchProfile();
-    fetchAllCountry()
+    fetchAllCountry();
   }, []);
 
   useEffect(() => {
@@ -359,6 +360,7 @@ export const EditProfile = ({navigation}) => {
         new_password: newPassword,
       };
       var result = await postData('api/getProfileedit', body);
+      // console.log(result);
       if (result.data == 1) {
         if (
           name === '' ||
@@ -378,7 +380,9 @@ export const EditProfile = ({navigation}) => {
         } else {
           Alert.alert(
             'Profile Updated Successfully',
-            result.free_id !== null && 'Your trial pack is active now!',
+            result.free_id !== null &&
+              result.status == 'newuser' &&
+              'Your trial pack is active now!',
           );
         }
         fetchProfile();
@@ -521,14 +525,13 @@ export const EditProfile = ({navigation}) => {
                       justifyContent: 'flex-end',
                     },
                   ]}
-                  onFocus={()=>{
-                    setStateName('')
+                  onFocus={() => {
+                    setStateName('');
                   }}
                   onChangeText={item => {
                     setCountryName(item);
                   }}
                   onSelectItem={itemValue => {
-                    
                     if (itemValue !== null) {
                       setCountry(itemValue.id);
                       fetchAllStates(itemValue.id);
@@ -564,10 +567,11 @@ export const EditProfile = ({navigation}) => {
                         borderBottomColor: '#999',
                         borderRadius: 0,
                         justifyContent: 'flex-end',
+                        padding: 5,
                       },
                     ]}
-                    onFocus={()=>{
-                      setCityName('')
+                    onFocus={() => {
+                      setCityName('');
                     }}
                     onChangeText={item => {
                       setStateName(item);
@@ -607,6 +611,7 @@ export const EditProfile = ({navigation}) => {
                         borderBottomColor: '#999',
                         borderRadius: 0,
                         justifyContent: 'flex-end',
+                        padding: 5,
                       },
                     ]}
                     onChangeText={item => {
@@ -623,7 +628,7 @@ export const EditProfile = ({navigation}) => {
 
                 <TextInput
                   value={phone}
-                  editable={false}
+                  // editable={false}
                   onChangeText={text => setPhone(text)}
                   style={[
                     styles.textInput,
@@ -668,28 +673,56 @@ export const EditProfile = ({navigation}) => {
                     color={textColor}
                   />
                 </View>
-                <TextInput
-                  // value={newPassword}
-                  secureTextEntry
-                  onChangeText={text => setNewPassword(text)}
+                <View
                   style={[
                     styles.textInput,
-                    {borderBottomColor: 'gray', color: textColor},
-                  ]}
-                  placeholder="New Password"
-                  placeholderTextColor="#999"
-                />
-                <TextInput
-                  secureTextEntry
-                  // value={confirmPassword}
-                  onChangeText={text => setConfirmPassword(text)}
+                    {
+                      borderBottomColor: 'gray',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    },
+                  ]}>
+                  <TextInput
+                    // value={newPassword}
+                    secureTextEntry={showPassNew}
+                    onChangeText={text => setNewPassword(text)}
+                    style={{color: textColor, width: width * 0.72}}
+                    placeholder="New Password"
+                    placeholderTextColor="#999"
+                  />
+                  <MaterialCommunityIcons
+                    onPress={() => setShowPassNew(!showPassNew)}
+                    style={{marginHorizontal: 10}}
+                    name={showPassNew ? 'eye-off' : 'eye'}
+                    size={25}
+                    color={textColor}
+                  />
+                </View>
+                <View
                   style={[
                     styles.textInput,
-                    {borderBottomColor: 'gray', color: textColor},
-                  ]}
-                  placeholder="Confirm Password"
-                  placeholderTextColor="#999"
-                />
+                    {
+                      borderBottomColor: 'gray',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                    },
+                  ]}>
+                  <TextInput
+                    secureTextEntry={showPassConfirm}
+                    // value={confirmPassword}
+                    onChangeText={text => setConfirmPassword(text)}
+                    style={{color: textColor, width: width * 0.72}}
+                    placeholder="Confirm Password"
+                    placeholderTextColor="#999"
+                  />
+                  <MaterialCommunityIcons
+                    onPress={() => setShowPassConfirm(!showPassConfirm)}
+                    style={{marginHorizontal: 10}}
+                    name={showPassConfirm ? 'eye-off' : 'eye'}
+                    size={25}
+                    color={textColor}
+                  />
+                </View>
               </View>
               <View style={{padding: 20, flexDirection: 'row'}}>
                 <Button
@@ -764,7 +797,9 @@ export const EditProfile = ({navigation}) => {
               size={120}
               rounded
               source={
-                image.substring(image.length - 4) !== `null` ? {uri: image} : require('../images/tempProfile.jpg')
+                image.substring(image.length - 4) !== `null`
+                  ? {uri: image}
+                  : require('../images/tempProfile.jpg')
               }
               containerStyle={{borderColor: '#ff9000', borderWidth: 1}}>
               <Avatar.Accessory
@@ -806,7 +841,10 @@ export const EditProfile = ({navigation}) => {
         </View>
       </Card>
       <Divider />
-      <View style={styles.listWrapper}>
+      <ScrollView
+        persistentScrollbar
+        style={styles.listWrapper}
+        contentContainerStyle={{alignItems: 'flex-start'}}>
         <TouchableOpacity onPress={() => toggleOverlay()}>
           <ListItem
             containerStyle={[
@@ -831,11 +869,11 @@ export const EditProfile = ({navigation}) => {
             ]}>
             <ListItem.Title
               style={{fontSize: 18, fontWeight: '800', color: textColor}}>
-              My Purchased Books
+              My Premium Books
             </ListItem.Title>
             <ListItem.Subtitle
               style={{fontSize: 12, fontWeight: '300', color: textColor}}>
-              View all your books
+              View all your premium books
             </ListItem.Subtitle>
           </ListItem>
         </TouchableOpacity>
@@ -893,7 +931,7 @@ export const EditProfile = ({navigation}) => {
           </TouchableOpacity>
         ) : null}
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Download')}>
           <ListItem
             containerStyle={[
               styles.listContainer,
@@ -922,7 +960,7 @@ export const EditProfile = ({navigation}) => {
             {show ? <ActivityIndicator /> : null}
           </ListItem>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
       {editProfile()}
     </View>
   );
@@ -949,10 +987,10 @@ const styles = StyleSheet.create({
   usertype: {fontSize: 14, fontWeight: '300', textAlign: 'center', padding: 3},
   listWrapper: {
     display: 'flex',
-    alignItems: 'flex-start',
     width: width * 0.95,
     padding: 0,
-    marginLeft: 20,
+    marginHorizontal: 20,
+    // height: height * 0.1,
   },
   listitem: {
     display: 'flex',
@@ -963,7 +1001,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'flex-start',
     flexDirection: 'column',
-    height: height * 0.07,
+    height: height * 0.09,
   },
   textInput: {borderBottomWidth: 1, width: width * 0.83},
   centeredView: {

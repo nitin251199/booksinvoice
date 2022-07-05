@@ -18,7 +18,6 @@ import TextTicker from 'react-native-text-ticker';
 import {useDispatch, useSelector} from 'react-redux';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
-import {ThemeContext} from './ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Button} from 'react-native-paper';
 import {Button as Button2} from 'react-native-elements';
@@ -28,7 +27,7 @@ import {useFocusEffect} from '@react-navigation/native';
 const {width, height} = Dimensions.get('window');
 
 export const Cart = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -50,7 +49,7 @@ export const Cart = ({navigation}) => {
   const [couponStatus, setCouponStatus] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [subtotal, setSubTotal] = useState(
-    cartItems.reduce(calculateAmount, 0)
+    cartItems.reduce(calculateAmount, 0),
   );
   const [total, setTotal] = useState(cartItems.reduce(calculateAmount, 0));
   const [netTotal, setNetTotal] = useState(total);
@@ -85,9 +84,9 @@ export const Cart = ({navigation}) => {
   }, []);
 
   useEffect(() => {
-     setSubTotal(cartItems.reduce(calculateAmount, 0));
-     setNetTotal(cartItems.reduce(calculateAmount, 0));
-     setCouponStatus(false);
+    setSubTotal(cartItems.reduce(calculateAmount, 0));
+    setNetTotal(cartItems.reduce(calculateAmount, 0));
+    setCouponStatus(false);
     // setNetTotal(total);
     // nettotal = netTotal;
     // setTotal(nettotal);
@@ -102,7 +101,7 @@ export const Cart = ({navigation}) => {
     dispatch({type: 'REMOVE_CART', payload: item.id});
     setRefresh(!refresh);
     ToastAndroid.show('Book Removed from Cart', ToastAndroid.SHORT);
-    setCart(cartItems)
+    setCart(cartItems);
     navigation.setParams({y: ''});
     var body = {
       type: 1,
@@ -135,7 +134,6 @@ export const Cart = ({navigation}) => {
   };
 
   const fetchDetails = async () => {
-    
     var key = await checkSyncData();
     if (key[0] !== 'fcmToken') {
       await getSyncData(key[0]).then(async res => {

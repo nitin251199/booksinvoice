@@ -1,29 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, View, Text, Dimensions, ScrollView} from 'react-native';
 import {ListItem} from 'react-native-elements';
 import {List} from 'react-native-paper';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import {postData} from './FetchApi';
 
 const {width, height} = Dimensions.get('window');
 
 export const FAQ = ({navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const [text, setText] = useState([]);
 
-  const fetchFaq =async () => {
-    var body = { type: 1, pagename: 'Faq' };
-    var result = await postData('api/getPages', body); 
+  const fetchFaq = async () => {
+    var body = {type: 1, pagename: 'Faq'};
+    var result = await postData('api/getPages', body);
     setText(result.data);
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchFaq();
-  },[])
+  }, []);
 
   return (
     <View style={[styles.container, {backgroundColor: backgroundColor}]}>
@@ -31,30 +31,29 @@ export const FAQ = ({navigation}) => {
         <Text style={{fontWeight: '800', color: '#ff9000', fontSize: 22}}>
           FAQs
         </Text>
-        {
-          text.map(item=>{
-            return <List.Accordion
-            style={{backgroundColor: backgroundColor}}
-            titleNumberOfLines={3}
-            titleStyle={[
-              styles.text,
-              {
-                color: textColor,
-              },
-            ]}
-            title={item.title}
-            >
-            <Text
-              style={{
-                textAlign: 'justify',
-                color: '#ff9000',
-                paddingHorizontal: 20,
-              }}>
-              {item.content}
-            </Text>
-          </List.Accordion>
-          })
-        }
+        {text.map(item => {
+          return (
+            <List.Accordion
+              style={{backgroundColor: backgroundColor}}
+              titleNumberOfLines={3}
+              titleStyle={[
+                styles.text,
+                {
+                  color: textColor,
+                },
+              ]}
+              title={item.title}>
+              <Text
+                style={{
+                  textAlign: 'justify',
+                  color: '#ff9000',
+                  paddingHorizontal: 20,
+                }}>
+                {item.content}
+              </Text>
+            </List.Accordion>
+          );
+        })}
       </ScrollView>
     </View>
   );

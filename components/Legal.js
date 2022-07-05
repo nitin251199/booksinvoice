@@ -2,10 +2,10 @@ import React, {useEffect, useState} from 'react';
 import {View} from 'react-native';
 import WebView from 'react-native-webview';
 import {postData} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 
 export const Legal = ({route}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';

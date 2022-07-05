@@ -16,14 +16,14 @@ import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SamplePlay} from './SamplePlay';
-import {ThemeContext} from './ThemeContext';
+import { useSelector } from 'react-redux';
 import {Picker} from '@react-native-picker/picker';
 import {getSyncData} from './AsyncStorage';
 
 const {width, height} = Dimensions.get('window');
 
 export const CategoryPage = ({navigation, route}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -39,6 +39,7 @@ export const CategoryPage = ({navigation, route}) => {
             flexDirection: 'row',
             // width: width * 0.30,
             paddingVertical: 15,
+            marginLeft: 20,
           }}>
           <TouchableOpacity
             onPress={() =>

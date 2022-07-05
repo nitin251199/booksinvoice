@@ -18,7 +18,7 @@ import TextTicker from 'react-native-text-ticker';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
@@ -42,7 +42,7 @@ export const Subscriptions = ({navigation}) => {
     packagefor: '',
   });
 
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -267,7 +267,7 @@ export const Subscriptions = ({navigation}) => {
             <View style={{display: 'flex', padding: 15, alignItems: 'center'}}>
               <Image
                 style={{width: 80, height: 80, borderRadius: 10}}
-                source={require('../../images/logo.jpg')}
+                source={require('../../images/oldlogo.jpg')}
               />
             </View>
             <Card.Divider style={{backgroundColor: 'white'}} />

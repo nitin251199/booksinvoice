@@ -16,12 +16,12 @@ import {Button, Divider} from 'react-native-elements';
 import {RadioButton} from 'react-native-paper';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData} from './FetchApi';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 
 export const PaymentSummary = ({route, navigation}) => {
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -63,9 +63,7 @@ export const PaymentSummary = ({route, navigation}) => {
     var body = {coupons: coupon, coupon_type: value};
     var result = await postData('api/getCoupon', body);
     if (result.msg === 'Success') {
-      if (
-        result.data[0].coupons_type === 'Promotional Coupons' 
-      ) {
+      if (result.data[0].coupons_type === 'Promotional Coupons') {
         setSubTotal(0);
         selected.packagedays = result.data[0].days;
         // copies = '1';
@@ -75,14 +73,12 @@ export const PaymentSummary = ({route, navigation}) => {
         couponid = result.data[0].id;
         setCouponStatus(true);
         return fetchDetails();
-      }
-      else if(result.data[0].coupons_type === 'Recharge Coupons')
-      {
+      } else if (result.data[0].coupons_type === 'Recharge Coupons') {
         let val = result.data[0].couponsvalue;
-        let sTotal = (val - (val * 0.18)).toFixed(2);
+        let sTotal = (val - val * 0.18).toFixed(2);
         setSubTotal(sTotal);
-        setGst((val * 0.18).toFixed(2))
-        setSgst((val * 0.09).toFixed(2))
+        setGst((val * 0.18).toFixed(2));
+        setSgst((val * 0.09).toFixed(2));
         // total = 1999
         couponid = result.data[0].id;
         setCouponStatus(true);
@@ -94,9 +90,12 @@ export const PaymentSummary = ({route, navigation}) => {
       setDiscount(d);
       let s = (subtotal - d).toFixed(2);
       setSubTotal(s);
-      setGst(((subtotal - d) * 0.18).toFixed(2))
-      setSgst(((subtotal - d) * 0.09).toFixed(2))
-      total = (parseFloat(subtotal - d) + parseFloat(((subtotal - d) * 0.18).toFixed(2))).toFixed(2);
+      setGst(((subtotal - d) * 0.18).toFixed(2));
+      setSgst(((subtotal - d) * 0.09).toFixed(2));
+      total = (
+        parseFloat(subtotal - d) +
+        parseFloat(((subtotal - d) * 0.18).toFixed(2))
+      ).toFixed(2);
       couponid = result.data[0].id;
       setCouponStatus(true);
       fetchDetails();
@@ -223,7 +222,7 @@ export const PaymentSummary = ({route, navigation}) => {
               <RadioButton.Group
                 onValueChange={newValue => handleCoupon(newValue)}
                 value={value}>
-                  <TouchableWithoutFeedback
+                <TouchableWithoutFeedback
                   onPress={() => setValue('Recharge Coupons')}>
                   <View
                     style={{
@@ -231,7 +230,9 @@ export const PaymentSummary = ({route, navigation}) => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                     }}>
-                    <Text style={{color: textColor}}>Buy Subscription Use Recharge Code</Text>
+                    <Text style={{color: textColor}}>
+                      Buy Subscription Use Recharge Code
+                    </Text>
                     <RadioButton
                       color="#ff9000"
                       uncheckedColor={textColor}
@@ -239,10 +240,8 @@ export const PaymentSummary = ({route, navigation}) => {
                     />
                   </View>
                 </TouchableWithoutFeedback>
-                <View style={{margin:10}}>
-                  <Text style={{color: textColor,fontWeight:'800'}}>
-                    OR
-                  </Text>
+                <View style={{margin: 10}}>
+                  <Text style={{color: textColor, fontWeight: '800'}}>OR</Text>
                 </View>
                 <TouchableWithoutFeedback
                   onPress={() => setValue('Discount Coupons')}>
@@ -276,7 +275,6 @@ export const PaymentSummary = ({route, navigation}) => {
                     />
                   </View>
                 </TouchableWithoutFeedback>
-                
               </RadioButton.Group>
             </View>
             <TouchableOpacity onPress={() => handleCouponProceed()}>

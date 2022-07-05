@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import {Button} from 'react-native-paper';
-import {ThemeContext} from './ThemeContext';
+import {useSelector} from 'react-redux';
 import NetInfo from '@react-native-community/netinfo';
 import {postData} from './FetchApi';
 import {useDispatch} from 'react-redux';
@@ -16,7 +16,7 @@ import {useDispatch} from 'react-redux';
 const {width, height} = Dimensions.get('window');
 
 export const OfflineScreen = ({navigation}) => {
-  const {theme} = useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const dispatch = useDispatch();
 
@@ -69,6 +69,15 @@ export const OfflineScreen = ({navigation}) => {
         dark
         mode="contained">
         Try Again
+      </Button>
+      <Button
+        icon="download"
+        onPress={() => navigation.navigate('Download')}
+        style={{backgroundColor: '#ff9000', marginTop: 10}}
+        contentStyle={{height: 55, width: width * 0.87, alignItems: 'center'}}
+        dark
+        mode="contained">
+        Go To Downloads
       </Button>
     </View>
   );

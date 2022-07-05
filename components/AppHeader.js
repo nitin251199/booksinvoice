@@ -86,7 +86,7 @@ export const AppHeader = ({navigation}) => {
       }}
       backgroundColor="#ff9000"
       barStyle="dark-content"
-      // elevated
+      elevated
       leftComponent={
         <View style={{flexDirection: 'row', width: 200, alignItems: 'center'}}>
           <TouchableOpacity
@@ -105,7 +105,7 @@ export const AppHeader = ({navigation}) => {
             )}
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Homepage')}>
-            <Text style={styles.heading}>Booksinvoice</Text>
+            <Text  style={styles.heading}>Booksinvoice</Text>
           </TouchableOpacity>
         </View>
       }

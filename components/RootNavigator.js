@@ -35,6 +35,7 @@ import { OfflineScreen } from './OfflineScreen';
 import { MyBooks } from './MyBooks';
 import AssignSub from './AssignSub';
 import ActivationLink from './ActivationLink';
+import Invoice from './Invoice';
 
 export default function RootNavigator() {
 
@@ -50,14 +51,15 @@ export default function RootNavigator() {
     requestUserPermission();
     notificationListener(navigation);
     fetchProfile(dispatch);
+    
   },[])
 
   function MyTabs() {
     return (
-      <View style={{
-        width:width,
-        height:height*1.05,
-    }}>
+    //   <View style={{
+    //     width:width,
+    //     height:height*1.05,
+    // }}>
       <Tab.Navigator
         // screenOptions={{
         //   swipeEnabled: false,
@@ -77,22 +79,17 @@ export default function RootNavigator() {
           options={{tabBarLabel: 'Search'}}
         />
         <Tab.Screen
-          name="Subscriptions"
+          name="SubscriptionComponent"
           component={SubscriptionComponent}
-          options={{tabBarLabel: 'Subscriptions', lazy: true}}
+          options={{tabBarLabel: 'Subscriptions'}}
         />
-        {/* <Tab.Screen
-          name="CartComponent"
-          component={CartComponent}
-          options={{tabBarLabel: 'Cart'}}
-        /> */}
         <Tab.Screen
           name="EditProfile"
           component={ProfileComponent}
           options={{tabBarLabel: 'Profile', lazy: true}}
         />
       </Tab.Navigator>
-      </View>
+      // </View> 
     );
   }
 
@@ -109,31 +106,31 @@ export default function RootNavigator() {
           component={OfflineScreen}
           options={{headerShown: false}}
         />
+        <Stack.Screen
+          name="MusicPlayer"
+          component={MusicPlayer}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Download"
+          component={Download}
+          options={{header: AppHeader}}
+        />
       </Stack.Navigator>
     );
   }
 
   function SubscriptionComponent() {
-    var isSub = useSelector(state => state.isSubscribed);
-    var isLogin = useSelector(state => state.isLogin);
 
     return (
       <Stack.Navigator screenOptions={{
         presentation: "modal"
       }}>
-        {isSub && isLogin  ? (
-          <Stack.Screen
-            name="UserSubscriptions"
-            component={UserSubscriptions}
-            options={{header: AppHeader}}
-          />
-        ) : (
-          <Stack.Screen
+        <Stack.Screen
             name="Subscriptions"
             component={Subscriptions}
             options={{header: AppHeader}}
           />
-        )}
         <Stack.Screen
           name="PaymentScreen"
           component={PaymentScreen}
@@ -194,11 +191,11 @@ export default function RootNavigator() {
           component={InfoPage}
           options={{header: AppHeader}}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
             name="Subscriptions"
             component={Subscriptions}
             options={{header: AppHeader}}
-          />
+          /> */}
           <Stack.Screen
             name="UserSubscriptions"
             component={UserSubscriptions}
@@ -217,6 +214,21 @@ export default function RootNavigator() {
         <Stack.Screen
           name="ActivationLink"
           component={ActivationLink}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="MusicPlayer"
+          component={MusicPlayer}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Download"
+          component={Download}
+          options={{header: AppHeader}}
+        />
+        <Stack.Screen
+          name="Invoice"
+          component={Invoice}
           options={{header: AppHeader}}
         />
       </Stack.Navigator>

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Dimensions,
   TouchableOpacity,
   Image,
@@ -15,9 +14,10 @@ import {
   ActivityIndicator,
   ScrollView,
   FlatList,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import BackgroundTimer from 'react-native-background-timer';
-
 import TrackPlayer, {
   Capability,
   Event,
@@ -34,12 +34,12 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import {postData, ServerURL} from './FetchApi';
 import {checkSyncData, getSyncData} from './AsyncStorage';
-import {ThemeContext} from './ThemeContext';
 import {Slider as SpeedSlider} from 'react-native-elements';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useSelector} from 'react-redux';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width, height} = Dimensions.get('window');
 
@@ -65,15 +65,15 @@ const MusicPlayer = ({route, navigation}) => {
   const [timerValue, setTimerValue] = useState(0);
   const [likeCount, setLikeCount] = useState('');
   const [isLike, setIsLike] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   var isSub = useSelector(state => state.isSubscribed);
 
   // custom referecnces
   const scrollX = useRef(new Animated.Value(0)).current;
   const songSlider = useRef(null);
-  const refRBSheet = useRef(null);
 
-  const {theme} = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -98,6 +98,7 @@ const MusicPlayer = ({route, navigation}) => {
 
   const index = route.params.index;
   const chapters = [];
+  const offlineStatus = route?.params?.offline || false;
 
   if (index !== null) {
     var temp = [
@@ -113,18 +114,40 @@ const MusicPlayer = ({route, navigation}) => {
       },
     ];
   } else {
-    var temp = [
-      {
-        id: route.params.state.id,
-        url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
-        title: route.params.state.bookname,
-        artist: route.params.state.bookauthor,
-        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-        album: route.params.state.bookcategory,
-        duration: route.params.state.sampleplay_time,
-        index: 0,
-      },
-    ];
+    if (route?.params?.offline) {
+      let offlineBook = route.params?.offlineBook;
+      var temp = [
+        {
+          id: offlineBook?.id,
+          url:
+            Platform.OS === 'android'
+              ? 'file://' + offlineBook.url
+              : '' + offlineBook.url,
+          title: offlineBook?.title,
+          artist: offlineBook?.artist,
+          artwork:
+            Platform.OS === 'android'
+              ? 'file://' + offlineBook.artwork
+              : '' + offlineBook.artwork,
+          album: offlineBook?.album,
+          duration: offlineBook?.duration,
+          index: 0,
+        },
+      ];
+    } else {
+      var temp = [
+        {
+          id: route.params.state.id,
+          url: `${ServerURL}/admin/upload/bookaudio/${route.params.state.audiofile}`,
+          title: route.params.state.bookname,
+          artist: route.params.state.bookauthor,
+          artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+          album: route.params.state.bookcategory,
+          duration: route.params.state.sampleplay_time,
+          index: 0,
+        },
+      ];
+    }
   }
 
   const mapTracks = async () => {
@@ -140,28 +163,30 @@ const MusicPlayer = ({route, navigation}) => {
         index: 1,
       });
     }
-    await route.params.chapters.map((track, index) => {
-      temp.push({
-        id: route.params.state.id,
-        url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
-        title: track.chaptername,
-        artist: route.params.state.bookauthor,
-        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-        album: route.params.state.bookcategory,
-        duration: route.params.state.sampleplay_time,
-        index: index + 1,
+    if (route.params.chapters.length > 0) {
+      await route.params?.chapters.map((track, index) => {
+        temp.push({
+          id: route.params.state.id,
+          url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+          title: track.chaptername,
+          artist: route.params.state.bookauthor,
+          artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+          album: route.params.state.bookcategory,
+          duration: route.params.state.sampleplay_time,
+          index: index + 1,
+        });
+        chapters.push({
+          id: route.params.state.id,
+          url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+          title: track.chaptername,
+          artist: route.params.state.bookauthor,
+          artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+          album: route.params.state.bookcategory,
+          duration: route.params.state.sampleplay_time,
+          index: index + 1,
+        });
       });
-      chapters.push({
-        id: route.params.state.id,
-        url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
-        title: track.chaptername,
-        artist: route.params.state.bookauthor,
-        artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-        album: route.params.state.bookcategory,
-        duration: route.params.state.sampleplay_time,
-        index: index + 1,
-      });
-    });
+    }
     setTracks(temp);
     setChapter(chapters);
   };
@@ -183,6 +208,7 @@ const MusicPlayer = ({route, navigation}) => {
       await TrackPlayer.add(temp);
       TrackPlayer.play();
       backgroundTimer();
+      checkDownload();
     } catch (error) {
       console.log(error);
     }
@@ -248,6 +274,7 @@ const MusicPlayer = ({route, navigation}) => {
 
       //   console.log(`Index : ${index}`);
     });
+
     return () => {
       scrollX.removeAllListeners();
       // TrackPlayer.stop();
@@ -273,39 +300,36 @@ const MusicPlayer = ({route, navigation}) => {
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key[0] !== 'fcmToken') {
-      await getSyncData(key[0]).then(async res => {
-        checkFavourite(res);
-        var body = {
-          type: 1,
-          user_id: res.id,
-          user_type: res.usertype.toLowerCase(),
-          book_id: route.params.state.id,
-        };
-        var result = await postData('api/getActivebook', body);
-        if (result.msg == true) {
-          setStatus(false);
-        }
-        var {id, usertype} = res;
-        setUserData({id, usertype});
-      });
-    }
+    // if (key[0] !== 'fcmToken') {
+    await getSyncData(key[0]).then(async res => {
+      checkFavourite(res);
+      var body = {
+        type: 1,
+        user_id: res.id,
+        user_type: res.usertype.toLowerCase(),
+        book_id: route.params.state.id,
+      };
+      var result = await postData('api/getActivebook', body);
+      if (result.msg == true) {
+        setStatus(false);
+      }
+      var {id, usertype} = res;
+      setUserData({id, usertype});
+    });
+    // }
   };
 
   const skipForward = async () => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     if (!isSub) {
       if (Math.floor(progress.position) >= temp[currentTrack].duration) {
-        console.log('end', temp[currentTrack].duration, Math.floor(progress.position));
         await TrackPlayer.seekTo(0);
         await TrackPlayer.pause();
         setModalVisible(true);
       } else {
-        console.log('starts', temp[currentTrack].duration, Math.floor(progress.position));
         await TrackPlayer.seekTo(progress.position + 10);
       }
     } else {
-      
       await TrackPlayer.seekTo(progress.position + 10);
     }
   };
@@ -313,22 +337,6 @@ const MusicPlayer = ({route, navigation}) => {
   const skipBackward = async () => {
     await TrackPlayer.seekTo(progress.position - 10);
   };
-
-  // const getSectionDone = async () => {
-  //   if (status) {
-  //     const currentTrack = await TrackPlayer.getCurrentTrack();
-  //     if (currentTrack != null) {
-  //       if (Math.floor(progress.position) >= tracks[currentTrack].duration) {
-  //         await TrackPlayer.stop();
-  //         setModalVisible(true);
-  //       }
-  //     }
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   getSectionDone();
-  // }, [progress.position]);
 
   const backgroundTimer = async () => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
@@ -387,25 +395,6 @@ const MusicPlayer = ({route, navigation}) => {
       </Modal>
     );
   };
-
-  // const closePlayer = () => {
-  //   refMiniRBSheet.current.close()
-  //   console.log('close', refMiniRBSheet);
-  // }
-
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     const onBackPress =() => {
-  //       // closePlayer()
-  //         return true;
-  //     };
-
-  //     BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-  //     return () =>
-  //       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-  //   }, [progress.position])
-  // );
 
   const renderSongs = ({item, index}) => {
     return (
@@ -601,8 +590,8 @@ const MusicPlayer = ({route, navigation}) => {
   const checkFavourite = async res => {
     var body = {
       type: '1',
-      user_id: res.id,
-      user_type: res.usertype,
+      user_id: res.id || '',
+      user_type: res.usertype || '',
       books_id: route.params.state.id,
     };
     var result = await postData('api/getFavouritebook', body);
@@ -895,7 +884,6 @@ const MusicPlayer = ({route, navigation}) => {
     try {
       let imagePath = null;
       let currentTrack = await TrackPlayer.getCurrentTrack();
-      console.log('onShare',temp[currentTrack].artwork);
       RNFetchBlob.config({
         fileCache: true,
       })
@@ -911,7 +899,7 @@ const MusicPlayer = ({route, navigation}) => {
           // here's base64 encoded image
           await Share.open({
             // title: `Booksinvoice - Download and listen books for free.`,
-            message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on Booksinvoice.com\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on booksinvoice.com/Audio/SingleAudio/${route.params.state.bookcategoryid}/${route.params.state.id}/${temp[currentTrack].title}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
             url: base64Data,
           });
           // remove the file from storage
@@ -919,6 +907,120 @@ const MusicPlayer = ({route, navigation}) => {
         });
     } catch (error) {
       alert(error.message);
+    }
+  };
+
+  const offlineShare = async () => {
+    let currentTrack = await TrackPlayer.getCurrentTrack();
+
+    RNFetchBlob.fs
+      .readFile(temp[currentTrack].artwork, 'base64')
+      .then(async data => {
+        // handle the data ..
+        const shareOptions = {
+          message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on booksinvoice.com/${route.params.state.bookcategoryid}/${route.params.state.id}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+          url: `data:image/png;base64,` + data,
+          failOnCancel: false,
+        };
+
+        try {
+          const ShareResponse = await Share.open(shareOptions);
+        } catch (error) {
+          console.log('Error =>', error);
+        }
+      });
+  };
+
+  const checkDownload = async () => {
+    const currentTrack = await TrackPlayer.getCurrentTrack();
+    const offLineBooks = await getSyncData('savedBooks');
+    if (offLineBooks) {
+      if (
+        offLineBooks.findIndex(item => {
+          return item.id === temp[currentTrack].id;
+        }) !== -1
+      ) {
+        setDownloadProgress(100);
+      }
+    }
+  };
+
+  const requestDownload = () => {
+    if (isSub) {
+      requestToPermissions();
+    } else if (!status) {
+      requestToPermissions();
+    } else {
+      ToastAndroid.show(
+        'Please subscribe or purchase the book to download!',
+        ToastAndroid.SHORT,
+      );
+    }
+  };
+
+  const requestToPermissions = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Booksinvoice',
+          message: 'App needs access to your Files... ',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED)
+        console.log('startDownload...');
+
+      startDownload();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const startDownload = async () => {
+    let currentTrack = await TrackPlayer.getCurrentTrack();
+
+    RNFetchBlob.config({
+      fileCache: true,
+    })
+      .fetch('GET', `${temp[currentTrack].url}`)
+      .progress((received, total) => {
+        setDownloadProgress(received / total);
+      })
+      .then(res => {
+        RNFetchBlob.config({
+          fileCache: true,
+        })
+          .fetch('GET', `${temp[currentTrack].artwork}`)
+          .then(imgres => {
+            saveToStorage(currentTrack, res.path(), imgres.path());
+            setDownloadProgress(100);
+            ToastAndroid.show('Downloaded Successfully', ToastAndroid.SHORT);
+          });
+      });
+  };
+
+  const saveToStorage = async (currentTrack, path, imgPath) => {
+    try {
+      let tempObj = {
+        id: temp[currentTrack].id,
+        url: path,
+        title: temp[currentTrack].title,
+        artist: temp[currentTrack].artist,
+        artwork: imgPath,
+        album: temp[currentTrack].album,
+        duration: temp[currentTrack].duration,
+        index: temp[currentTrack].index,
+      };
+      await AsyncStorage.getItem('savedBooks').then(savedBooks => {
+        const c = savedBooks ? JSON.parse(savedBooks) : [];
+        c.push(tempObj);
+        AsyncStorage.setItem('savedBooks', JSON.stringify(c));
+      });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -1065,7 +1167,12 @@ const MusicPlayer = ({route, navigation}) => {
         <View
           style={{...style.bottomSection, backgroundColor: backgroundColor}}>
           <View style={style.bottomIconContainer}>
-            <TouchableOpacity onPress={() => addLike()}>
+            <TouchableOpacity
+              onPress={() => {
+                offlineStatus
+                  ? ToastAndroid.show('You are offline', ToastAndroid.SHORT)
+                  : addLike();
+              }}>
               {isLike ? (
                 <Ionicons name="heart-sharp" size={30} color="red" />
               ) : (
@@ -1092,9 +1199,11 @@ const MusicPlayer = ({route, navigation}) => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('Comment', {id: route.params.id})
-              }>
+              onPress={() => {
+                offlineStatus
+                  ? ToastAndroid.show('You are offline', ToastAndroid.SHORT)
+                  : navigation.navigate('Comment', {id: route?.params?.id});
+              }}>
               <Fontisto
                 style={{marginTop: 4}}
                 name="commenting"
@@ -1134,15 +1243,34 @@ const MusicPlayer = ({route, navigation}) => {
         <View
           style={{...style.bottomSection, backgroundColor: backgroundColor}}>
           <View style={style.bottomIconContainer}>
-            <TouchableOpacity>
-              <MaterialCommunityIcons
-                name="download"
+            {downloadProgress == 0 ? (
+              <TouchableOpacity onPress={() => requestDownload()}>
+                <MaterialCommunityIcons
+                  name="download"
+                  size={30}
+                  color="#888888"
+                />
+              </TouchableOpacity>
+            ) : (downloadProgress * 100).toFixed(0) < 90 ? (
+              <Text
+                style={{
+                  fontSize: 18,
+                }}>
+                {(downloadProgress * 100).toFixed(0)} %
+              </Text>
+            ) : (
+              <MaterialIcons
+                name="file-download-done"
                 size={30}
-                color="#888888"
+                color="#ff9000"
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => addFavourite()}>
+            )}
+            <TouchableOpacity
+              onPress={() => {
+                offlineStatus
+                  ? ToastAndroid.show('You are offline', ToastAndroid.SHORT)
+                  : addFavourite();
+              }}>
               {isFavourite ? (
                 <Ionicons name="bookmark" size={28} color="#0652DD" />
               ) : (
@@ -1159,13 +1287,13 @@ const MusicPlayer = ({route, navigation}) => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={onShare}>
+            <TouchableOpacity onPress={offlineStatus ? offlineShare : onShare}>
               <MaterialCommunityIcons name="share" size={30} color="#888888" />
             </TouchableOpacity>
           </View>
         </View>
 
-        {route.params.chapters.length > 1 && (
+        {route.params?.chapters.length > 1 && (
           <View
             style={{
               width: width,

@@ -11,12 +11,11 @@ import { Badge } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSelector } from 'react-redux';
-import { ThemeContext } from './ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export default function BottomSheet({ state, descriptors, navigation, position }) {
-  const { theme } = React.useContext(ThemeContext);
+  const theme = useSelector(state => state.theme);
 
   const bottomBackground = theme === 'dark' ? '#000' : '#fff';
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
