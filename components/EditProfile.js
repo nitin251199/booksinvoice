@@ -27,7 +27,7 @@ import {
   removeDatasync,
   storeDatasync,
 } from './AsyncStorage';
-import {postData, postDataAndImage, ServerURL} from './FetchApi';
+import {postData, ServerURL} from './FetchApi';
 import {useSelector} from 'react-redux';
 import AnimatedLottieView from 'lottie-react-native';
 import ImagePicker from 'react-native-image-crop-picker';
@@ -507,6 +507,7 @@ export const EditProfile = ({navigation}) => {
                     placeholder: '-Select Country-',
                     placeholderTextColor: '#999',
                     fontSize: 14,
+                    color: textColor
                     // value: countryName,
                   }}
                   suggestionsListContainerStyle={{
@@ -549,6 +550,7 @@ export const EditProfile = ({navigation}) => {
                       placeholder: '-Select State-',
                       placeholderTextColor: '#999',
                       fontSize: 14,
+                      color: textColor,
                       value: stateName,
                     }}
                     suggestionsListContainerStyle={{
@@ -594,6 +596,7 @@ export const EditProfile = ({navigation}) => {
                       placeholder: '-Select City-',
                       placeholderTextColor: '#999',
                       fontSize: 14,
+                      color: textColor,
                       value: cityName,
                     }}
                     suggestionsListContainerStyle={{
@@ -628,7 +631,7 @@ export const EditProfile = ({navigation}) => {
 
                 <TextInput
                   value={phone}
-                  // editable={false}
+                  editable={false}
                   onChangeText={text => setPhone(text)}
                   style={[
                     styles.textInput,

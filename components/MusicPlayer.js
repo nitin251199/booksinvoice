@@ -935,6 +935,10 @@ const MusicPlayer = ({route, navigation}) => {
     const currentTrack = await TrackPlayer.getCurrentTrack();
     const offLineBooks = await getSyncData('savedBooks');
     if (offLineBooks) {
+      let currentBook = offLineBooks.find(item => {
+        return item.id === temp[currentTrack].id;
+      });
+      // tryme(currentBook.url,currentTrack);
       if (
         offLineBooks.findIndex(item => {
           return item.id === temp[currentTrack].id;
@@ -945,7 +949,21 @@ const MusicPlayer = ({route, navigation}) => {
     }
   };
 
-  const requestDownload = () => {
+  const requestDownload = async () => {
+    // limit size = 400000000
+    const offLineBooks = await getSyncData('savedBooks');
+    var totalSize = 0;
+    if (offLineBooks && offLineBooks.length > 0) {
+      offLineBooks.map(async item => {
+        totalSize += item.size;
+      });
+    }
+    if (totalSize >= 400000000) {
+      return ToastAndroid.show(
+        'You have reached your 500mb download limit',
+        ToastAndroid.SHORT,
+      );
+    }
     if (isSub) {
       requestToPermissions();
     } else if (!status) {
@@ -971,8 +989,6 @@ const MusicPlayer = ({route, navigation}) => {
         },
       );
       if (granted === PermissionsAndroid.RESULTS.GRANTED)
-        console.log('startDownload...');
-
       startDownload();
     } catch (err) {
       console.log(err);
@@ -1002,7 +1018,47 @@ const MusicPlayer = ({route, navigation}) => {
       });
   };
 
+  const cancelDownload = async () => {
+    let currentTrack = await TrackPlayer.getCurrentTrack();
+    let task = RNFetchBlob.config({
+      fileCache: true,
+    })
+      .fetch('GET', `${temp[currentTrack].url}`)
+    task.cancel((err, taskId) => {
+        console.log(`Cancel: taskId ${taskId}`);
+    })
+    setDownloadProgress(0);
+    ToastAndroid.show('Download Cancelled', ToastAndroid.SHORT);
+  }
+
+  const tryme = async (dest, currentTrack) => {
+    await RNFetchBlob.fs
+      .exists(dest)
+      .then(async ext => {
+        if (ext) {
+          return RNFetchBlob.fs.stat(dest).then(stat => stat);
+        } else {
+          return Promise.resolve({size: 0});
+        }
+      })
+      .then(stat => {
+        console.log('stat', stat);
+        return RNFetchBlob.config({
+          path: dest,
+          fileCache: true,
+          overwrite: false,
+        })
+          .fetch('GET', `${temp[currentTrack].url}`, {
+            Range: `bytes=${stat.size}-`,
+          })
+          .progress((received, total) => {
+            // setDownloadProgress(received / total);
+          });
+      });
+  };
+
   const saveToStorage = async (currentTrack, path, imgPath) => {
+    let size = await RNFetchBlob.fs.stat(path);
     try {
       let tempObj = {
         id: temp[currentTrack].id,
@@ -1013,6 +1069,7 @@ const MusicPlayer = ({route, navigation}) => {
         album: temp[currentTrack].album,
         duration: temp[currentTrack].duration,
         index: temp[currentTrack].index,
+        size: size.size,
       };
       await AsyncStorage.getItem('savedBooks').then(savedBooks => {
         const c = savedBooks ? JSON.parse(savedBooks) : [];
@@ -1251,13 +1308,21 @@ const MusicPlayer = ({route, navigation}) => {
                   color="#888888"
                 />
               </TouchableOpacity>
-            ) : (downloadProgress * 100).toFixed(0) < 90 ? (
-              <Text
+            ) : (downloadProgress * 100).toFixed(0) <= 99 ? (
+              // <TouchableOpacity>
+                <Text
                 style={{
-                  fontSize: 18,
+                  fontSize: 12,
                 }}>
                 {(downloadProgress * 100).toFixed(0)} %
               </Text>
+              //<MaterialIcons
+              //  name="close"
+              //  size={30}
+              //  color="#ff9000"
+              //  onPress={() => cancelDownload()}
+             // />
+             //   </TouchableOpacity> 
             ) : (
               <MaterialIcons
                 name="file-download-done"

@@ -12,7 +12,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import {AirbnbRating, Divider} from 'react-native-elements';
+import {Divider} from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {postData, ServerURL} from './FetchApi';

@@ -15,6 +15,7 @@ import {
   Modal,
   ToastAndroid,
   BackHandler,
+  PermissionsAndroid,
 } from 'react-native';
 import {AirbnbRating} from 'react-native-elements';
 import {Button} from 'react-native-paper';
@@ -22,7 +23,9 @@ import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import {useDispatch, useSelector} from 'react-redux';
+import RNFetchBlob from 'rn-fetch-blob';
 import {checkSyncData, getSyncData} from './AsyncStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {postData, ServerURL} from './FetchApi';
 import {SamplePlay} from './SamplePlay';
 
@@ -32,7 +35,6 @@ export default function InfoPage({route, navigation}) {
   var id = route.params.state;
   var categoryid = route.params.category;
 
-
   const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#000';
@@ -41,12 +43,13 @@ export default function InfoPage({route, navigation}) {
   const [book, setBook] = useState([]);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(false);
-  // const [refresh, setRefresh] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   var dispatch = useDispatch();
 
   var cart = useSelector(state => state?.cart);
   var keys = Object.keys(cart);
+  var isSub = useSelector(state => state.isSubscribed);
 
   const [newArrivals, setNewArrivals] = useState([]);
   const [topRated, setTopRated] = useState([]);
@@ -172,42 +175,174 @@ export default function InfoPage({route, navigation}) {
     setNumLines(textShown ? undefined : 3);
   }, [textShown]);
 
+  const requestDownload = item => {
+    if (isSub) {
+      requestToPermissions(item);
+    } else if (!status) {
+      requestToPermissions(item);
+    } else {
+      ToastAndroid.show(
+        'Please subscribe or purchase the book to download!',
+        ToastAndroid.SHORT,
+      );
+    }
+  };
+
+  const requestToPermissions = async item => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Booksinvoice',
+          message: 'App needs access to your Files... ',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED)
+        console.log('startDownload...');
+
+      startDownload(item);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const startDownload = async item => {
+    let url = `${ServerURL}/admin/upload/bookaudio/${item.audiofile}`;
+
+    RNFetchBlob.config({
+      fileCache: true,
+    })
+      .fetch('GET', url)
+      .progress((received, total) => {
+        setDownloadProgress(received / total);
+      })
+      .then(res => {
+        RNFetchBlob.config({
+          fileCache: true,
+        })
+          .fetch(
+            'GET',
+            `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
+          )
+          .then(imgres => {
+            saveToStorage(item, res.path(), imgres.path());
+            setDownloadProgress(100);
+            ToastAndroid.show('Downloaded Successfully', ToastAndroid.SHORT);
+          });
+      });
+  };
+
+  const tryme = async (dest, currentTrack) => {
+    await RNFetchBlob.fs
+      .exists(dest)
+      .then(ext => {
+        if (ext) {
+          return RNFetchBlob.fs.stat(dest).then(stat => stat);
+        } else {
+          return Promise.resolve({size: 0});
+        }
+      })
+      .then(stat => {
+        console.log('stat', stat);
+        return RNFetchBlob.config({
+          path: dest,
+          fileCache: true,
+          overwrite: false,
+        })
+          .fetch('GET', `${temp[currentTrack].url}`, {
+            Range: `bytes=${stat.size}-`,
+          })
+          .progress((received, total) => {
+            // setDownloadProgress(received / total);
+          });
+      });
+  };
+
+  const saveToStorage = async (item, path, imgPath) => {
+    try {
+      let tempObj = {
+        id: book.id,
+        url: path,
+        title: item.chaptername,
+        artist: book.bookauthor,
+        artwork: imgPath,
+        album: book.bookcategory,
+        duration: book.sampleplay_time,
+        index: 0,
+      };
+      return console.log('temp', tempObj);
+      await AsyncStorage.getItem('savedBooks').then(savedBooks => {
+        const c = savedBooks ? JSON.parse(savedBooks) : [];
+        c.push(tempObj);
+        AsyncStorage.setItem('savedBooks', JSON.stringify(c));
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const showChapters = ({item, index}) => {
     return (
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('MusicPlayer', {
-            state: book,
-            chapters: chapters,
-            index: index,
-            id: id,
-          });
-          // setShow(true)
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 10,
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            padding: 10,
-            alignItems: 'center',
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('MusicPlayer', {
+              state: book,
+              chapters: chapters,
+              index: index,
+              id: id,
+            });
+            // setShow(true)
           }}>
-          <Image
-            source={{
-              uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
-            }}
-            style={{width: 35, height: 35, borderRadius: 5}}
-          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              width: width * 0.75,
+            }}>
+            <Image
+              source={{
+                uri: `${ServerURL}/admin/upload/bookcategory/${book.bookcategoryid}/${book.photo}`,
+              }}
+              style={{width: 35, height: 35, borderRadius: 5}}
+            />
 
+            <Text
+              style={{
+                fontSize: 15,
+                color: textColor,
+                marginLeft: 15,
+                fontWeight: '700',
+              }}>
+              {item.chaptername}
+            </Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* {downloadProgress == 0 ? (
+          <TouchableOpacity onPress={() => requestDownload(item)}>
+            <MaterialCommunityIcons name="download" size={30} color="#888888" />
+          </TouchableOpacity>
+        ) : (downloadProgress * 100).toFixed(0) < 90 ? (
           <Text
             style={{
-              fontSize: 15,
-              color: textColor,
-              marginLeft: 15,
-              fontWeight: '700',
+              fontSize: 18,
             }}>
-            {item.chaptername}
+            {(downloadProgress * 100).toFixed(0)} %
           </Text>
-        </View>
-      </TouchableOpacity>
+        ) : (
+          <MI name="file-download-done" size={30} color="#ff9000" />
+        )} */}
+      </View>
     );
   };
 
@@ -876,8 +1011,6 @@ export default function InfoPage({route, navigation}) {
           </View>
         </ScrollView>
       </View>
-      {/* <BottomSheet navigation={navigation} /> */}
-      {/* <MiniPlayer show={show} /> */}
     </View>
   );
 }

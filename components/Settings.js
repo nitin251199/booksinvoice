@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import pkg from '../package.json';
 import RNFetchBlob from 'rn-fetch-blob';
 import Share from 'react-native-share';
 import {useDispatch} from 'react-redux';
 import {useSelector} from 'react-redux';
+import VersionCheck from 'react-native-version-check';
 
 export const Settings = ({navigation}) => {
   const [loading, setLoading] = React.useState(false);
@@ -140,7 +140,7 @@ export const Settings = ({navigation}) => {
               <Text style={{fontSize: 12, color: textColor}}>App Version</Text>
             </View>
             <Text style={[styles.itemText, {color: textColor}]}>
-              {pkg.version}
+              {VersionCheck.getCurrentVersion()}
             </Text>
           </View>
           <TouchableOpacity

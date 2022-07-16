@@ -21,8 +21,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useDrawerStatus} from '@react-navigation/drawer';
 import {Badge, List} from 'react-native-paper';
 import {useDispatch, useSelector} from 'react-redux';
-import pkg from '../package.json';
 import RNFetchBlob from 'rn-fetch-blob';
+import VersionCheck from 'react-native-version-check';
 
 const {width, height} = Dimensions.get('window');
 
@@ -557,7 +557,7 @@ export const DrawerContent = ({navigation}) => {
         <ListItem.Content style={{paddingLeft: 15}}>
           <ListItem.Title>
             <Text style={[styles.text, {color: textColor}]}>
-              App Version v{pkg.version}
+              App Version v{VersionCheck.getCurrentVersion()}
             </Text>
           </ListItem.Title>
         </ListItem.Content>

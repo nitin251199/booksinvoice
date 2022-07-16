@@ -8,6 +8,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:scaleType">centerCrop</item>
+        <item name="android:statusBarColor">#bf6d01</item>
     </style>
 
 </resources>

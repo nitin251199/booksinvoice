@@ -8,12 +8,8 @@ import {postData} from './FetchApi';
 import {
   checkSyncData,
   getSyncData,
-  removeDatasync,
   storeDatasync,
 } from './AsyncStorage';
-import {Platform} from 'react-native-windows';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import {LoginManager} from 'react-native-fbsdk-next';
 
 export const WelcomePage = ({navigation, route}) => {
   var dispatch = useDispatch();

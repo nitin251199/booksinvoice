@@ -144,8 +144,9 @@ export default function BottomSheet({ state, descriptors, navigation, position }
           <TouchableOpacity
             onPress={onPress}
             // style={{ marginHorizontal:20 }}
+            key={index}
           >
-            <Animated.View  style={{ backgroundColor: isFocused ? '#ff900020' : 'transparent' , flexDirection:'row',alignItems: 'center',paddingHorizontal:10, borderRadius:50,paddingVertical:5, }}>
+            <Animated.View   style={{ backgroundColor: isFocused ? '#ff900020' : 'transparent' , flexDirection:'row',alignItems: 'center',paddingHorizontal:10, borderRadius:50,paddingVertical:5, }}>
               {/* {label} */}
               {icon()}
               {isFocused ? <Text style={{color: isFocused ? '#ff9000' : '#FFF',padding:5, fontWeight:'600'}}>{label}</Text> : null}

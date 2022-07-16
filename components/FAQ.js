@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, View, Text, Dimensions, ScrollView} from 'react-native';
-import {ListItem} from 'react-native-elements';
 import {List} from 'react-native-paper';
 import {useSelector} from 'react-redux';
 import {postData} from './FetchApi';

@@ -61,8 +61,8 @@ export default function RootNavigator() {
     //     height:height*1.05,
     // }}>
       <Tab.Navigator
-        // screenOptions={{
-        //   swipeEnabled: false,
+        // screenOptions={({ route }) => {
+        //   console.log('route', route)
         // }}
         // initialRouteName="Homepage"
         tabBarPosition="bottom"

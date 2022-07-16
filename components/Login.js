@@ -34,7 +34,6 @@ import {LoginManager, Profile} from 'react-native-fbsdk-next';
 const {width, height} = Dimensions.get('window');
 
 export const Login = ({navigation}) => {
-  const refRBSheet = useRef();
   const phoneInput = useRef(null);
 
   const [email, setEmail] = useState('');
@@ -51,6 +50,11 @@ export const Login = ({navigation}) => {
   const [country, setCountry] = useState('');
   const [showSignup, setShowSignup] = useState(false);
   const [showLogo, setShowLogo] = useState(true);
+
+  const DEVICE_ID =
+    Platform.OS === 'android'
+      ? NativeModules.PlatformConstants.getAndroidID()
+      : NativeModules.SettingsManager.clientUniqueId;
 
   let resendOtpTimerInterval;
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(0);
@@ -105,6 +109,7 @@ export const Login = ({navigation}) => {
       username: user.user.name,
       type: '1',
       user_type: selectedIndex === 0 ? 'individual' : 'organisation',
+      device_id: DEVICE_ID,
     };
     var result = await postData('api/getAddgoogleuser', body);
     if (result !== null) {
@@ -194,8 +199,8 @@ export const Login = ({navigation}) => {
       username: user.name,
       type: '1',
       user_type: selectedIndex === 0 ? 'individual' : 'organisation',
+      device_id: DEVICE_ID,
     };
-    console.log('body', body);
     var result = await postData('api/getAddfacebookuser', body);
     if (result !== null) {
       var sub = await checkSubscription(result.data);
@@ -237,7 +242,6 @@ export const Login = ({navigation}) => {
     var result = await postData('api/getSubscription', body);
 
     var cart = await postData('api/getShowcart', body);
-    // console.log('cart', result);
     if (cart.msg === 'Success') {
       cart.data.map(item => {
         dispatch({type: 'ADD_CART', payload: [item.id, item]});
@@ -419,13 +423,9 @@ export const Login = ({navigation}) => {
       email: email,
       password: password,
       type: 1,
-      device_id:
-        Platform.OS === 'android'
-          ? NativeModules.PlatformConstants.getAndroidID()
-          : NativeModules.SettingsManager.clientUniqueId,
+      device_id: DEVICE_ID,
     };
     var result = await postData('api/getLogin', body);
-
     if (result.msg === 'Login') {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
@@ -477,6 +477,7 @@ export const Login = ({navigation}) => {
       user_type: selectedIndex === 0 ? 'individual' : 'organisation',
       otp: otp,
       mobile: plainMobileNo,
+      device_id: DEVICE_ID,
     };
     var result = await postData('api/getValidateuserotp', body);
     if (result.msg === 'Login') {

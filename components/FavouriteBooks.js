@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, ToastAndroid, TouchableOpacity, useColorScheme, View } from 'react-native'
+import { ActivityIndicator, Dimensions, FlatList, Image, ScrollView, StyleSheet, Text, ToastAndroid, TouchableOpacity, View } from 'react-native'
 import { AirbnbRating, Divider } from 'react-native-elements';
 import TextTicker from 'react-native-text-ticker';
+import { useSelector } from 'react-redux';
 import { checkSyncData, getSyncData } from './AsyncStorage';
 import { postData, ServerURL } from './FetchApi';
 

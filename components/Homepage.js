@@ -16,11 +16,11 @@ import Carousel from 'react-native-banner-carousel';
 import MI from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {StyleSheet, View, Dimensions} from 'react-native';
-import {AirbnbRating, Divider, Tile} from 'react-native-elements';
-import {postData, ServerURL} from './FetchApi';
+import {AirbnbRating, Divider} from 'react-native-elements';
+import {ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import {SamplePlay} from './SamplePlay';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import {useFocusEffect} from '@react-navigation/native';
 
 const BannerWidth = Dimensions.get('window').width;

@@ -1,11 +1,15 @@
 import messaging from '@react-native-firebase/messaging';
-import {checkSyncData, getSyncData, removeDatasync, storeDatasync} from './AsyncStorage';
+import {
+  checkSyncData,
+  getSyncData,
+  removeDatasync,
+  storeDatasync,
+} from './AsyncStorage';
 import PushNotification from 'react-native-push-notification';
-import { postData } from './FetchApi';
-import { NativeModules, Platform } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { LoginManager } from 'react-native-fbsdk-next';
-import { useDispatch } from 'react-redux';
+import {postData} from './FetchApi';
+import {Alert, NativeModules, Platform} from 'react-native';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {LoginManager} from 'react-native-fbsdk-next';
 
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission({
@@ -33,7 +37,7 @@ const getFcmToken = async () => {
         console.log('the new token', fcmToken);
         await storeDatasync('fcmToken', fcmToken);
         var body = {type: 1, token_no_id: fcmToken};
-        await postData('api/getAddToken',body)
+        await postData('api/getAddToken', body);
       }
     } catch (error) {
       console.log('error getting token', error);
@@ -79,7 +83,7 @@ export const notificationListener = async navigation => {
     });
 };
 
-export const fetchProfile = async (dispatch) => {
+export const fetchProfile = async dispatch => {
   var key = await checkSyncData();
 
   if (key[0] != 'fcmToken') {
@@ -92,15 +96,19 @@ export const fetchProfile = async (dispatch) => {
     var result = await postData('api/getProfile', body);
     await checkDeviceID(result.data[0].device_id, userData, dispatch);
   }
-}
+};
 
-const checkDeviceID = async (deviceID,userData, dispatch) => {
+const checkDeviceID = async (deviceID, userData, dispatch) => {
   let originalID =
     Platform.OS === 'android'
       ? NativeModules.PlatformConstants.getAndroidID()
       : NativeModules.SettingsManager.clientUniqueId;
   if (deviceID !== originalID) {
     // console.log('Device ID is not same', deviceID, originalID);
+    Alert.alert(
+      'Different Device Detected',
+      'You have been logged out of your account. Please login again.',
+    );
     await handleLogout(userData, dispatch);
   }
 };

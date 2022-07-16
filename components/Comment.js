@@ -95,8 +95,10 @@ export const Comment = ({route, navigation}) => {
             </Text>
           </View>
           <View>
-            <Text style={[styles.commentHeader, {color: textColor}]}>
-              {item.comment}
+            <Text style={[styles.commentHeader, {color: item.review_status == "1" ? textColor : '#999'}]}>
+           { item.review_status == "1" ? item.comment
+            :
+            'Waiting for admin approval'}
             </Text>
           </View>
           <View>

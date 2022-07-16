@@ -1,5 +1,6 @@
 import React from 'react';
 import {StyleSheet, View, Text, Dimensions, ScrollView} from 'react-native';
+import { useSelector } from 'react-redux';
 
 const {width, height} = Dimensions.get('window');
 

@@ -278,7 +278,7 @@ padding: 8px 0
     <div class="row contacts">
         <div class="col invoice-to">
             <div class="address">GST- 23AAPCA1066Q1ZA</div>
-            <div class="email"><a href="#">Order No.: ${data.oid}</a></div>
+            <div class="email">Order No.: ${data.oid}</div>
         </div>
         <div class="col invoice-details">
             <div class="date">Date of Invoice: ${
@@ -404,7 +404,7 @@ padding: 8px 0
       `;
 
   return (
-    //<View>
+    //<View style={styles.container}>
     <WebView
       originWhitelist={['*']}
       source={{
@@ -415,4 +415,8 @@ padding: 8px 0
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  }
+});
