@@ -17,6 +17,9 @@ export default function RootReducer(state = initialState, action) {
   const setCart = cart => {
     storeDatasync('cart', cart);
   };
+  const setLanguage = language => {
+    storeDatasync('languageid', language);
+  }
 
   switch (action.type) {
     case 'SET_THEME':
@@ -58,6 +61,7 @@ export default function RootReducer(state = initialState, action) {
       };
     case 'SET_LANG':
       state.language = action.payload;
+      setLanguage(action.payload);
       return {
         ...state,
         language: state.language,

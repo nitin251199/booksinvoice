@@ -348,7 +348,7 @@ export const Login = ({navigation}) => {
                 color="#ff9000"
               />
               <TextInput
-                // autoFocus
+                autoFocus
                 style={{width: '90%', color: textColor}}
                 placeholder="OTP"
                 placeholderTextColor={textColor}
@@ -480,6 +480,7 @@ export const Login = ({navigation}) => {
       device_id: DEVICE_ID,
     };
     var result = await postData('api/getValidateuserotp', body);
+    
     if (result.msg === 'Login') {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');

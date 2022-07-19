@@ -31,7 +31,6 @@ const {width, height} = Dimensions.get('window');
 export default function Homepage({navigation, route}) {
   const theme = useSelector(state => state.theme);
 
-
   const setdata = useSelector(state => state?.home?.new_arrival) || [];
   const setbanner = useSelector(state => state?.home?.Banner_image) || [];
   const settop = useSelector(state => state?.home?.top_rated) || [];
@@ -128,7 +127,7 @@ export default function Homepage({navigation, route}) {
               width: width * 0.45,
               resizeMode: 'stretch',
               marginTop: 10,
-              marginRight: 10,
+              marginRight: 11,
               borderRadius: 2,
             }}
             source={{
@@ -164,6 +163,7 @@ export default function Homepage({navigation, route}) {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
+            paddingVertical: 10,
           }}>
           <TouchableOpacity
             onPress={() => {
@@ -201,11 +201,20 @@ export default function Homepage({navigation, route}) {
           </TouchableOpacity>
         </View>
         <View style={styles.categoryImage}>
-          <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
+          {/* <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
             {otherCategory[index].map((item, index) => {
               return <DisplayItem item={item} key={index} />;
             })}
-          </ScrollView>
+          </ScrollView> */}
+          <FlatList
+            data={otherCategory[index]}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({item, index}) => {
+              return <DisplayItem item={item} key={index} />;
+            }}
+            keyExtractor={(item, index) => index.toString()}
+          />
         </View>
       </View>
     );
@@ -323,376 +332,391 @@ export default function Homepage({navigation, route}) {
   // }
 
   return (
-    <View>
-      <ScrollView
-        // onScroll={handleScroll}
-        // scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}>
-        <View
+    <ScrollView
+      // onScroll={handleScroll}
+      // scrollEventThrottle={16}
+      style={[
+        styles.container,
+        {
+          backgroundColor: backgroundColor,
+        },
+      ]}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        justifyContent: 'center',
+        // alignItems: 'center',
+      }}>
+      <View>
+        <Carousel
+          autoplay
+          showsPageIndicator={false}
+          autoplayTimeout={3500}
+          loop
+          pageSize={BannerWidth}>
+          {banner.map((item, index) => {
+            return <DisplayBanner key={item.id} item={item} />;
+          })}
+        </Carousel>
+      </View>
+      <View
+        style={{
+          paddingLeft: 15,
+        }}>
+        <Text
           style={[
-            styles.container,
+            styles.categoryTitle,
             {
-              backgroundColor: backgroundColor,
+              color: textColor,
+              paddingTop: 10,
             },
           ]}>
-          <View>
-            <Carousel
-              autoplay
-              showsPageIndicator={false}
-              autoplayTimeout={3500}
-              loop
-              pageSize={BannerWidth}>
-              {banner.map((item, index) => {
-                return <DisplayBanner key={item.id} item={item} />;
-              })}
-            </Carousel>
-          </View>
-          <View
-            style={{
-              paddingLeft: 20,
-            }}>
-            <Text
-              style={[
-                styles.categoryTitle,
-                {
-                  color: textColor,
-                  paddingBottom: 4,
-                },
-              ]}>
-              Books Category
-            </Text>
-            <View
-              style={{
-                height: height * 0.18,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <ScrollView
+          Books Category
+        </Text>
+        <View
+          style={{
+            height: height * 0.18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          {/* <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={{display: 'flex', flexDirection: 'row'}}>
                 {category.map((item, index) => {
                   return <DisplayCategory key={item.id} item={item} />;
                 })}
-              </ScrollView>
-            </View>
-          </View>
-          <View
-            style={{
-              paddingLeft: 20,
-              // paddingTop: 20,
-            }}>
-            <Divider />
-            <View
+              </ScrollView> */}
+          <FlatList
+            data={category}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            renderItem={({item, index}) => {
+              return <DisplayCategory key={item.id} item={item} />;
+            }}
+            keyExtractor={(item, index) => index.toString()}
+          />
+        </View>
+      </View>
+      <View
+        style={{
+          paddingLeft: 15,
+          // paddingTop: 20,
+        }}>
+        <Divider />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 10,
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'New Arrivals',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
+              style={[
+                styles.categoryTitle,
+                {
+                  color: textColor,
+                },
+              ]}>
+              New Arrivals !
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'New Arrivals',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                fontSize: 12,
+                fontWeight: '500',
+                paddingRight: 15,
+                color: '#999',
               }}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'New Arrivals',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={[
-                    styles.categoryTitle,
-                    {
-                      color: textColor,
-                    },
-                  ]}>
-                  New Arrivals !
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'New Arrivals',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '500',
-                    paddingRight: 15,
-                    color: '#999',
-                  }}>
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.categoryImage}>
-              <FlatList
-                data={data}
-                horizontal
-                removeClippedSubviews
-                // initialNumToRender={3}
-                showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={
-                  <View
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      width: width,
-                    }}>
-                    <ActivityIndicator size={'large'} />
-                  </View>
-                }
-                renderItem={({item}) => <DisplayItem item={item} />}
-                keyExtractor={item => item.id}
-              />
-            </View>
+              View All
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.categoryImage}>
+          <FlatList
+            data={data}
+            horizontal
+            removeClippedSubviews
+            // initialNumToRender={3}
+            showsHorizontalScrollIndicator={false}
+            ListEmptyComponent={
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: width,
+                }}>
+                <ActivityIndicator size={'large'} />
+              </View>
+            }
+            renderItem={({item}) => <DisplayItem item={item} />}
+            keyExtractor={item => item.id}
+          />
+        </View>
 
-            <Divider />
-            <View
+        <Divider />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 10,
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Top Rated',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
+              style={[
+                styles.categoryTitle,
+                {
+                  color: textColor,
+                },
+              ]}>
+              Top Rated
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Top Rated',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                fontSize: 12,
+                fontWeight: '500',
+                paddingRight: 15,
+                color: '#999',
               }}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Top Rated',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={[
-                    styles.categoryTitle,
-                    {
-                      color: textColor,
-                    },
-                  ]}>
-                  Top Rated
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Top Rated',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '500',
-                    paddingRight: 15,
-                    color: '#999',
-                  }}>
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.categoryImage}>
-              <FlatList
-                data={topRated}
-                horizontal
-                removeClippedSubviews
-                // initialNumToRender={3}
-                showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={
-                  <View
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      width: width,
-                    }}>
-                    <ActivityIndicator size={'large'} />
-                  </View>
-                }
-                renderItem={({item}) => <DisplayItem item={item} />}
-                keyExtractor={item => item.id}
-              />
-            </View>
-            <Divider />
-            <View
+              View All
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.categoryImage}>
+          <FlatList
+            data={topRated}
+            horizontal
+            removeClippedSubviews
+            // initialNumToRender={3}
+            showsHorizontalScrollIndicator={false}
+            ListEmptyComponent={
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: width,
+                }}>
+                <ActivityIndicator size={'large'} />
+              </View>
+            }
+            renderItem={({item}) => <DisplayItem item={item} />}
+            keyExtractor={item => item.id}
+          />
+        </View>
+        <Divider />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 10,
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Popular Books',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
+              style={[
+                styles.categoryTitle,
+                {
+                  color: textColor,
+                },
+              ]}>
+              Popular Books
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Popular Books',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                fontSize: 12,
+                fontWeight: '500',
+                paddingRight: 15,
+                color: '#999',
               }}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Popular Books',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={[
-                    styles.categoryTitle,
-                    {
-                      color: textColor,
-                    },
-                  ]}>
-                  Popular Books
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Popular Books',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '500',
-                    paddingRight: 15,
-                    color: '#999',
-                  }}>
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.categoryImage}>
-              <FlatList
-                data={popularBooks}
-                horizontal
-                removeClippedSubviews
-                // initialNumToRender={3}
-                showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={
-                  <View
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      width: width,
-                    }}>
-                    <ActivityIndicator size={'large'} />
-                  </View>
-                }
-                renderItem={({item}) => <DisplayItem item={item} />}
-                keyExtractor={item => item.id}
-              />
-            </View>
-            <Divider />
-            <View
+              View All
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.categoryImage}>
+          <FlatList
+            data={popularBooks}
+            horizontal
+            removeClippedSubviews
+            // initialNumToRender={3}
+            showsHorizontalScrollIndicator={false}
+            ListEmptyComponent={
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: width,
+                }}>
+                <ActivityIndicator size={'large'} />
+              </View>
+            }
+            renderItem={({item}) => <DisplayItem item={item} />}
+            keyExtractor={item => item.id}
+          />
+        </View>
+        <Divider />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingVertical: 10,
+          }}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Premium',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
+              style={[
+                styles.categoryTitle,
+                {
+                  color: textColor,
+                },
+              ]}>
+              Premium
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('CategoryPage', {
+                item: {
+                  id: '0',
+                  bookcategory: 'Premium',
+                  catphoto: 'custom_img.jpg',
+                },
+              })
+            }>
+            <Text
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                fontSize: 12,
+                fontWeight: '500',
+                paddingRight: 15,
+                color: '#999',
               }}>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Premium',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={[
-                    styles.categoryTitle,
-                    {
-                      color: textColor,
-                    },
-                  ]}>
-                  Premium
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('CategoryPage', {
-                    item: {
-                      id: '0',
-                      bookcategory: 'Premium',
-                      catphoto: 'custom_img.jpg',
-                    },
-                  })
-                }>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '500',
-                    paddingRight: 15,
-                    color: '#999',
-                  }}>
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
+              View All
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.categoryImage}>
-              <FlatList
-                data={premiumBooks}
-                horizontal
-                removeClippedSubviews
-                // initialNumToRender={3}
-                showsHorizontalScrollIndicator={false}
-                ListEmptyComponent={
-                  <View
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      width: width,
-                    }}>
-                    <ActivityIndicator size={'large'} />
-                  </View>
-                }
-                renderItem={({item}) => <DisplayItem item={item} />}
-                keyExtractor={item => item.id}
-              />
-            </View>
-          </View>
-          <TouchableWithoutFeedback
-            onPress={() => navigation.navigate('Subscriptions')}>
-            <ImageBackground
-              style={{
-                height: height * 0.2,
-                width: width,
-                marginVertical: 10,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              imageStyle={{resizeMode: 'stretch'}}
-              source={{
-                uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
-              }}>
-              {/* <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
+        <View style={styles.categoryImage}>
+          <FlatList
+            data={premiumBooks}
+            horizontal
+            removeClippedSubviews
+            // initialNumToRender={3}
+            showsHorizontalScrollIndicator={false}
+            ListEmptyComponent={
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: width,
+                }}>
+                <ActivityIndicator size={'large'} />
+              </View>
+            }
+            renderItem={({item}) => <DisplayItem item={item} />}
+            keyExtractor={item => item.id}
+          />
+        </View>
+      </View>
+      <TouchableWithoutFeedback
+        onPress={() => navigation.navigate('Subscriptions')}>
+        <ImageBackground
+          style={{
+            height: height * 0.2,
+            width: width,
+            marginVertical: 10,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          imageStyle={{resizeMode: 'stretch'}}
+          source={{
+            uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
+          }}>
+          {/* <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
                 Buy Subscription Plans
               </Text> */}
-              <Text
-                style={{
-                  fontSize: 15,
-                  marginVertical: 10,
-                  color: '#FFF',
-                }}>{`${advertise[0]?.title}`}</Text>
-            </ImageBackground>
-          </TouchableWithoutFeedback>
-          {/* <Tile
+          <Text
+            style={{
+              fontSize: 15,
+              marginVertical: 10,
+              color: '#FFF',
+            }}>{`${advertise[0]?.title}`}</Text>
+        </ImageBackground>
+      </TouchableWithoutFeedback>
+      {/* <Tile
             onPress={() => navigation.navigate('Subscriptions')}
             imageSrc={{
               uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
@@ -710,8 +734,8 @@ export default function Homepage({navigation, route}) {
             }}
             containerStyle={{marginVertical: 10}}
           /> */}
-          <View style={{paddingLeft: 20}}>
-            <FlatList
+      <View style={{paddingLeft: 15}}>
+        {/* <FlatList
               data={otherCategory}
               removeClippedSubviews
               // initialNumToRender={3}
@@ -733,18 +757,25 @@ export default function Homepage({navigation, route}) {
                   categoryname={item[0]}
                 />
               )}
+            /> */}
+        {otherCategory.map((item, index) => {
+          return (
+            <DisplayOtherCategory
+              key={index}
+              item={item}
+              index={index}
+              categoryname={item[0]}
             />
-          </View>
-        </View>
-      </ScrollView>
-      {/* <MiniPlayer /> */}
-    </View>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
+    flex: 1,
     paddingBottom: 60,
   },
   input: {
@@ -763,8 +794,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     fontFamily: 'Calibri',
-    paddingTop: 6,
-    paddingBottom: 15,
   },
   categoryImage: {
     height: height * 0.24,

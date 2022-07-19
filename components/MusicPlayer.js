@@ -165,26 +165,26 @@ const MusicPlayer = ({route, navigation}) => {
     }
     if (route.params.chapters.length > 0) {
       await route.params?.chapters.map((track, index) => {
-        temp.push({
-          id: route.params.state.id,
-          url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
-          title: track.chaptername,
-          artist: route.params.state.bookauthor,
-          artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-          album: route.params.state.bookcategory,
-          duration: route.params.state.sampleplay_time,
-          index: index + 1,
-        });
-        chapters.push({
-          id: route.params.state.id,
-          url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
-          title: track.chaptername,
-          artist: route.params.state.bookauthor,
-          artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
-          album: route.params.state.bookcategory,
-          duration: route.params.state.sampleplay_time,
-          index: index + 1,
-        });
+          temp.push({
+            id: route.params.state.id,
+            url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+            title: track.chaptername,
+            artist: route.params.state.bookauthor,
+            artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+            album: route.params.state.bookcategory,
+            duration: route.params.state.sampleplay_time,
+            index: index + 1,
+          });
+          chapters.push({
+            id: route.params.state.id,
+            url: `${ServerURL}/admin/upload/bookaudio/${track.audiofile}`,
+            title: track.chaptername,
+            artist: route.params.state.bookauthor,
+            artwork: `${ServerURL}/admin/upload/bookcategory/${route.params.state.bookcategoryid}/${route.params.state.photo}`,
+            album: route.params.state.bookcategory,
+            duration: route.params.state.sampleplay_time,
+            index: index + 1,
+          });
       });
     }
     setTracks(temp);
@@ -320,9 +320,9 @@ const MusicPlayer = ({route, navigation}) => {
   };
 
   const skipForward = async () => {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
+    // const currentTrack = await TrackPlayer.getCurrentTrack();
     if (!isSub) {
-      if (Math.floor(progress.position) >= temp[currentTrack].duration) {
+      if (Math.floor(progress.position) >= temp[songIndex].duration) {
         await TrackPlayer.seekTo(0);
         await TrackPlayer.pause();
         setModalVisible(true);
@@ -352,7 +352,7 @@ const MusicPlayer = ({route, navigation}) => {
           }
           // this will be executed once after 10 seconds
           // even when app is the the background
-        }, temp[currentTrack].duration * 1000);
+        }, temp[songIndex].duration * 1000);
       }
     }
     // Cancel the timeout if necessary
@@ -652,12 +652,17 @@ const MusicPlayer = ({route, navigation}) => {
     }
   };
 
-  const [selected, setSelected] = useState({index: 0});
+  const [selected, setSelected] = useState({index: index + 1});
 
   const playChapter = (item, i) => {
     var {index} = item;
     setSelected({index});
-    skipTo(i + 1);
+    if(route?.params?.playFromChapters){
+      skipTo(i+2);
+    }
+    else {
+      skipTo(i+1);
+    }
     if (playBackState == State.Paused) {
       TrackPlayer.play();
     }
@@ -883,11 +888,11 @@ const MusicPlayer = ({route, navigation}) => {
   const onShare = async () => {
     try {
       let imagePath = null;
-      let currentTrack = await TrackPlayer.getCurrentTrack();
+      // let currentTrack = await TrackPlayer.getCurrentTrack();
       RNFetchBlob.config({
         fileCache: true,
       })
-        .fetch('GET', temp[currentTrack].artwork)
+        .fetch('GET', temp[songIndex].artwork)
         // the image is now dowloaded to device's storage
         .then(resp => {
           // the image path you can use it directly with Image component
@@ -899,7 +904,7 @@ const MusicPlayer = ({route, navigation}) => {
           // here's base64 encoded image
           await Share.open({
             // title: `Booksinvoice - Download and listen books for free.`,
-            message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on booksinvoice.com/Audio/SingleAudio/${route.params.state.bookcategoryid}/${route.params.state.id}/${temp[currentTrack].title}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            message: `Listen to ${temp[songIndex].title} by ${temp[songIndex].artist} only on booksinvoice.com/Audio/SingleAudio/${route.params.state.bookcategoryid}/${route.params.state.id}/${temp[songIndex].title}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
             url: base64Data,
           });
           // remove the file from storage
@@ -911,14 +916,14 @@ const MusicPlayer = ({route, navigation}) => {
   };
 
   const offlineShare = async () => {
-    let currentTrack = await TrackPlayer.getCurrentTrack();
+    // let currentTrack = await TrackPlayer.getCurrentTrack();
 
     RNFetchBlob.fs
-      .readFile(temp[currentTrack].artwork, 'base64')
+      .readFile(temp[songIndex].artwork, 'base64')
       .then(async data => {
         // handle the data ..
         const shareOptions = {
-          message: `Listen to ${temp[currentTrack].title} by ${temp[currentTrack].artist} only on booksinvoice.com/${route.params.state.bookcategoryid}/${route.params.state.id}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+          message: `Listen to ${temp[songIndex].title} by ${temp[songIndex].artist} only on booksinvoice.com/${route.params.state.bookcategoryid}/${route.params.state.id}/${temp[songIndex].title}\nBooksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
           url: `data:image/png;base64,` + data,
           failOnCancel: false,
         };
@@ -932,16 +937,16 @@ const MusicPlayer = ({route, navigation}) => {
   };
 
   const checkDownload = async () => {
-    const currentTrack = await TrackPlayer.getCurrentTrack();
+    // const currentTrack = await TrackPlayer.getCurrentTrack();
     const offLineBooks = await getSyncData('savedBooks');
     if (offLineBooks) {
       let currentBook = offLineBooks.find(item => {
-        return item.id === temp[currentTrack].id;
+        return item.id === temp[songIndex].id;
       });
       // tryme(currentBook.url,currentTrack);
       if (
         offLineBooks.findIndex(item => {
-          return item.id === temp[currentTrack].id;
+          return item.id === temp[songIndex].id;
         }) !== -1
       ) {
         setDownloadProgress(100);
@@ -988,50 +993,44 @@ const MusicPlayer = ({route, navigation}) => {
           buttonPositive: 'OK',
         },
       );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED)
-      startDownload();
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) startDownload();
     } catch (err) {
       console.log(err);
     }
   };
 
-  const startDownload = async () => {
-    let currentTrack = await TrackPlayer.getCurrentTrack();
-
+  const startDownload = () => {
+    // let currentTrack = await TrackPlayer.getCurrentTrack();
     RNFetchBlob.config({
       fileCache: true,
     })
-      .fetch('GET', `${temp[currentTrack].url}`)
+      .fetch('GET', `${temp[songIndex]?.url}`)
       .progress((received, total) => {
-        setDownloadProgress(received / total);
+        setDownloadProgress(((received / total) * 100).toFixed(0));
       })
       .then(res => {
         RNFetchBlob.config({
           fileCache: true,
         })
-          .fetch('GET', `${temp[currentTrack].artwork}`)
+          .fetch('GET', `${temp[songIndex].artwork}`)
           .then(imgres => {
-            saveToStorage(currentTrack, res.path(), imgres.path());
+            saveToStorage(songIndex, res.path(), imgres.path());
             setDownloadProgress(100);
             ToastAndroid.show('Downloaded Successfully', ToastAndroid.SHORT);
           });
       });
   };
 
-  const cancelDownload = async () => {
-    let currentTrack = await TrackPlayer.getCurrentTrack();
-    let task = RNFetchBlob.config({
-      fileCache: true,
-    })
-      .fetch('GET', `${temp[currentTrack].url}`)
+  const cancelDownload = () => {
+    // let currentTrack = await TrackPlayer.getCurrentTrack();
     task.cancel((err, taskId) => {
-        console.log(`Cancel: taskId ${taskId}`);
-    })
-    setDownloadProgress(0);
+      console.log(`Cancel: taskId ${taskId}`);
+    });
+    setDownloadProgress(null);
     ToastAndroid.show('Download Cancelled', ToastAndroid.SHORT);
-  }
+  };
 
-  const tryme = async (dest, currentTrack) => {
+  const tryme = async (dest, songIndex) => {
     await RNFetchBlob.fs
       .exists(dest)
       .then(async ext => {
@@ -1048,7 +1047,7 @@ const MusicPlayer = ({route, navigation}) => {
           fileCache: true,
           overwrite: false,
         })
-          .fetch('GET', `${temp[currentTrack].url}`, {
+          .fetch('GET', `${temp[songIndex].url}`, {
             Range: `bytes=${stat.size}-`,
           })
           .progress((received, total) => {
@@ -1057,18 +1056,18 @@ const MusicPlayer = ({route, navigation}) => {
       });
   };
 
-  const saveToStorage = async (currentTrack, path, imgPath) => {
+  const saveToStorage = async (songIndex, path, imgPath) => {
     let size = await RNFetchBlob.fs.stat(path);
     try {
       let tempObj = {
-        id: temp[currentTrack].id,
+        id: temp[songIndex].id,
         url: path,
-        title: temp[currentTrack].title,
-        artist: temp[currentTrack].artist,
+        title: temp[songIndex].title,
+        artist: temp[songIndex].artist,
         artwork: imgPath,
-        album: temp[currentTrack].album,
-        duration: temp[currentTrack].duration,
-        index: temp[currentTrack].index,
+        album: temp[songIndex].album,
+        duration: temp[songIndex].duration,
+        index: temp[songIndex].index,
         size: size.size,
       };
       await AsyncStorage.getItem('savedBooks').then(savedBooks => {
@@ -1143,9 +1142,9 @@ const MusicPlayer = ({route, navigation}) => {
               minimumTrackTintColor="#ff9000"
               maximumTrackTintColor={textColor}
               onSlidingComplete={async value => {
-                const currentTrack = await TrackPlayer.getCurrentTrack();
+                // const currentTrack = await TrackPlayer.getCurrentTrack();
                 if (!isSub) {
-                  if (Math.floor(value) >= temp[currentTrack].duration) {
+                  if (Math.floor(value) >= temp[songIndex].duration) {
                     await TrackPlayer.seekTo(0);
                     await TrackPlayer.pause();
                     setModalVisible(true);
@@ -1300,7 +1299,7 @@ const MusicPlayer = ({route, navigation}) => {
         <View
           style={{...style.bottomSection, backgroundColor: backgroundColor}}>
           <View style={style.bottomIconContainer}>
-            {downloadProgress == 0 ? (
+            {downloadProgress == 0 || downloadProgress == null ? (
               <TouchableOpacity onPress={() => requestDownload()}>
                 <MaterialCommunityIcons
                   name="download"
@@ -1308,21 +1307,21 @@ const MusicPlayer = ({route, navigation}) => {
                   color="#888888"
                 />
               </TouchableOpacity>
-            ) : (downloadProgress * 100).toFixed(0) <= 99 ? (
-              // <TouchableOpacity>
+            ) : downloadProgress <= 99 ? (
+              <TouchableOpacity onPress={() => cancelDownload()}>
+                <MaterialIcons name="close" size={30} color="#ff9000" />
                 <Text
-                style={{
-                  fontSize: 12,
-                }}>
-                {(downloadProgress * 100).toFixed(0)} %
-              </Text>
-              //<MaterialIcons
-              //  name="close"
-              //  size={30}
-              //  color="#ff9000"
-              //  onPress={() => cancelDownload()}
-             // />
-             //   </TouchableOpacity> 
+                  style={{
+                    fontSize: 12,
+                    position: 'absolute',
+                    zIndex: 1,
+                    right: -20,
+                    left: 0,
+                    top: -10,
+                  }}>
+                  {downloadProgress} %
+                </Text>
+              </TouchableOpacity>
             ) : (
               <MaterialIcons
                 name="file-download-done"

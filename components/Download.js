@@ -46,7 +46,7 @@ export const Download = ({navigation}) => {
 
   const deleteBook = async book => {
     const books = await getSyncData('savedBooks');
-    const newBooks = books.filter(item => item.id !== book.id);
+    const newBooks = books.filter(item => item.title !== book.title);
     setBooks(newBooks);
     storeDatasync('savedBooks', newBooks);
     RNFetchBlob.fs
@@ -77,6 +77,7 @@ export const Download = ({navigation}) => {
                 offline: true,
                 index: null,
                 chapters: [],
+                playFromChapters: false
               })
             }>
             <Image
@@ -97,6 +98,7 @@ export const Download = ({navigation}) => {
                   offline: true,
                   index: null,
                   chapters: [],
+                  playFromChapters: false
                 })
               }
               style={{

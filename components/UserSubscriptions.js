@@ -822,17 +822,17 @@ export const UserSubscriptions = ({navigation}) => {
                 fontWeight: '700',
                 paddingVertical: 5,
               }}>
-              {item.packagename}
+              {item?.packagename}
             </Text>
-            <Text style={{color: textColor}}>Days: {item.days}</Text>
+            <Text style={{color: textColor}}>Days: {item?.days}</Text>
             <Text style={{color: textColor}}>
-              No. of Copies: {item.no_of_copies}
+              No. of Copies: {item?.no_of_copies}
             </Text>
             <Text style={{color: textColor}}>
-              Valid From : {item.valid_from}
+              Valid From : {item?.valid_from}
             </Text>
-            <Text style={{color: textColor}}>Valid To : {item.valid_to}</Text>
-            <Text style={{color: textColor}}>Order Id: {item.oid}</Text>
+            <Text style={{color: textColor}}>Valid To : {item?.valid_to}</Text>
+            <Text style={{color: textColor}}>Order Id: {item?.oid}</Text>
           </View>
           <View>
             <TouchableOpacity
@@ -858,8 +858,8 @@ export const UserSubscriptions = ({navigation}) => {
                 style={{marginLeft: -3}}
                 onPress={() =>
                   navigation.navigate('AssignSub', {
-                    packagename: item.packagename,
-                    packageid: item.id,
+                    packagename: item?.packagename,
+                    packageid: item?.id,
                   })
                 }>
                 <View>

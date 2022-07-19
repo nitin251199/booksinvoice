@@ -15,6 +15,7 @@ const App = () => {
   useEffect(() => {
     LogBox.ignoreAllLogs();
     LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
+    LogBox.ignoreLogs(['new NativeEventEmitter()']);
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     LogBox.ignoreLogs(['[react-native-gesture-handler]']);
   }, []);

@@ -28,13 +28,13 @@ export async function requestUserPermission() {
 
 const getFcmToken = async () => {
   let fcmToken = await getSyncData('fcmToken');
-  console.log('the old token', fcmToken);
+  // console.log('the old token', fcmToken);
   if (!fcmToken) {
     try {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
-        // user has a device token
-        console.log('the new token', fcmToken);
+        // user has a device token 
+        // console.log('the new token', fcmToken);
         await storeDatasync('fcmToken', fcmToken);
         var body = {type: 1, token_no_id: fcmToken};
         await postData('api/getAddToken', body);

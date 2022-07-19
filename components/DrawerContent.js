@@ -40,7 +40,7 @@ export const DrawerContent = ({navigation}) => {
   const [userData, setUserData] = React.useState([]);
   const [languages, setLanguages] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
-  const [language, setLanguage] = React.useState();
+  const language = useSelector(state => state.language);
 
   var dispatch = useDispatch();
 
@@ -64,7 +64,6 @@ export const DrawerContent = ({navigation}) => {
 
   useEffect(() => {
     checkLogin();
-    getLanguage();
     setExpanded(false);
     setLanguageExpanded(false);
     setLExpanded(false);
@@ -97,12 +96,6 @@ export const DrawerContent = ({navigation}) => {
     );
   };
 
-  const getLanguage = async () => {
-    let lang = await getSyncData('languageid');
-    if (lang) {
-      setLanguage(lang);
-    }
-  };
 
   const DisplayLanguage = ({item, index}) => {
     return (
@@ -117,7 +110,7 @@ export const DrawerContent = ({navigation}) => {
             setLoading(true);
             var body = {type: 1, languageid: item.id};
             var data = await postData('api/getHome', body);
-            storeDatasync('languageid', item.id);
+            dispatch({type: 'SET_LANG', payload: item.id});
             dispatch({type: 'SET_HOME', payload: data});
             navigation.closeDrawer();
             navigation.navigate('Homepage');

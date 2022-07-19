@@ -30,7 +30,7 @@ export const Search = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchMsg, setSearchMsg] = useState('');
-  const [lang, setLang] = useState('');
+  const lang = useSelector(state => state.language);
 
   const searchBook = async text => {
     setLoading(true);
@@ -52,14 +52,8 @@ export const Search = ({navigation}) => {
     }
   };
 
-  const getLang = async () => {
-    var lang = await getSyncData('languageid');
-    setLang(lang);
-  };
-
   useFocusEffect(
     React.useCallback(() => {
-      getLang();
       // alert('Screen was focused');
       // Do something when the screen is focused
       return () => {

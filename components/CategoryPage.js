@@ -172,10 +172,10 @@ export const CategoryPage = ({navigation, route}) => {
   const [allBooks, setAllBooks] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [skip, setSkip] = React.useState(0);
+  const languageid = useSelector(state => state.language);
 
   const fetchBooksbyid = async id => {
     setIsLoading(true);
-    let languageid = await getSyncData('languageid');
     let type = route.params.item.bookcategory;
     switch (type) {
       case 'New Arrivals':

@@ -24,9 +24,8 @@ export const WelcomePage = ({navigation, route}) => {
     // console.log('data.status', body);
 
     dispatch({type: 'SET_HOME', payload: data});
-    if (languageid === null) {
-      await storeDatasync('languageid', '1');
-    }
+      // await storeDatasync('languageid', '1');
+    dispatch({type: 'SET_LANG', payload: languageid || '1'});
     fetchProfile();
     setShow(true);
   };

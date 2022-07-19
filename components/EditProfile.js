@@ -801,7 +801,7 @@ export const EditProfile = ({navigation}) => {
               rounded
               source={
                 image.substring(image.length - 4) !== `null`
-                  ? {uri: image}
+                  ? {uri: image || '../images/tempProfile.jpg'}
                   : require('../images/tempProfile.jpg')
               }
               containerStyle={{borderColor: '#ff9000', borderWidth: 1}}>
