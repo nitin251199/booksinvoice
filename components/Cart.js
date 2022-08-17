@@ -23,6 +23,7 @@ import {Button} from 'react-native-paper';
 import {Button as Button2} from 'react-native-elements';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import {useFocusEffect} from '@react-navigation/native';
+import {useSwipe} from './useSwipe';
 
 const {width, height} = Dimensions.get('window');
 
@@ -49,9 +50,13 @@ export const Cart = ({navigation}) => {
   const [couponStatus, setCouponStatus] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [subtotal, setSubTotal] = useState(
-    cartItems.reduce(calculateAmount, 0),
+    cartItems.reduce(calculateAmount, 0) +
+      cartItems.reduce(calculateAmount, 0) * 0.18,
   );
-  const [total, setTotal] = useState(cartItems.reduce(calculateAmount, 0));
+  const [total, setTotal] = useState(
+    cartItems.reduce(calculateAmount, 0) +
+      cartItems.reduce(calculateAmount, 0) * 0.18,
+  );
   const [netTotal, setNetTotal] = useState(total);
 
   var nettotal = netTotal;
@@ -70,9 +75,11 @@ export const Cart = ({navigation}) => {
     return a + b;
   }
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const getUser = async () => {
     var key = await checkSyncData();
-    if (key[0] !== 'fcmToken') {
+    if (isLogin) {
       var userData = await getSyncData(key[0]).then(async res => {
         setUser(res);
       });
@@ -84,8 +91,14 @@ export const Cart = ({navigation}) => {
   }, []);
 
   useEffect(() => {
-    setSubTotal(cartItems.reduce(calculateAmount, 0));
-    setNetTotal(cartItems.reduce(calculateAmount, 0));
+    setSubTotal(
+      cartItems.reduce(calculateAmount, 0) +
+        cartItems.reduce(calculateAmount, 0) * 0.18,
+    );
+    setNetTotal(
+      cartItems.reduce(calculateAmount, 0) +
+        cartItems.reduce(calculateAmount, 0) * 0.18,
+    );
     setCouponStatus(false);
     // setNetTotal(total);
     // nettotal = netTotal;
@@ -134,8 +147,9 @@ export const Cart = ({navigation}) => {
   };
 
   const fetchDetails = async () => {
+    setLoading(true);
     var key = await checkSyncData();
-    if (key[0] !== 'fcmToken') {
+    if (isLogin) {
       await getSyncData(key[0]).then(async res => {
         await fetchUserData(res).then(async result => {
           var body = {
@@ -174,18 +188,6 @@ export const Cart = ({navigation}) => {
   useEffect(() => {
     fetchDetails();
   }, []);
-
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     fetchDetails('CAllback');
-  //     // alert('Screen was focused');
-  //     // Do something when the screen is focused
-  //     return () => {
-  //       // Do something when the screen is unfocused
-  //       // Useful for cleanup functions
-  //     };
-  //   }, []),
-  // );
 
   const fetchUserData = async res => {
     if (res.usertype === 'individual') {
@@ -435,9 +437,21 @@ export const Cart = ({navigation}) => {
     );
   };
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   if (keys.length === 0) {
     return (
       <View
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
         style={{
           flex: 1,
           backgroundColor: backgroundColor,
@@ -463,17 +477,20 @@ export const Cart = ({navigation}) => {
   }
 
   return (
-    <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+    <View
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={[styles.container, {backgroundColor: backgroundColor}]}>
       <ActivityIndicator
         animating={rLoading}
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
       />
-      <ActivityIndicator
+      {/* <ActivityIndicator
         animating={loading}
         size={'large'}
         style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0}}
-      />
+      /> */}
       <View style={{paddingBottom: 100}}>
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <Text
@@ -493,6 +510,14 @@ export const Cart = ({navigation}) => {
               padding: 20,
             }}>
             ₹ {netTotal}
+            <Text
+              style={{
+                fontSize: 12,
+                color: '#999',
+              }}>
+              {' '}
+              (incl. GST)
+            </Text>
           </Text>
         </View>
 
@@ -514,7 +539,12 @@ export const Cart = ({navigation}) => {
           dark
           labelStyle={{fontSize: 16, letterSpacing: 0}}
           mode="contained"
-          style={{backgroundColor: '#ff9000', borderRadius: 0}}
+          disabled={loading}
+          loading={loading}
+          style={{
+            backgroundColor: loading ? '#999' : '#ff9000',
+            borderRadius: 0,
+          }}
           contentStyle={{width: width * 0.5}}
           onPress={() => handleProceed()}>
           Checkout

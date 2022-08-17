@@ -20,47 +20,10 @@ export default function BottomSheet({ state, descriptors, navigation, position }
   const bottomBackground = theme === 'dark' ? '#000' : '#fff';
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   // const modelBackgroundColor = theme === 'dark' ? '#191414' : '#999';
-  // const [user, setUser] = React.useState('Login & Buy');
-
-  var cart = useSelector(state => state?.cart);
-  var keys = Object.keys(cart);
+  // const [user, setUser] = React.useState('Login & Buy');;
 
   return (
   <>
-  {/* <Modal
-    animationType="slide"
-    transparent={true}
-    visible={show}
-    onShow={async () => {
-      var key = await checkSyncData();
-
-      if (key[0] !== 'isLogin') {
-        setUser('Buy Subscription');
-      }
-    }}
-    onRequestClose={() => {
-      setShow(false)
-    }}
-  >
-    <View style={styles.centeredView}>
-    <View
-            style={[styles.modalView, {backgroundColor: modelBackgroundColor}]}>
-            <Text style={[styles.modalText, {color: textColor}]}>
-              Please Buy Subscription to listen further !
-            </Text>
-            <Pressable
-              style={[styles.button, {backgroundColor: '#ff9000'}]}
-              onPress={() => {
-                user === 'Login & Buy'
-                  ? navigation.navigate('Login')
-                  : navigation.navigate('Subscriptions');
-                setShow(false);
-              }}>
-              <Text style={[styles.textStyle, {color: textColor}]}>{user}</Text>
-            </Pressable>
-          </View>
-    </View>
-  </Modal> */}
 
     <View
         style={{
@@ -101,19 +64,6 @@ export default function BottomSheet({ state, descriptors, navigation, position }
       
           if (options.tabBarLabel == 'Subscriptions') {
             return <FontAwesome5 name="crown" size={18} color={isFocused ? '#ff9000' : textColor} />;
-          }
-
-          if (options.tabBarLabel == 'Cart') {
-            return (
-            <>
-            <FontAwesome5 name="shopping-cart" size={18} color={isFocused ? '#ff9000' : textColor} />
-            {
-              keys.length > 0 && <Badge size={15} style={{color:textColor,backgroundColor:'#ff9000',position:'absolute',top:0,right:0}}>
-              {keys.length}
-              </Badge>
-            }
-            </>)
-            ;
           }
 
           if (options.tabBarLabel == 'Profile') {

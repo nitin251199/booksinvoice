@@ -48,10 +48,12 @@ export default function AssignSub({route}) {
     // return code;
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const getAssigndata = async () => {
     var key = await checkSyncData();
 
-    if (key !== 'fcmToken') {
+    if (isLogin) {
       await getSyncData(key[0]).then(async res => {
         setUserData(res);
         var body = {

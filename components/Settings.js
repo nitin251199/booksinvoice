@@ -13,12 +13,13 @@ import Share from 'react-native-share';
 import {useDispatch} from 'react-redux';
 import {useSelector} from 'react-redux';
 import VersionCheck from 'react-native-version-check';
+import {useSwipe} from './useSwipe';
 
 export const Settings = ({navigation}) => {
   const [loading, setLoading] = React.useState(false);
   const [quality, setQuality] = React.useState('');
 
-  const [darkMode, setDarkMode] = React.useState(true);
+  const [darkMode, setDarkMode] = React.useState(theme !== 'light');
   const theme = useSelector(state => state.theme);
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
@@ -64,8 +65,8 @@ export const Settings = ({navigation}) => {
           var base64Data = `data:image/png;base64,` + base64Data;
           // here's base64 encoded image
           await Share.open({
-            // title: `Booksinvoice - Download and listen books for free.`,
-            message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            // title: `Booksinvoice - Download and listen to your favourite audiobooks.`,
+            message: `Booksinvoice - Download and listen to your favourite audiobooks.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
             url: base64Data,
           });
           // remove the file from storage
@@ -76,8 +77,21 @@ export const Settings = ({navigation}) => {
     }
   };
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   return (
-    <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+    <View
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={[styles.container, {backgroundColor: backgroundColor}]}>
       <Text style={[styles.title, {color: textColor}]}>Settings</Text>
       <View style={{paddingVertical: 10}}>
         <Text style={[styles.itemText, {color: textColor}]}>Theme</Text>

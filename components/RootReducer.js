@@ -10,7 +10,7 @@ const initialState = {
     isSubscribed: false,
   },
   currentSong: {},
-  theme : 'dark'
+  theme: 'dark',
 };
 
 export default function RootReducer(state = initialState, action) {
@@ -19,15 +19,23 @@ export default function RootReducer(state = initialState, action) {
   };
   const setLanguage = language => {
     storeDatasync('languageid', language);
+  };
+  const setStatus = status => {
+    storeDatasync('isSubscribed', status.isSubscribed);
+    storeDatasync('isLogin', status.isLogin);
+  };
+  const setTheme = theme => {
+    storeDatasync('theme', theme);
   }
 
   switch (action.type) {
     case 'SET_THEME':
-      state.theme = action.payload
+      state.theme = action.payload;
+      setTheme(action.payload);
       return {
         ...state,
-        theme: state.theme
-      }
+        theme: state.theme,
+      };
     case 'ADD_USER':
       state.user[action.payload[0]] = action.payload[1];
       return {
@@ -48,6 +56,7 @@ export default function RootReducer(state = initialState, action) {
       };
     case 'SET_STATUS':
       state.status = action.payload;
+      setStatus(action.payload);
       return {
         ...state,
         isLogin: state.status.isLogin,

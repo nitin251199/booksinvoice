@@ -32,6 +32,7 @@ import {useSelector} from 'react-redux';
 import AnimatedLottieView from 'lottie-react-native';
 import ImagePicker from 'react-native-image-crop-picker';
 import RBSheet from 'react-native-raw-bottom-sheet';
+import TrackPlayer from 'react-native-track-player';
 
 const {width, height} = Dimensions.get('window');
 
@@ -64,6 +65,7 @@ export const EditProfile = ({navigation}) => {
   const [showPassNew, setShowPassNew] = useState(true);
   const [showPassConfirm, setShowPassConfirm] = useState(true);
   const [image, setImage] = useState('');
+  const [oldData, setOldData] = useState([]);
   const refProfilepic = useRef(null);
   const [tempCountryList, setTempCountryList] = useState([]);
 
@@ -116,6 +118,24 @@ export const EditProfile = ({navigation}) => {
     });
   };
 
+  const removeImage = async () => {
+    setImage('https://booksinvoice.com/upload/userprofile_ind/null');
+    let body = {
+      user_id: userData.id,
+      user_type: userData.usertype,
+    };
+    let result = await postData('api/getRemoveProimg', body);
+    if (result.msg == 'Success') {
+      ToastAndroid.show(
+        'Profile Picture Removed Successfully',
+        ToastAndroid.SHORT,
+      );
+      refProfilepic.current.close();
+    } else {
+      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+    }
+  };
+
   const uploadImage = async image => {
     var body = {
       image:
@@ -125,7 +145,14 @@ export const EditProfile = ({navigation}) => {
       img_string2: image.data,
     };
     await postData('api/getProfileimg', body).then(res => {
-      console.log(res);
+      if (res.msg == 'Success') {
+        ToastAndroid.show(
+          'Profile Picture uploaded Successfully',
+          ToastAndroid.SHORT,
+        );
+      } else {
+        ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+      }
     });
   };
 
@@ -148,7 +175,7 @@ export const EditProfile = ({navigation}) => {
             borderTopRightRadius: 20,
           },
         }}
-        height={height * 0.45}>
+        height={height * 0.55}>
         <View style={{...styles.panel, backgroundColor: backgroundColor}}>
           <View style={{alignItems: 'center'}}>
             <Text style={{...styles.panelTitle, color: textColor}}>
@@ -170,6 +197,11 @@ export const EditProfile = ({navigation}) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={{...styles.panelButton, backgroundColor: '#ff9000'}}
+            onPress={() => removeImage()}>
+            <Text style={styles.panelButtonTitle}>Remove Profile Picture</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{...styles.panelButton, backgroundColor: '#ff9000'}}
             onPress={() => refProfilepic.current.close()}>
             <Text style={styles.panelButtonTitle}>Cancel</Text>
           </TouchableOpacity>
@@ -178,10 +210,12 @@ export const EditProfile = ({navigation}) => {
     );
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const fetchProfile = async () => {
     var key = await checkSyncData();
 
-    if (key[0]) {
+    if (isLogin) {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
     }
@@ -195,6 +229,7 @@ export const EditProfile = ({navigation}) => {
         user_type: 'individual',
       };
       var result = await postData('api/getProfile', body);
+      setOldData(result.data[0]);
       setName(result.data[0].username);
       setAddress(result.data[0].address);
       setPinCode(result.data[0].zip_pin);
@@ -221,6 +256,7 @@ export const EditProfile = ({navigation}) => {
         user_type: 'organisation',
       };
       var result = await postData('api/getProfile', body);
+      setOldData(result.data[0]);
       setName(result.data[0].orgnisationname);
       setAddress(result.data[0].address);
       setPinCode(result.data[0].postalcode);
@@ -384,6 +420,10 @@ export const EditProfile = ({navigation}) => {
               result.status == 'newuser' &&
               'Your trial pack is active now!',
           );
+          dispatch({
+            type: 'SET_STATUS',
+            payload: {isLogin: true, isSubscribed: true},
+          });
         }
         fetchProfile();
         fetchUserData();
@@ -428,6 +468,37 @@ export const EditProfile = ({navigation}) => {
     // }
   };
 
+  const closeModal = () => {
+    setVisible(false);
+    if (userData.usertype === 'individual') {
+      setName(oldData.username);
+      setAddress(oldData.address);
+      setPinCode(oldData.zip_pin);
+      setCountry(oldData.country_id);
+      setCountryName(oldData.name);
+      setState(oldData.state_id);
+      setStateName(oldData.name);
+      setCity(oldData.district_id);
+      setCityName(oldData.name);
+      setPhone(oldData.telephone);
+      setEmail(oldData.email);
+      setCurrentPassword(oldData.password);
+    } else {
+      setName(oldData.orgnisationname);
+      setAddress(oldData.address);
+      setPinCode(oldData.postalcode);
+      setCity(oldData.district);
+      setCityName(oldData.name);
+      setState(oldData.state);
+      setStateName(oldData.name);
+      setCountry(oldData.country_id);
+      setCountryName(oldData.name);
+      setPhone(oldData.orgnisationcontact);
+      setEmail(oldData.orgnisationemail);
+      setCurrentPassword(oldData.password);
+    }
+  };
+
   const editProfile = () => {
     return (
       <Modal
@@ -435,7 +506,7 @@ export const EditProfile = ({navigation}) => {
         animationType="slide"
         transparent={true}
         visible={visible}
-        onRequestClose={() => setVisible(false)}>
+        onRequestClose={() => closeModal()}>
         <View style={styles.centeredView}>
           <KeyboardAvoidingView behavior="padding">
             <View
@@ -507,7 +578,7 @@ export const EditProfile = ({navigation}) => {
                     placeholder: '-Select Country-',
                     placeholderTextColor: '#999',
                     fontSize: 14,
-                    color: textColor
+                    color: textColor,
                     // value: countryName,
                   }}
                   suggestionsListContainerStyle={{
@@ -539,118 +610,129 @@ export const EditProfile = ({navigation}) => {
                     }
                   }}
                 />
+                <AutocompleteDropdown
+                  clearOnFocus={true}
+                  showClear={false}
+                  closeOnSubmit={false}
+                  initialValue={{id: state, title: stateName}} // or just '2'
+                  dataSet={stateList}
+                  textInputProps={{
+                    placeholder: '-Select State-',
+                    placeholderTextColor: '#999',
+                    fontSize: 14,
+                    color: textColor,
+                    value: stateName,
+                  }}
+                  suggestionsListContainerStyle={{
+                    backgroundColor: backgroundColor,
+                  }}
+                  suggestionsListTextStyle={{
+                    color: textColor,
+                  }}
+                  inputContainerStyle={[
+                    styles.textInput,
+                    {
+                      backgroundColor: backgroundColor,
+                      color: textColor,
+                      borderBottomColor: '#999',
+                      borderRadius: 0,
+                      justifyContent: 'flex-end',
+                    },
+                  ]}
+                  onFocus={() => {
+                    setCityName('');
+                  }}
+                  onChangeText={item => {
+                    setStateName(item);
+                  }}
+                  onSelectItem={itemValue => {
+                    if (itemValue !== null) {
+                      setState(itemValue.id);
+                      setStateName(itemValue.title);
+                      fetchAllCity(itemValue.id);
+                    }
+                  }}
+                />
+                <AutocompleteDropdown
+                  clearOnFocus={true}
+                  showClear={false}
+                  closeOnSubmit={false}
+                  initialValue={{id: city, title: cityName}} // or just '2'
+                  dataSet={cityList}
+                  textInputProps={{
+                    placeholder: '-Select City-',
+                    placeholderTextColor: '#999',
+                    fontSize: 14,
+                    color: textColor,
+                    value: cityName,
+                  }}
+                  suggestionsListContainerStyle={{
+                    backgroundColor: backgroundColor,
+                  }}
+                  suggestionsListTextStyle={{
+                    color: textColor,
+                  }}
+                  inputContainerStyle={[
+                    styles.textInput,
+                    {
+                      backgroundColor: backgroundColor,
+                      color: textColor,
+                      borderBottomColor: '#999',
+                      borderRadius: 0,
+                      justifyContent: 'flex-end',
+                    },
+                  ]}
+                  onChangeText={item => {
+                    setCityName(item);
+                  }}
+                  onSelectItem={itemValue => {
+                    if (itemValue !== null) {
+                      setCity(itemValue.id);
+                      setCityName(itemValue.title);
+                    }
+                  }}
+                />
+
                 <View style={{flexDirection: 'row'}}>
-                  <AutocompleteDropdown
-                    clearOnFocus={true}
-                    showClear={false}
-                    closeOnSubmit={false}
-                    initialValue={{id: state, title: stateName}} // or just '2'
-                    dataSet={stateList}
-                    textInputProps={{
-                      placeholder: '-Select State-',
-                      placeholderTextColor: '#999',
-                      fontSize: 14,
-                      color: textColor,
-                      value: stateName,
-                    }}
-                    suggestionsListContainerStyle={{
-                      backgroundColor: backgroundColor,
-                    }}
-                    suggestionsListTextStyle={{
-                      color: textColor,
-                    }}
-                    inputContainerStyle={[
+                  <TextInput
+                    value={phone}
+                    editable={phone.length < 10}
+                    onChangeText={text => setPhone(text)}
+                    style={[
                       styles.textInput,
                       {
                         backgroundColor: backgroundColor,
-                        width: width * 0.4,
+                        width: width * 0.3,
+                        color: textColor,
+                        borderBottomColor: '#999',
+                        borderRadius: 0,
+                        justifyContent: 'flex-end',
                         marginRight: 10,
-                        color: textColor,
-                        borderBottomColor: '#999',
-                        borderRadius: 0,
-                        justifyContent: 'flex-end',
-                        padding: 5,
                       },
                     ]}
-                    onFocus={() => {
-                      setCityName('');
-                    }}
-                    onChangeText={item => {
-                      setStateName(item);
-                    }}
-                    onSelectItem={itemValue => {
-                      if (itemValue !== null) {
-                        setState(itemValue.id);
-                        setStateName(itemValue.title);
-                        fetchAllCity(itemValue.id);
-                      }
-                    }}
+                    placeholder="Contact Number"
+                    placeholderTextColor="#999"
                   />
-                  <AutocompleteDropdown
-                    clearOnFocus={true}
-                    showClear={false}
-                    closeOnSubmit={false}
-                    initialValue={{id: city, title: cityName}} // or just '2'
-                    dataSet={cityList}
-                    textInputProps={{
-                      placeholder: '-Select City-',
-                      placeholderTextColor: '#999',
-                      fontSize: 14,
-                      color: textColor,
-                      value: cityName,
-                    }}
-                    suggestionsListContainerStyle={{
-                      backgroundColor: backgroundColor,
-                    }}
-                    suggestionsListTextStyle={{
-                      color: textColor,
-                    }}
-                    inputContainerStyle={[
+                  <TextInput
+                    value={email}
+                    editable={false}
+                    onChangeText={text => setEmail(text)}
+                    style={[
                       styles.textInput,
                       {
                         backgroundColor: backgroundColor,
-                        width: width * 0.4,
+                        width: width * 0.5,
                         color: textColor,
                         borderBottomColor: '#999',
                         borderRadius: 0,
                         justifyContent: 'flex-end',
-                        padding: 5,
+                        // padding: 5,
                       },
                     ]}
-                    onChangeText={item => {
-                      setCityName(item);
-                    }}
-                    onSelectItem={itemValue => {
-                      if (itemValue !== null) {
-                        setCity(itemValue.id);
-                        setCityName(itemValue.title);
-                      }
-                    }}
+                    placeholder="Email"
+                    placeholderTextColor="#999"
                   />
                 </View>
-
-                <TextInput
-                  value={phone}
-                  editable={false}
-                  onChangeText={text => setPhone(text)}
-                  style={[
-                    styles.textInput,
-                    {borderBottomColor: 'gray', color: textColor},
-                  ]}
-                  placeholder="Contact Number"
-                  placeholderTextColor="#999"
-                />
-                <TextInput
-                  value={email}
-                  editable={false}
-                  onChangeText={text => setEmail(text)}
-                  style={[
-                    styles.textInput,
-                    {borderBottomColor: 'gray', color: textColor},
-                  ]}
-                  placeholder="Email"
-                  placeholderTextColor="#999"
-                />
                 <View
                   style={[
                     styles.textInput,
@@ -743,7 +825,7 @@ export const EditProfile = ({navigation}) => {
                   titleStyle={{fontWeight: 'bold', color: 'black'}}
                 />
                 <Button
-                  onPress={() => toggleOverlay()}
+                  onPress={() => closeModal()}
                   containerStyle={{
                     width: 100,
                     marginVertical: 10,
@@ -762,16 +844,17 @@ export const EditProfile = ({navigation}) => {
 
   const handleLogout = async () => {
     setShow(true);
+    await TrackPlayer.destroy();
     signOut();
     signOutFb();
     await removeDatasync(userData.id);
-    storeDatasync('isLogin', false);
+    // storeDatasync('isLogin', false);
     dispatch({
       type: 'SET_STATUS',
       payload: {isLogin: false, isSubscribed: false},
     });
     dispatch({type: 'REMOVE_ALL_CART'});
-    storeDatasync('isSubscribed', false);
+    // storeDatasync('isSubscribed', false);
     navigation.navigate('Homepage');
     // dispatch({type: 'REMOVE_USER', payload: userData.id});
     setShow(false);
@@ -927,8 +1010,7 @@ export const EditProfile = ({navigation}) => {
               </ListItem.Title>
               <ListItem.Subtitle
                 style={{fontSize: 12, fontWeight: '300', color: textColor}}>
-                Here You Will Get Individual Account Activation Link From Your
-                Organization
+                View Activation Link From Your Organization
               </ListItem.Subtitle>
             </ListItem>
           </TouchableOpacity>

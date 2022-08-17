@@ -12,23 +12,60 @@ import {
   View,
 } from 'react-native';
 import {AirbnbRating, Divider} from 'react-native-elements';
+import {Button} from 'react-native-paper';
 import {postData, ServerURL} from './FetchApi';
 import TextTicker from 'react-native-text-ticker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SamplePlay} from './SamplePlay';
-import { useSelector } from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {Picker} from '@react-native-picker/picker';
-import {getSyncData} from './AsyncStorage';
+import {useSwipe} from './useSwipe';
+import {checkSyncData, getSyncData} from './AsyncStorage';
 
 const {width, height} = Dimensions.get('window');
 
 export const CategoryPage = ({navigation, route}) => {
   const theme = useSelector(state => state.theme);
 
+  const listRef = React.useRef(null);
+
+  const alphabetArray = [
+    'Select Alphabet',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ];
+
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
 
   const [filterState, setFilterState] = React.useState('');
+  const [subfilterState, setSubfilterState] = React.useState('');
+  // const [cartLoading, setCartLoading] = React.useState(false);
+  // const [cartStatus, setCartStatus] = React.useState(false);
 
   const displayBooks = ({item}) => {
     return (
@@ -154,7 +191,7 @@ export const CategoryPage = ({navigation, route}) => {
               <></>
             )}
             <AirbnbRating
-              starContainerStyle={{marginLeft: -160}}
+              starContainerStyle={{marginLeft: -140}}
               count={5}
               showRating={false}
               defaultRating={item.percentage !== null ? item.percentage : 0}
@@ -173,6 +210,13 @@ export const CategoryPage = ({navigation, route}) => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [skip, setSkip] = React.useState(0);
   const languageid = useSelector(state => state.language);
+  const [userData, setUserData] = React.useState([]);
+
+  const [showSubFilter, setShowSubFilter] = React.useState(false);
+
+  // const isLogin = useSelector(state => state.isLogin);
+
+  const dispatch = useDispatch();
 
   const fetchBooksbyid = async id => {
     setIsLoading(true);
@@ -239,28 +283,79 @@ export const CategoryPage = ({navigation, route}) => {
     setSkip(skip + 20);
   };
 
-  const renderLoader = () => {
-    return isLoading ? (
-      <View>
-        <ActivityIndicator size="large" />
-      </View>
-    ) : null;
-  };
-
   useEffect(() => {
-    // console.log('useEffect');
     fetchBooksbyid(route.params.item.id);
   }, [skip]);
 
+  const getUser = async () => {
+    var key = await checkSyncData();
+    if (isLogin) {
+      await getSyncData(key[0]).then(async res => {
+        var {id, usertype} = res;
+        setUserData({id, usertype});
+      });
+    }
+  };
+
+  const addToCart = async () => {
+    if (isLogin) {
+      setCartLoading(true);
+      let tempArr = [];
+      books.map(item => {
+        dispatch({type: 'ADD_CART', payload: [item.id, item]});
+        tempArr.push(item.id);
+      });
+      let body = {
+        user_id: userData.id,
+        user_type: userData.usertype,
+      };
+      setCartLoading(false);
+    } else {
+      navigation.navigate('Login');
+    }
+  };
+
+  // useEffect(() => {
+  //   getUser();
+  // }, []);
+
   var category = route.params.category;
+
+  const subfilterData = val => {
+    switch (filterState) {
+      case 'Author':
+        let filtered = allBooks.filter(
+          item => item.bookauthor.charAt(0) === val,
+        );
+        setBooks([...filtered]);
+        break;
+      case 'Alphabet':
+        let filtered2 = allBooks.filter(
+          item => item.bookname.charAt(0) === val,
+        );
+        setBooks([...filtered2]);
+        break;
+      default:
+        break;
+    }
+  };
 
   const filterData = type => {
     switch (type) {
       case 'All':
+        setShowSubFilter(false);
         setBooks([...allBooks]);
         break;
+      case 'Author':
+        setShowSubFilter(true);
+        break;
+      case 'Alphabet':
+        setShowSubFilter(true);
+        break;
       case 'Non Premium':
-        let filteredData6 = allBooks.filter(item => {
+        setShowSubFilter(false);
+        let tempBooks6 = [...allBooks];
+        let filteredData6 = tempBooks6.filter(item => {
           return (
             item.premiumtype === 'Non Premium' ||
             item.premiumtype === 'BIV' ||
@@ -270,32 +365,85 @@ export const CategoryPage = ({navigation, route}) => {
         setBooks([...filteredData6]);
         break;
       case 'Premium':
-        let filteredData = allBooks.filter(item => {
+        setShowSubFilter(false);
+        let tempBooks5 = [...allBooks];
+        let filteredData = tempBooks5.filter(item => {
           return item.premiumtype === 'Premium' || item.premiumtype === 'Both';
         });
         setBooks([...filteredData]);
         break;
       case 'By A-Z':
-        let filteredData2 = allBooks.sort((a, b) =>
+        setShowSubFilter(false);
+        let tempBooks = [...allBooks];
+        let filteredData2 = tempBooks.sort((a, b) =>
           a.bookname.localeCompare(b.bookname),
         );
         setBooks([...filteredData2]);
         break;
       case 'By Z-A':
-        let filteredData3 = allBooks.sort((a, b) =>
+        setShowSubFilter(false);
+        let tempBooks2 = [...allBooks];
+        let filteredData3 = tempBooks2.sort((a, b) =>
           b.bookname.localeCompare(a.bookname),
         );
         setBooks([...filteredData3]);
         break;
+      case 'New Arrivals':
+        setShowSubFilter(false);
+        let tempBooks9 = [...allBooks];
+        let filteredData9 = tempBooks9.sort(
+          (a, b) =>
+            new Date(Date.parse(b.created_on)) -
+            new Date(Date.parse(a.created_on)),
+        );
+        setBooks([...filteredData9]);
+      case 'Popular':
+        setShowSubFilter(false);
+        let tempBooks7 = [...allBooks];
+        let viewFilter = tempBooks7.filter(item => {
+          return item.viewcount == null;
+        });
+        let notNullView = tempBooks7.filter(item => {
+          return item.viewcount !== null;
+        });
+        let filteredData7 = notNullView.sort(
+          (a, b) => parseInt(b.viewcount) - parseInt(a.viewcount),
+        );
+        setBooks([...filteredData7, ...viewFilter]);
+        break;
+      case 'Top Rated':
+        setShowSubFilter(false);
+        let tempBooks8 = [...allBooks];
+        let percentageFilter2 = tempBooks8.filter(item => {
+          return item.percentage == null;
+        });
+        let notNullPercentage2 = tempBooks8.filter(item => {
+          return item.percentage !== null;
+        });
+        let filteredData8 = notNullPercentage2.sort(
+          (a, b) => parseInt(b.percentage) - parseInt(a.percentage),
+        );
+        setBooks([...filteredData8, ...percentageFilter2]);
+        break;
       case 'Price Low to High':
-        let filteredData4 = allBooks.sort(function (a, b) {
-          return a.price - b.price;
+        setShowSubFilter(false);
+        let tempBooks3 = [...allBooks];
+        // let pricefilter = tempBooks3.filter(item => {
+        //   return item.price !== '';
+        // });
+        let filteredData4 = tempBooks3.sort(function (a, b) {
+          return parseFloat(a.price) - parseFloat(b.price);
         });
         setBooks([...filteredData4]);
         break;
       case 'Price High to Low':
-        let filteredData5 = allBooks.sort(function (a, b) {
-          return b.price - a.price;
+        setShowSubFilter(false);
+        let tempBooks4 = [...allBooks];
+        // let pricefilter2 = tempBooks4.filter(item => {
+        //   return item.price !== '';
+        // });
+        let filteredData5 = tempBooks4.sort(function (a, b) {
+          return parseFloat(b.price) - parseFloat(a.price);
         });
         setBooks([...filteredData5]);
         break;
@@ -340,7 +488,7 @@ export const CategoryPage = ({navigation, route}) => {
         <View
           style={{
             width: width * 0.9,
-            marginLeft: 25,
+            marginLeft: 10,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -352,28 +500,74 @@ export const CategoryPage = ({navigation, route}) => {
               borderWidth: 1,
               color: textColor,
               borderColor: textColor,
-              width: width * 0.8,
+              width: showSubFilter ? width * 0.4 : width * 0.8,
             }}
             mode="dropdown"
             onValueChange={(itemValue, itemIndex) => {
+              listRef.current.scrollToIndex({animated: true, index: 0});
               filterData(itemValue);
               setFilterState(itemValue);
             }}>
             <Picker.Item label="All" value="All" />
+            <Picker.Item label="Author" value="Author" />
+            <Picker.Item label="Alphabet" value="Alphabet" />
             <Picker.Item label="Non Premium" value="Non Premium" />
             <Picker.Item label="Premium" value="Premium" />
             <Picker.Item label="By A-Z" value="By A-Z" />
             <Picker.Item label="By Z-A" value="By Z-A" />
+            <Picker.Item label="New Arrivals" value="New Arrivals" />
+            <Picker.Item label="Popular" value="Popular" />
+            <Picker.Item label="Top Rated" value="Top Rated" />
             <Picker.Item label="Price Low to High" value="Price Low to High" />
             <Picker.Item label="Price High to Low" value="Price High to Low" />
           </Picker>
+          <View>
+            <Picker
+              selectedValue={subfilterState}
+              style={{
+                borderWidth: 1,
+                color: textColor,
+                borderColor: textColor,
+                width: showSubFilter ? width * 0.35 : 0,
+                opacity: showSubFilter ? 1 : 0,
+              }}
+              mode="dropdown"
+              onValueChange={(itemValue, itemIndex) => {
+                listRef.current.scrollToIndex({animated: true, index: 0});
+                subfilterData(itemValue);
+                setSubfilterState(itemValue);
+              }}>
+              {alphabetArray.map((item, index) => {
+                return (
+                  <Picker.Item
+                    label={item}
+                    value={item}
+                    enabled={index != 0}
+                    key={index}
+                  />
+                );
+              })}
+            </Picker>
+          </View>
         </View>
       </React.Fragment>
     );
   };
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   return (
     <View
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       style={[
         styles.container,
         {
@@ -389,20 +583,52 @@ export const CategoryPage = ({navigation, route}) => {
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: -1,
         }}
       />
+      {renderHeader()}
+      {/* {route.params.item.bookcategory == 'Premium' && (
+        <Button
+          mode="contained"
+          loading={cartLoading}
+          color="#ff9000"
+          dark={theme !== 'dark'}
+          contentStyle={{
+            width: width * 0.9,
+            padding: width * 0.01,
+          }}
+          onPress={() => addToCart()}>
+          Add All Books to Cart
+        </Button>
+      )} */}
       <View style={{alignItems: 'center'}}>
         <View style={styles.categoryImage}>
           <FlatList
+            ref={listRef}
             data={books}
             removeClippedSubviews
-            ListHeaderComponent={renderHeader}
             renderItem={displayBooks}
             keyExtractor={(item, index) => index.toString()}
-            // ListFooterComponent={renderLoader}
-            onEndReached={() => loadMore(route.params.item.id)}
-            onEndReachedThreshold={0.3}
+            ListFooterComponent={
+              <TouchableOpacity onPress={() => loadMore()}>
+                <Text
+                  style={{
+                    color: textColor,
+                    fontSize: 16,
+                    fontWeight: '800',
+                    textAlign: 'center',
+                  }}>
+                  Load More...
+                </Text>
+              </TouchableOpacity>
+            }
+            ListFooterComponentStyle={{
+              opacity: isLoading ? 0 : 1,
+              padding: 20,
+              width: width,
+              height: height * 0.6,
+            }}
+            // onEndReached={() => loadMore(route.params.item.id)}
+            // onEndReachedThreshold={0.3}
           />
         </View>
       </View>

@@ -17,6 +17,7 @@ import {getSyncData, storeDatasync} from './AsyncStorage';
 import {useSelector} from 'react-redux';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import RNFetchBlob from 'rn-fetch-blob';
+import {useSwipe} from './useSwipe';
 
 const {width, height} = Dimensions.get('window');
 
@@ -77,7 +78,7 @@ export const Download = ({navigation}) => {
                 offline: true,
                 index: null,
                 chapters: [],
-                playFromChapters: false
+                playFromChapters: false,
               })
             }>
             <Image
@@ -98,7 +99,7 @@ export const Download = ({navigation}) => {
                   offline: true,
                   index: null,
                   chapters: [],
-                  playFromChapters: false
+                  playFromChapters: false,
                 })
               }
               style={{
@@ -137,9 +138,22 @@ export const Download = ({navigation}) => {
     );
   };
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   if (books.length === 0) {
     return (
-      <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+      <View
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        style={[styles.container, {backgroundColor: backgroundColor}]}>
         <View style={{paddingBottom: 60}}>
           <View style={styles.header}>
             <Text style={[styles.headerContent, {color: textColor}]}>
@@ -157,7 +171,10 @@ export const Download = ({navigation}) => {
   }
 
   return (
-    <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+    <View
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={[styles.container, {backgroundColor: backgroundColor}]}>
       <ActivityIndicator
         animating={loading}
         size={'large'}

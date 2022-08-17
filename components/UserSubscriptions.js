@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -22,6 +22,7 @@ import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import WebView from 'react-native-webview';
 import RNPrint from 'react-native-print';
 import {useFocusEffect} from '@react-navigation/native';
+import {useSwipe} from './useSwipe';
 
 const {width, height} = Dimensions.get('window');
 
@@ -41,10 +42,12 @@ export const UserSubscriptions = ({navigation}) => {
   const [openInvoice, setOpenInvoice] = useState(false);
   const [data, setData] = useState();
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key !== 'fcmToken') {
+    if (isLogin) {
       await getSyncData(key[0]).then(async res => {
         fetchSubscriptions(res);
         setUserData(res);
@@ -133,12 +136,12 @@ export const UserSubscriptions = ({navigation}) => {
     data?.d_percentage === '' || data?.d_percentage === null
       ? 0
       : parseFloat(data?.d_percentage);
-  var discount = data?.packageprice * (percentage / 100);
+  var discount = data?.price * (percentage / 100);
   discount = discount.toFixed(2);
   var tax =
     data?.d_percentage === ''
       ? parseFloat(data?.price) * 0.18
-      : (parseFloat(data?.packageprice) - discount) * 0.18;
+      : (parseFloat(data?.price) - discount) * 0.18;
   tax = tax.toFixed(2);
   var price = parseFloat(data?.price).toFixed(2);
   const RsInWords = inWords(parseFloat(data?.price));
@@ -458,7 +461,7 @@ export const UserSubscriptions = ({navigation}) => {
       </main>
       <footer>
           <p>*This is a computer generated invoice and does not require a physical signature</p>
-          <p>If You have any questions. feel free to call customer care at +91-7588986868 or use Help section in our website www.booksinvoice.com</p>
+          <p>If You have any questions. feel free to call customer care at +91-7588988686 or use Help section in our website www.booksinvoice.com</p>
       </footer>
     </div>
     <div></div>
@@ -772,7 +775,7 @@ export const UserSubscriptions = ({navigation}) => {
     </main>
     <footer>
         <p>*This is a computer generated invoice and does not require a physical signature</p>
-        <p>If You have any questions. feel free to call customer care at +91-7588986868 or use Help section in our website www.booksinvoice.com</p>
+        <p>If You have any questions. feel free to call customer care at +91-7588988686 or use Help section in our website www.booksinvoice.com</p>
     </footer>
   </div>
   <div></div>
@@ -853,7 +856,7 @@ export const UserSubscriptions = ({navigation}) => {
                 <FontAwesome5 name="eye" size={21} color={textColor} />
               </View>
             </TouchableOpacity>
-            {userData.usertype === 'organisation' ? (
+            {item?.id != "0" && userData.usertype === 'organisation' ? (
               <TouchableOpacity
                 style={{marginLeft: -3}}
                 onPress={() =>
@@ -879,7 +882,7 @@ export const UserSubscriptions = ({navigation}) => {
   };
 
   const fetchSubscriptions = async res => {
-    var body = {type: 1, user_id: res.id, user_type: res.usertype};
+    var body = {type: 1, user_id: res?.id, user_type: res.usertype};
     var result = await postData('api/getSubscription', body);
     if (result.data === 0 || result.data === null) {
       setNotSubText('Not Subscribed yet');
@@ -906,17 +909,13 @@ export const UserSubscriptions = ({navigation}) => {
     }
   };
 
-  useEffect(() => {
-    checkLogin();
-  }, []);
-
   useFocusEffect(
     React.useCallback(() => {
       checkLogin();
       // alert('Screen was focused');
       // Do something when the screen is focused
       return () => {
-        setActiveSubs([]);
+        // setActiveSubs([]);
         // Do something when the screen is unfocused
         // Useful for cleanup functions
       };
@@ -931,14 +930,28 @@ export const UserSubscriptions = ({navigation}) => {
         style={{
           textAlign: 'center',
           margin: 30,
+          color: textColor,
         }}>
         {text}
       </Text>
     );
   };
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   return (
-    <View style={[styles.container, {backgroundColor: backgroundColor}]}>
+    <View
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      style={[styles.container, {backgroundColor: backgroundColor}]}>
       <ActivityIndicator
         animating={loading}
         size={'large'}
@@ -985,14 +998,14 @@ export const UserSubscriptions = ({navigation}) => {
           <FlatList
             data={activeSubs}
             renderItem={renderItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item?.id}
             ListEmptyComponent={() => emptyComponent('No Active Subscriptions')}
           />
         ) : (
           <FlatList
             data={expiredSubs}
             renderItem={renderItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item?.id}
             ListEmptyComponent={() =>
               emptyComponent('No Expired Subscriptions')
             }

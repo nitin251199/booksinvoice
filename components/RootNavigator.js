@@ -15,7 +15,6 @@ import {CategoryPage} from './CategoryPage';
 import {AppHeader} from './AppHeader';
 import {EditProfile} from './EditProfile';
 import {Legal} from './Legal';
-import {JoinUs} from './JoinUs';
 import {Search} from './Search';
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import { getSyncData} from './AsyncStorage';
@@ -42,7 +41,7 @@ export default function RootNavigator() {
   const Stack = createStackNavigator();
   const Tab = createMaterialTopTabNavigator();
 
-  const { width, height } = Dimensions.get("window")
+  // var isLogin = useSelector(state => state.isLogin);
 
   var dispatch = useDispatch();
   const navigation = useNavigation();
@@ -327,11 +326,6 @@ export default function RootNavigator() {
         <Stack.Screen
           name="Legal"
           component={Legal}
-          options={{header: AppHeader}}
-        />
-        <Stack.Screen
-          name="JoinUs"
-          component={JoinUs}
           options={{header: AppHeader}}
         />
         <Stack.Screen

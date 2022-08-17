@@ -28,7 +28,7 @@ const BannerHeight = 140;
 
 const {width, height} = Dimensions.get('window');
 
-export default function Homepage({navigation, route}) {
+export default function Homepage({navigation}) {
   const theme = useSelector(state => state.theme);
 
   const setdata = useSelector(state => state?.home?.new_arrival) || [];
@@ -40,34 +40,6 @@ export default function Homepage({navigation, route}) {
   const setother = useSelector(state => state?.home?.books_by_cate) || [];
   const setad = useSelector(state => state?.home?.advertise) || [];
 
-  const [data, setData] = useState(Object.values(setdata));
-
-  const [banner, setBanner] = useState(Object.values(setbanner));
-
-  const [topRated, setTopRated] = useState(Object.values(settop));
-
-  const [popularBooks, setPopularBooks] = useState(Object.values(setpopular));
-
-  const [premiumBooks, setPremiumBooks] = useState(Object.values(setpremium));
-
-  const [category, setCategory] = useState(Object.values(setcategory));
-
-  const [otherCategory, setOtherCategory] = useState(setother);
-
-  const [advertise, setAdvertise] = useState(setad);
-
-  useEffect(() => {}, []);
-
-  useEffect(() => {
-    setData(Object.values(setdata));
-    setBanner(Object.values(setbanner));
-    setTopRated(Object.values(settop));
-    setPopularBooks(Object.values(setpopular));
-    setPremiumBooks(Object.values(setpremium));
-    // setCategory(Object.values(setcategory));
-    setOtherCategory(setother);
-    setAdvertise(setad);
-  }, [setdata]);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
   const backgroundColor = theme === 'dark' ? '#212121' : '#FFF';
@@ -150,7 +122,7 @@ export default function Homepage({navigation, route}) {
   };
 
   const DisplayOtherCategory = ({item, index, categoryname}) => {
-    mainCategoryArr = category.filter(
+    mainCategoryArr = setcategory.filter(
       item => item.id === categoryname.bookcategoryid,
     );
     let mCat = [];
@@ -207,7 +179,7 @@ export default function Homepage({navigation, route}) {
             })}
           </ScrollView> */}
           <FlatList
-            data={otherCategory[index]}
+            data={setother[index]}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
             renderItem={({item, index}) => {
@@ -353,14 +325,14 @@ export default function Homepage({navigation, route}) {
           autoplayTimeout={3500}
           loop
           pageSize={BannerWidth}>
-          {banner.map((item, index) => {
+          {setbanner.map((item, index) => {
             return <DisplayBanner key={item.id} item={item} />;
           })}
         </Carousel>
       </View>
       <View
         style={{
-          paddingLeft: 15,
+          paddingLeft: 20,
         }}>
         <Text
           style={[
@@ -388,7 +360,7 @@ export default function Homepage({navigation, route}) {
                 })}
               </ScrollView> */}
           <FlatList
-            data={category}
+            data={setcategory}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
             renderItem={({item, index}) => {
@@ -400,7 +372,7 @@ export default function Homepage({navigation, route}) {
       </View>
       <View
         style={{
-          paddingLeft: 15,
+          paddingLeft: 20,
           // paddingTop: 20,
         }}>
         <Divider />
@@ -454,7 +426,7 @@ export default function Homepage({navigation, route}) {
         </View>
         <View style={styles.categoryImage}>
           <FlatList
-            data={data}
+            data={setdata}
             horizontal
             removeClippedSubviews
             // initialNumToRender={3}
@@ -526,7 +498,7 @@ export default function Homepage({navigation, route}) {
         </View>
         <View style={styles.categoryImage}>
           <FlatList
-            data={topRated}
+            data={settop}
             horizontal
             removeClippedSubviews
             // initialNumToRender={3}
@@ -597,7 +569,7 @@ export default function Homepage({navigation, route}) {
         </View>
         <View style={styles.categoryImage}>
           <FlatList
-            data={popularBooks}
+            data={setpopular}
             horizontal
             removeClippedSubviews
             // initialNumToRender={3}
@@ -669,7 +641,7 @@ export default function Homepage({navigation, route}) {
 
         <View style={styles.categoryImage}>
           <FlatList
-            data={premiumBooks}
+            data={setpremium}
             horizontal
             removeClippedSubviews
             // initialNumToRender={3}
@@ -703,7 +675,7 @@ export default function Homepage({navigation, route}) {
           }}
           imageStyle={{resizeMode: 'stretch'}}
           source={{
-            uri: `https://booksinvoice.com/admin/${advertise[0]?.url}`,
+            uri: `https://booksinvoice.com/admin/${setad[0]?.url}`,
           }}>
           {/* <Text style={{fontSize: 20, fontWeight: '800', color: '#FFF'}}>
                 Buy Subscription Plans
@@ -713,7 +685,7 @@ export default function Homepage({navigation, route}) {
               fontSize: 15,
               marginVertical: 10,
               color: '#FFF',
-            }}>{`${advertise[0]?.title}`}</Text>
+            }}>{`${setad[0]?.title}`}</Text>
         </ImageBackground>
       </TouchableWithoutFeedback>
       {/* <Tile
@@ -734,7 +706,7 @@ export default function Homepage({navigation, route}) {
             }}
             containerStyle={{marginVertical: 10}}
           /> */}
-      <View style={{paddingLeft: 15}}>
+      <View style={{paddingLeft: 20}}>
         {/* <FlatList
               data={otherCategory}
               removeClippedSubviews
@@ -758,7 +730,7 @@ export default function Homepage({navigation, route}) {
                 />
               )}
             /> */}
-        {otherCategory.map((item, index) => {
+        {setother.map((item, index) => {
           return (
             <DisplayOtherCategory
               key={index}

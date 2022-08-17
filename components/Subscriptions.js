@@ -58,9 +58,11 @@ export const Subscriptions = ({navigation}) => {
     setShow(true);
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const checkSession = async () => {
     var key = await checkSyncData();
-    if (key[0]) {
+    if (isLogin) {
       var userData = await getSyncData(key[0]);
       if (userData.usertype == 'individual') {
         setStatus(1);
@@ -256,7 +258,9 @@ export const Subscriptions = ({navigation}) => {
         },
       ]}>
       <View style={{alignItems: 'center'}}>
-        <ScrollView style={{width: width}} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{
+          alignItems: 'center',
+        }} style={{width: width}} showsVerticalScrollIndicator={false}>
           <Card
             containerStyle={{
               elevation: 5,

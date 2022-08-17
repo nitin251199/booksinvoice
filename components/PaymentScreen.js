@@ -40,20 +40,6 @@ export const PaymentScreen = ({route, navigation}) => {
   }
   urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
 
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     const onBackPress =() => {
-  //       navigation.jumpTo('Subscriptions');
-  //         return false;
-  //     };
-
-  //     BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-  //     return () =>
-  //       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-  //   }, [])
-  // );
-
   const onMessage = data => {
     if (data.nativeEvent.data === 'success') {
       ToastAndroid.show('Payment Successful', ToastAndroid.SHORT);
@@ -63,7 +49,7 @@ export const PaymentScreen = ({route, navigation}) => {
         payload: {isLogin: true, isSubscribed: true},
       });
       dispatch({type: 'REMOVE_ALL_CART'});
-      storeDatasync('isSubscribed', true);
+      // storeDatasync('isSubscribed', true);
     } else if (data.nativeEvent.data === 'failure') {
       ToastAndroid.show('Payment Failed', ToastAndroid.SHORT);
     }

@@ -50,10 +50,12 @@ export const Comment = ({route, navigation}) => {
     }
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const fetchUser = async () => {
     var key = await checkSyncData();
 
-    if (key[0] != 'fcmToken') {
+    if (isLogin) {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
       setName(userData?.user_name);

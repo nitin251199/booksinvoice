@@ -1,60 +1,77 @@
 import LottieView from 'lottie-react-native';
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, Image, StatusBar, Alert, NativeModules, Linking} from 'react-native';
+import {
+  StyleSheet,
+  Image,
+  StatusBar,
+  Alert,
+  Linking,
+} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {postData} from './FetchApi';
-import {
-  checkSyncData,
-  getSyncData,
-  storeDatasync,
-} from './AsyncStorage';
+import {checkSyncData, getSyncData, storeDatasync} from './AsyncStorage';
 
-export const WelcomePage = ({navigation, route}) => {
+export const WelcomePage = ({navigation}) => {
   var dispatch = useDispatch();
 
   const [show, setShow] = useState(false);
 
   const fetch = async () => {
     let languageid = await getSyncData('languageid');
+    let theme = await getSyncData('theme');
     var body = {type: 1, languageid: languageid || '1'};
     var data = await postData('api/getHome', body);
     // console.log('data', data);
     // console.log('data.status', body);
 
     dispatch({type: 'SET_HOME', payload: data});
-      // await storeDatasync('languageid', '1');
+    dispatch({type: 'SET_THEME', payload: theme || 'dark'});
+    let infoPageData = {
+      newArrivals: data?.new_arrival,
+      popular: data?.populars_books,
+      topRated: data?.top_rated,
+      premium: data?.Premium_books,
+    };
+    await storeDatasync('infoPageData', infoPageData); // store infopage data in async storage
     dispatch({type: 'SET_LANG', payload: languageid || '1'});
     fetchProfile();
     setShow(true);
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const fetchProfile = async () => {
     var key = await checkSyncData();
 
-    if (key[0] != 'fcmToken') {
+    if (isLogin) {
       var userData = await getSyncData(key[0]);
       fetchUserData(userData);
-      var body1 = {type: 1, user_id: userData.id, user_type: userData.usertype};
+      var body1 = {
+        type: 1,
+        user_id: userData?.id,
+        user_type: userData?.usertype,
+      };
       var result = await postData('api/getSubscription', body1);
       if (result?.msg === 'Subscribed') {
         dispatch({
           type: 'SET_STATUS',
           payload: {isLogin: true, isSubscribed: true},
         });
-        storeDatasync('isSubscribed', true);
+        // storeDatasync('isSubscribed', true);
       } else {
         dispatch({
           type: 'SET_STATUS',
           payload: {isLogin: true, isSubscribed: false},
         });
-        storeDatasync('isSubscribed', false);
+        // storeDatasync('isSubscribed', false);
       }
       var cart = await postData('api/getShowcart', body1);
+      // console.log('cart', cart);
       if (cart.msg === 'Success') {
-        cart.data.map(item => {
-          dispatch({type: 'ADD_CART', payload: [item.id, item]});
+        cart?.data?.map(item => {
+          dispatch({type: 'ADD_CART', payload: [item?.book_id, item]});
         });
       }
       // var cartData = await getSyncData('cart');
@@ -68,7 +85,7 @@ export const WelcomePage = ({navigation, route}) => {
     if (userData.usertype === 'individual') {
       var body = {
         type: 1,
-        user_id: userData.id,
+        user_id: userData?.id,
         user_type: 'individual',
       };
       var result = await postData('api/getProfile', body);
@@ -103,7 +120,7 @@ export const WelcomePage = ({navigation, route}) => {
     } else if (userData.usertype === 'organisation') {
       var body = {
         type: 1,
-        user_id: userData.id,
+        user_id: userData?.id,
         user_type: 'organisation',
       };
       var result = await postData('api/getProfile', body);
@@ -161,8 +178,7 @@ export const WelcomePage = ({navigation, route}) => {
               params: {category: matches[0], state: matches[1], nested: true},
             },
           });
-        }
-        else{
+        } else {
           navigation.navigate('MyTabs');
         }
       };

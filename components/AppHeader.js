@@ -17,7 +17,7 @@ const {width, height} = Dimensions.get('window');
 
 export const AppHeader = ({navigation}) => {
   var cart = useSelector(state => state?.cart);
-  var keys = Object.keys(cart);
+  var keys =  Object.keys(cart);
 
   const appHeader = () => {
     return (

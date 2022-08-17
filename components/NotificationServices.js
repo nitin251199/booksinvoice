@@ -10,6 +10,7 @@ import {postData} from './FetchApi';
 import {Alert, NativeModules, Platform} from 'react-native';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {LoginManager} from 'react-native-fbsdk-next';
+import {useSelector} from 'react-redux';
 
 export async function requestUserPermission() {
   const authStatus = await messaging().requestPermission({
@@ -33,7 +34,7 @@ const getFcmToken = async () => {
     try {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
-        // user has a device token 
+        // user has a device token
         // console.log('the new token', fcmToken);
         await storeDatasync('fcmToken', fcmToken);
         var body = {type: 1, token_no_id: fcmToken};
@@ -83,10 +84,12 @@ export const notificationListener = async navigation => {
     });
 };
 
-export const fetchProfile = async dispatch => {
-  var key = await checkSyncData();
+// var isLogin = useSelector(state => state.isLogin);
 
-  if (key[0] != 'fcmToken') {
+export const fetchProfile = async (dispatch) => {
+  var key = await checkSyncData();
+  var isLogin = await checkSyncData('isLogin');
+  if (isLogin) {
     var userData = await getSyncData(key[0]);
     var body = {
       type: 1,
@@ -141,5 +144,5 @@ const handleLogout = async (userData, dispatch) => {
     payload: {isLogin: false, isSubscribed: false},
   });
   dispatch({type: 'REMOVE_ALL_CART'});
-  await storeDatasync('isSubscribed', false);
+  // await storeDatasync('isSubscribed', false);
 };

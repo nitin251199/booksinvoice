@@ -26,7 +26,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 import {checkSyncData, getSyncData} from './AsyncStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {postData, ServerURL} from './FetchApi';
-import { SamplePlay } from "./SamplePlay";
+import {SamplePlay} from './SamplePlay';
 
 const {width, height} = Dimensions.get('window');
 
@@ -41,7 +41,7 @@ export default function InfoPage({route, navigation}) {
 
   const [book, setBook] = useState([]);
   const [similar, setSimilar] = useState([]);
-  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarLoading, setSimilarLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [selected, setSelected] = useState({chaptername: ''});
@@ -68,26 +68,26 @@ export default function InfoPage({route, navigation}) {
       resizeMode: 'stretch',
       borderRadius: 5,
     },
-  ]
+  ];
 
   var dispatch = useDispatch();
 
   var cart = useSelector(state => state?.cart);
   var keys = Object.keys(cart);
   var isSub = useSelector(state => state.isSubscribed);
+  var isLogin = useSelector(state => state.isLogin);
   var languageid = useSelector(state => state.language);
 
-  const [newArrivals, setNewArrivals] = useState([]);
-  const [newArrivalsLoading, setNewArrivalsLoading] = useState(true);
-  const [topRated, setTopRated] = useState([]);
-  const [topRatedLoading, setTopRatedLoading] = useState(true);
-  const [popularBooks, setPopularBooks] = useState([]);
-  const [popularBooksLoading, setPopularBooksLoading] = useState(true);
-  const [premiumBooks, setPremiumBooks] = useState([]);
-  const [premiumBooksLoading, setPremiumBooksLoading] = useState(true);
   const [chapters, setChapters] = useState([]);
   const [status, setStatus] = useState(true);
   const [userData, setUserData] = useState({id: '', usertype: ''});
+  const [savedInfoData, setSavedInfoData] = useState({
+    newArrivals: [],
+    topRated: [],
+    popular: [],
+    premium: [],
+  });
+  const [savedInfoLoading, setSavedInfoLoading] = useState(true);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -100,6 +100,9 @@ export default function InfoPage({route, navigation}) {
           return true;
         }
       };
+      getSyncData('savedBooks').then(res => {
+        setSavedBooks(res);
+      });
 
       BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
@@ -120,40 +123,18 @@ export default function InfoPage({route, navigation}) {
     var result = await postData('api/getSimiler', body);
     setSimilar(result.data);
     setSimilarLoading(false);
+    fetchNewArrivals();
   };
 
   const fetchNewArrivals = async () => {
-    var body = {type: '1', skip: 0, languageid: languageid};
-    var result = await postData('api/getNewarrival', body);
-    setNewArrivals(result.data);
-    setNewArrivalsLoading(false);
-  };
-
-  const fetchTopRated = async () => {
-    var body = {type: '1', skip: 0, languageid: languageid};
-    var result = await postData('api/getToprated', body);
-    setTopRated(result.data);
-    setTopRatedLoading(false);
-  };
-
-  const fetchPopularBooks = async () => {
-    var body = {type: '1', skip: 0, languageid: languageid};
-    var result = await postData('api/getPopulerbooks', body);
-    setPopularBooks(result.data);
-    setPopularBooksLoading(false);
-  };
-
-  const fetchPremiumBooks = async () => {
-    var body = {type: '1', skip: 0, languageid: languageid};
-    var result = await postData('api/getPremiumbooks', body);
-    setPremiumBooks(result.data);
-    setPremiumBooksLoading(false);
+    let savedData = await getSyncData('infoPageData');
+    setSavedInfoData(savedData);
+    setSavedInfoLoading(false);
   };
 
   const checkLogin = async () => {
     var key = await checkSyncData();
-
-    if (key[0] !== 'fcmToken') {
+    if (isLogin) {
       await getSyncData(key[0]).then(async res => {
         var body = {
           type: 1,
@@ -172,14 +153,29 @@ export default function InfoPage({route, navigation}) {
     }
   };
 
+  const addToCart = async () => {
+    if (userData.id && userData.id != '') {
+      setLoading(true);
+      dispatch({type: 'ADD_CART', payload: [book.id, book]});
+      var body = {
+        type: 1,
+        user_id: userData.id,
+        user_type: userData.usertype,
+        book_id: id,
+      };
+      var result = await postData('api/getAddcart', body);
+      ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
+      navigation.setParams({x: ''});
+      setLoading(false);
+    } else {
+      navigation.navigate('Login');
+    }
+  };
+
   useEffect(() => {
     fetchBook(id);
     checkLogin();
     fetchSimilarBooks(categoryid);
-    fetchNewArrivals();
-    fetchTopRated();
-    fetchPopularBooks();
-    fetchPremiumBooks();
   }, []);
 
   const [showMoreButton, setShowMoreButton] = useState(false);
@@ -204,11 +200,24 @@ export default function InfoPage({route, navigation}) {
     setNumLines(textShown ? undefined : 3);
   }, [textShown]);
 
-  const requestDownload = item => {
-    setSelected({chaptername: item.chaptername});
+  const requestDownload = async item => {
+    var totalSize = 0;
+    if (savedBooks && savedBooks.length > 0) {
+      savedBooks.map(async item => {
+        totalSize += item.size;
+      });
+    }
+    if (totalSize >= 400000000) {
+      return ToastAndroid.show(
+        'You have reached your 500mb download limit',
+        ToastAndroid.SHORT,
+      );
+    }
     if (isSub) {
+      setSelected({chaptername: item.chaptername});
       requestToPermissions(item);
     } else if (!status) {
+      setSelected({chaptername: item.chaptername});
       requestToPermissions(item);
     } else {
       ToastAndroid.show(
@@ -218,14 +227,64 @@ export default function InfoPage({route, navigation}) {
     }
   };
 
-  const [savedBooks, setSavedBooks] = useState([]);
+  const downloadIcon = item => {
+    if (
+      savedBooks &&
+      savedBooks.some(saved => saved['title'] === item.chaptername)
+    ) {
+      return <MI name="file-download-done" size={30} color="#ff9000" />;
+    } else {
+      if (selected['chaptername'] === item.chaptername) {
+        if (downloadProgress == 100) {
+          return <MI name="file-download-done" size={30} color="#ff9000" />;
+        }
+        return <Text style={{fontSize: 16}}>{downloadProgress} %</Text>;
+      }
+      return (
+        <TouchableOpacity
+          onPress={() =>
+            downloadProgress > 0
+              ? ToastAndroid.show(
+                  'One Download Already in Progress, Please wait...',
+                  ToastAndroid.SHORT,
+                )
+              : requestDownload(item)
+          }>
+          <MaterialCommunityIcons name="download" size={30} color="#888888" />
+        </TouchableOpacity>
+      );
+    }
 
-  const offLineBooks = useMemo(() => {
-    getSyncData('savedBooks').then(res => {
-      setSavedBooks(res);
-      return res;
-    });
-  }, [setBook]);
+    // savedBooks &&
+    // savedBooks.some(saved => saved['title'] === item.chaptername) ? (
+    //   <MI name="file-download-done" size={30} color="#ff9000" />
+    // ) : selected['chaptername'] === item.chaptername ? (
+    //   downloadProgress == 100 ? (
+    //     <MI name="file-download-done" size={30} color="#ff9000" />
+    //   ) : (
+    //     <Text
+    //       style={{
+    //         fontSize: 16,
+    //       }}>
+    //       {downloadProgress} %
+    //     </Text>
+    //   )
+    // ) : (
+    //   <TouchableOpacity
+    //     onPress={() =>
+    //       downloadProgress > 0
+    //         ? ToastAndroid.show(
+    //             'One Download Already in Progress, Please wait...',
+    //             ToastAndroid.SHORT,
+    //           )
+    //         : requestDownload(item)
+    //     }>
+    //     <MaterialCommunityIcons name="download" size={30} color="#888888" />
+    //   </TouchableOpacity>
+    // );
+  };
+
+  const [savedBooks, setSavedBooks] = useState([]);
 
   const requestToPermissions = async item => {
     try {
@@ -298,6 +357,7 @@ export default function InfoPage({route, navigation}) {
   };
 
   const saveToStorage = async (item, path, imgPath) => {
+    let size = await RNFetchBlob.fs.stat(path);
     try {
       let tempObj = {
         id: book.id,
@@ -308,13 +368,14 @@ export default function InfoPage({route, navigation}) {
         album: book.bookcategory,
         duration: book.sampleplay_time,
         index: 0,
+        size: size.size,
       };
-      // return console.log('temp', tempObj);
       await AsyncStorage.getItem('savedBooks').then(savedBooks => {
         const c = savedBooks ? JSON.parse(savedBooks) : [];
         c.push(tempObj);
         setSavedBooks(c);
         setDownloadProgress(0);
+        setSelected({chaptername: ''});
         AsyncStorage.setItem('savedBooks', JSON.stringify(c));
       });
     } catch (error) {
@@ -364,78 +425,26 @@ export default function InfoPage({route, navigation}) {
               }}>
               {item.chaptername}
             </Text>
+            {/* <ActivityIndicator
+              size="small"
+              animating={
+                downloadProgress >= 0 &&
+                downloadProgress < 1 &&
+                selected['chaptername'] === item.chaptername ? true : false
+              }
+              style={{
+                marginLeft: 5,
+              }}
+            /> */}
           </View>
         </TouchableOpacity>
 
-        {savedBooks &&
-        savedBooks.some(saved => saved['title'] === item.chaptername) ? (
-          <MI name="file-download-done" size={30} color="#ff9000" />
-        ) : selected['chaptername'] === item.chaptername ? (
-          downloadProgress == 100 ? (
-            <MI name="file-download-done" size={30} color="#ff9000" />
-          ) : 
-          downloadProgress > 0 ?
-            <Text
-              style={{
-                fontSize: 16,
-              }}>
-              {downloadProgress} %
-            </Text>
-            :
-            <TouchableOpacity
-            onPress={() =>
-              downloadProgress > 0
-                ? ToastAndroid.show(
-                    'One Download Already in Progress, Please wait...',
-                    ToastAndroid.SHORT,
-                  )
-                : requestDownload(item)
-            }>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
-        ) : 
-          <TouchableOpacity
-            onPress={() =>
-              downloadProgress > 0
-                ? ToastAndroid.show(
-                    'One Download Already in Progress, Please wait...',
-                    ToastAndroid.SHORT,
-                  )
-                : requestDownload(item)
-            }>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
-        }
-
-        {/* {checkChapterDownload(item) ? (
-          <MI name="file-download-done" size={30} color="#ff9000" />
-        ) : downloadProgress == 0 ? (
-          <TouchableOpacity onPress={() => requestDownload(item)}>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
-        ) : (downloadProgress * 100).toFixed(0) <= 99 &&
-          selected.chaptername == item.chaptername ? (
-          <Text
-            style={{
-              fontSize: 16,
-            }}>
-            {(downloadProgress * 100).toFixed(0)} %
-          </Text>
-        ) : selected.chaptername == item.chaptername ? (
-          <MI name="file-download-done" size={30} color="#ff9000" />
-        ) : (
-          <TouchableOpacity onPress={() => 
-            downloadProgress == 100 ? requestDownload(item) :
-            ToastAndroid.show('Please wait for the current download to complete', ToastAndroid.SHORT)
-          }>
-            <MaterialCommunityIcons name="download" size={30} color="#888888" />
-          </TouchableOpacity>
-        )} */}
+        {downloadIcon(item)}
       </View>
     );
   };
 
-  const renderItem = (item) => {
+  const renderItem = item => {
     return (
       <View
         style={{
@@ -531,25 +540,6 @@ export default function InfoPage({route, navigation}) {
         </View>
       </View>
     );
-  }
-
-  const addToCart = async () => {
-    setLoading(true);
-    if (userData !== null) {
-      dispatch({type: 'ADD_CART', payload: [book.id, book]});
-      var body = {
-        type: 1,
-        user_id: userData.id,
-        user_type: userData.usertype,
-        book_id: id,
-      };
-      var result = await postData('api/getAddcart', body);
-      ToastAndroid.show('Book added to Cart', ToastAndroid.SHORT);
-      navigation.setParams({x: ''});
-      setLoading(false);
-    } else {
-      navigation.navigate('Login');
-    }
   };
 
   // const onRefresh = () => {
@@ -820,10 +810,21 @@ export default function InfoPage({route, navigation}) {
                     width: width * 0.92,
                   },
                 ]}>
-                <Text style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
-                  PLAY
-                </Text>
-                <MaterialCommunityIcons name="play" size={22} color="#fff" />
+                {!similarLoading && !savedInfoLoading ? (
+                  <>
+                    <Text
+                      style={{fontSize: 18, fontWeight: '800', color: '#fff'}}>
+                      PLAY
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="play"
+                      size={22}
+                      color="#fff"
+                    />
+                  </>
+                ) : (
+                  <ActivityIndicator size="small" color={backgroundColor} />
+                )}
               </View>
             </TouchableOpacity>
           </View>
@@ -836,7 +837,8 @@ export default function InfoPage({route, navigation}) {
                   paddingVertical: 0,
                 }}>
                 {keys.includes(book.id) ? (
-                  <View
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Cart')}
                     style={[
                       styles.btn,
                       {
@@ -854,14 +856,14 @@ export default function InfoPage({route, navigation}) {
                         color: '#fff',
                         marginRight: 10,
                       }}>
-                      ADDED TO CART
+                      GO TO CART
                     </Text>
                     <MaterialCommunityIcons
                       name="cart"
                       size={20}
                       color="#fff"
                     />
-                  </View>
+                  </TouchableOpacity>
                 ) : (
                   <Button
                     onPress={() => addToCart()}
@@ -946,13 +948,13 @@ export default function InfoPage({route, navigation}) {
               highlightColor={backgroundColor}
               isLoading={similarLoading}
               layout={layout}>
-            <FlatList
-              data={similar}
-              renderItem={({item})=>renderItem(item)}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, index) => index.toString()}
-            />
+              <FlatList
+                data={similar}
+                renderItem={({item}) => renderItem(item)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => index.toString()}
+              />
             </SkeletonContent>
             <TouchableOpacity
               onPress={() =>
@@ -981,11 +983,11 @@ export default function InfoPage({route, navigation}) {
               containerStyle={styles.skeletonContainer}
               boneColor="#333333"
               highlightColor={backgroundColor}
-              isLoading={newArrivalsLoading}
+              isLoading={savedInfoLoading}
               layout={layout}>
               <FlatList
-                data={newArrivals}
-                renderItem={({item})=>renderItem(item)}
+                data={savedInfoData.newArrivals}
+                renderItem={({item}) => renderItem(item)}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item, index) => index.toString()}
@@ -1018,15 +1020,15 @@ export default function InfoPage({route, navigation}) {
               containerStyle={styles.skeletonContainer}
               boneColor="#333333"
               highlightColor={backgroundColor}
-              isLoading={topRatedLoading}
+              isLoading={savedInfoLoading}
               layout={layout}>
-            <FlatList
-              data={topRated}
-              renderItem={({item})=>renderItem(item)}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, index) => index.toString()}
-            />
+              <FlatList
+                data={savedInfoData.topRated}
+                renderItem={({item}) => renderItem(item)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => index.toString()}
+              />
             </SkeletonContent>
             <TouchableOpacity
               onPress={() =>
@@ -1055,15 +1057,15 @@ export default function InfoPage({route, navigation}) {
               containerStyle={styles.skeletonContainer}
               boneColor="#333333"
               highlightColor={backgroundColor}
-              isLoading={popularBooksLoading}
+              isLoading={savedInfoLoading}
               layout={layout}>
-            <FlatList
-              data={popularBooks}
-              renderItem={({item})=>renderItem(item)}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, index) => index.toString()}
-            />
+              <FlatList
+                data={savedInfoData.popular}
+                renderItem={({item}) => renderItem(item)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => index.toString()}
+              />
             </SkeletonContent>
             <TouchableOpacity
               onPress={() =>
@@ -1092,15 +1094,15 @@ export default function InfoPage({route, navigation}) {
               containerStyle={styles.skeletonContainer}
               boneColor="#333333"
               highlightColor={backgroundColor}
-              isLoading={premiumBooksLoading}
+              isLoading={savedInfoLoading}
               layout={layout}>
-            <FlatList
-              data={premiumBooks}
-              renderItem={({item})=>renderItem(item)}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item, index) => index.toString()}
-            />
+              <FlatList
+                data={savedInfoData.premium}
+                renderItem={({item}) => renderItem(item)}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => index.toString()}
+              />
             </SkeletonContent>
           </View>
         </ScrollView>
@@ -1257,9 +1259,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
   },
-  skeletonContainer : {
+  skeletonContainer: {
     width: width,
     flexDirection: 'row',
     flex: 1,
-  }
+  },
 });

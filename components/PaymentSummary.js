@@ -105,10 +105,12 @@ export const PaymentSummary = ({route, navigation}) => {
     }
   };
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const fetchDetails = async () => {
     var key = await checkSyncData();
 
-    if (key) {
+    if (isLogin) {
       await getSyncData(key[0]).then(async res => {
         await fetchUserData(res).then(async result => {
           var body = {

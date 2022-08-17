@@ -47,7 +47,6 @@ export const DrawerContent = ({navigation}) => {
   var cart = useSelector(state => state?.cart);
   var isSub = useSelector(state => state.isSubscribed);
   var keys = Object.keys(cart);
-
   const fetchAllCategory = async () => {
     var body = {type: 1};
     var result = await postData('api/getCategory', body);
@@ -69,10 +68,12 @@ export const DrawerContent = ({navigation}) => {
     setLExpanded(false);
   }, [isDrawerOpen]);
 
+  var isLogin = useSelector(state => state.isLogin);
+
   const checkLogin = async () => {
     var key = await checkSyncData();
 
-    if (key[0] !== 'fcmToken') {
+    if (isLogin) {
       var userData = await getSyncData(key[0]);
       setUserData(userData);
     } else {
@@ -96,7 +97,6 @@ export const DrawerContent = ({navigation}) => {
     );
   };
 
-
   const DisplayLanguage = ({item, index}) => {
     return (
       <View style={{paddingVertical: 0}}>
@@ -110,6 +110,13 @@ export const DrawerContent = ({navigation}) => {
             setLoading(true);
             var body = {type: 1, languageid: item.id};
             var data = await postData('api/getHome', body);
+            let infoPageData = {
+              newArrivals: data.new_arrival,
+              popular: data.populars_books,
+              topRated: data.top_rated,
+              premium: data.Premium_books,
+            };
+            await storeDatasync('infoPageData', infoPageData);
             dispatch({type: 'SET_LANG', payload: item.id});
             dispatch({type: 'SET_HOME', payload: data});
             navigation.closeDrawer();
@@ -139,8 +146,8 @@ export const DrawerContent = ({navigation}) => {
           var base64Data = `data:image/png;base64,` + base64Data;
           // here's base64 encoded image
           await Share.open({
-            // title: `Booksinvoice - Download and listen books for free.`,
-            message: `Booksinvoice - Download and listen books for free.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
+            // title: `Booksinvoice - Download and listen to your favourite audiobooks.`,
+            message: `Booksinvoice - Download and listen to your favourite audiobooks.\nDownload from playstore: https://play.google.com/store/apps/details?id=com.booksinvoice`,
             url: base64Data,
           });
           // remove the file from storage
@@ -440,6 +447,7 @@ export const DrawerContent = ({navigation}) => {
           onPress={() => {
             navigation.navigate('Legal', {page: 'PrivacyPolicy'});
             navigation.closeDrawer();
+            // console.log('Privacy Policy',navigation);
           }}
           style={{backgroundColor: backgroundColor}}></List.Item>
 

@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect} from 'react';
-import {useSelector} from 'react-redux';
+import {useSelector,useDispatch} from 'react-redux';
 import {Button} from 'react-native-paper';
 import {postData} from './FetchApi';
 import {Divider} from 'react-native-elements';
@@ -93,12 +93,18 @@ export default function ActivationLink({route, navigation}) {
     );
   };
 
+  const dispatch = useDispatch();
+
   const handleActivate = async item => {
     var body = {type: 1, id: item.aid};
     var result = await postData('api/getActivatedsub', body);
     if (result.msg === 'Success') {
       setModalVisible(true);
       fetchAssignedSubs();
+      dispatch({
+        type: 'SET_STATUS',
+        payload: {isLogin: true, isSubscribed: true},
+      });
     }
     // check.current.play(0, 50)
   };

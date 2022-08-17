@@ -30,6 +30,8 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import {LoginManager, Profile} from 'react-native-fbsdk-next';
+import ForgotPass from './ForgotPass';
+import {useSwipe} from './useSwipe';
 
 const {width, height} = Dimensions.get('window');
 
@@ -70,6 +72,15 @@ export const Login = ({navigation}) => {
       // Do something when the screen is focused
       return () => {
         setShowSignup(false);
+        setShow(false);
+        setMobileNo('');
+        setPlainMobileNo('');
+        setOtp('');
+        setEmail('');
+        setPassword('');
+        setSelectedIndex(0);
+        setLoading1(false);
+        setLoading2(false);
         // Do something when the screen is unfocused
         // Useful for cleanup functions
       };
@@ -100,7 +111,6 @@ export const Login = ({navigation}) => {
         console.log('error', error);
       }
     }
-    setLoading1(false);
   };
 
   const saveGoogleInfo = async user => {
@@ -114,16 +124,23 @@ export const Login = ({navigation}) => {
     var result = await postData('api/getAddgoogleuser', body);
     if (result !== null) {
       var sub = await checkSubscription(result.data);
+      setLoading1(false);
       navigation.navigate('Homepage');
       storeDatasync(result.data.id, result.data);
       dispatch({
         type: 'SET_STATUS',
         payload: {isLogin: true, isSubscribed: sub},
       });
-      storeDatasync('isSubscribed', sub);
+      // storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
       dispatch({type: 'SET_LOGIN', payload: true});
-      storeDatasync('isLogin', true);
+      // storeDatasync('isLogin', true);
+      if (result?.success !== '') {
+        Alert.alert(
+          'Welcome to Booksinvoice',
+          `Email: ${result.data.useremail}\nPassword: ${result?.success}`,
+        );
+      }
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
       alert('Invalid Creditentials');
@@ -211,10 +228,16 @@ export const Login = ({navigation}) => {
         type: 'SET_STATUS',
         payload: {isLogin: true, isSubscribed: sub},
       });
-      storeDatasync('isSubscribed', sub);
+      // storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
       dispatch({type: 'SET_LOGIN', payload: true});
-      storeDatasync('isLogin', true);
+      // storeDatasync('isLogin', true);
+      if (result?.success !== '') {
+        Alert.alert(
+          'Welcome to Booksinvoice',
+          `Email: ${result.data.useremail}\nPassword: ${result?.success}`,
+        );
+      }
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
       alert('Invalid Creditentials');
@@ -242,7 +265,7 @@ export const Login = ({navigation}) => {
     var result = await postData('api/getSubscription', body);
 
     var cart = await postData('api/getShowcart', body);
-    if (cart.msg === 'Success') {
+    if (cart && cart.msg === 'Success') {
       cart.data.map(item => {
         dispatch({type: 'ADD_CART', payload: [item.id, item]});
       });
@@ -253,20 +276,6 @@ export const Login = ({navigation}) => {
       return false;
     }
   };
-
-  const createAlert = () =>
-    Alert.alert(
-      'Your Precious Information is Safe With Us',
-      'Continue, if you agree to the T&C and Privacy Policy.',
-      [
-        {
-          text: 'Cancel',
-          // onPress: () => console.log("Cancel Pressed"),
-          style: 'cancel',
-        },
-        {text: 'Proceed', onPress: () => validateOTP()},
-      ],
-    );
 
   useEffect(() => {
     startResendOtpTimer();
@@ -299,13 +308,11 @@ export const Login = ({navigation}) => {
           // backgroundColor: '#FFD369',
           alignItems: 'center',
           paddingVertical: 15,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
         }}>
         <View>
           <PhoneInput
             ref={phoneInput}
-            defaultValue={mobileNo}
+            defaultValue={mobileNo.slice(3, mobileNo.length)}
             defaultCode={country}
             layout="first"
             textContainerStyle={{
@@ -349,6 +356,8 @@ export const Login = ({navigation}) => {
               />
               <TextInput
                 autoFocus
+                value={otp}
+                keyboardType="numeric"
                 style={{width: '90%', color: textColor}}
                 placeholder="OTP"
                 placeholderTextColor={textColor}
@@ -359,7 +368,9 @@ export const Login = ({navigation}) => {
               <View
                 style={{flexDirection: 'row', justifyContent: 'space-between'}}>
                 {resendButtonDisabledTime > 0 ? (
-                  <Text>Resend OTP in {resendButtonDisabledTime}s</Text>
+                  <Text style={{color: textColor}}>
+                    Resend OTP in {resendButtonDisabledTime}s
+                  </Text>
                 ) : (
                   <TouchableOpacity
                     onPress={() => {
@@ -368,25 +379,21 @@ export const Login = ({navigation}) => {
                     <Text style={{color: '#ff9000'}}>Resend OTP</Text>
                   </TouchableOpacity>
                 )}
+                <TouchableOpacity onPress={() => setShow(false)}>
+                  <Text style={{color: '#ff9000'}}>Change Mobile Number</Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <TouchableOpacity onPress={() => createAlert()}>
-              <View
-                style={[
-                  styles.btn,
-                  {backgroundColor: '#ff9000', marginVertical: 10},
-                ]}>
-                <Text
-                  style={[
-                    styles.btnText,
-                    {
-                      color: '#000',
-                    },
-                  ]}>
-                  Validate OTP
-                </Text>
-              </View>
-            </TouchableOpacity>
+            <Button
+              onPress={() => validateOTP()}
+              title="Validate OTP"
+              loading={loading}
+              loadingProps={{
+                color: '#000',
+              }}
+              titleStyle={styles.btnText}
+              buttonStyle={styles.btn}
+            />
           </View>
         ) : (
           <TouchableOpacity
@@ -434,9 +441,9 @@ export const Login = ({navigation}) => {
         type: 'SET_STATUS',
         payload: {isLogin: true, isSubscribed: sub},
       });
-      storeDatasync('isSubscribed', sub);
+      // storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
-      storeDatasync('isLogin', true);
+      // storeDatasync('isLogin', true);
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
       alert('Invalid Creditentials');
@@ -471,6 +478,7 @@ export const Login = ({navigation}) => {
   // var dispatch = useDispatch()
 
   const validateOTP = async () => {
+    setLoading(true);
     var body = {
       type: '1',
       usermobile: mobileNo,
@@ -480,7 +488,7 @@ export const Login = ({navigation}) => {
       device_id: DEVICE_ID,
     };
     var result = await postData('api/getValidateuserotp', body);
-    
+
     if (result.msg === 'Login') {
       var sub = await checkSubscription(result.data);
       navigation.navigate('Homepage');
@@ -489,14 +497,21 @@ export const Login = ({navigation}) => {
         type: 'SET_STATUS',
         payload: {isLogin: true, isSubscribed: sub},
       });
-      storeDatasync('isSubscribed', sub);
+      // storeDatasync('isSubscribed', sub);
       dispatch({type: 'ADD_USER', payload: [result.data.id, result.data]});
-      storeDatasync('isLogin', true);
+      // storeDatasync('isLogin', true);
+      if (result?.success !== '') {
+        Alert.alert(
+          'Welcome to Booksinvoice',
+          `Email: ${result.data.useremail}\nPassword: ${result?.success}`,
+        );
+      }
       ToastAndroid.show('Login Successfully !', ToastAndroid.LONG);
     } else {
       // ToastAndroid.show('Invalid OTP !', ToastAndroid.LONG);
       alert('Invalid OTP');
     }
+    setLoading(false);
   };
 
   const loginView = () => {
@@ -504,6 +519,7 @@ export const Login = ({navigation}) => {
       return (
         <>
           {otpLogin()}
+          {/* <ForgotPass /> */}
           <View
             style={{
               width: width * 0.9,
@@ -551,8 +567,22 @@ export const Login = ({navigation}) => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity onPress={() => setShowSignup(false)}>
-            <View style={{width: width * 0.85, marginTop: 10}}>
+          <View
+            style={{
+              width: width * 0.85,
+              marginVertical: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowSignup(false);
+                setShow(false);
+                setMobileNo('');
+                setPlainMobileNo('');
+                setOtp('');
+              }}>
               <Text
                 style={{
                   color: textColor,
@@ -561,8 +591,9 @@ export const Login = ({navigation}) => {
                 }}>
                 Sign In Instead ?
               </Text>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            <ForgotPass width={width * 0.35} />
+          </View>
         </>
       );
     } else {
@@ -584,6 +615,7 @@ export const Login = ({navigation}) => {
               />
               <TextInput
                 style={{width: '80%', color: textColor}}
+                value={email}
                 placeholder="Login id ex:(xxxxxx1234@biv.com)"
                 placeholderTextColor="#999"
                 onChangeText={text => setEmail(text)}
@@ -605,6 +637,7 @@ export const Login = ({navigation}) => {
               <TextInput
                 style={{width: '70%', color: textColor}}
                 secureTextEntry={!showPass}
+                value={password}
                 placeholder="Password"
                 placeholderTextColor="#999"
                 onChangeText={text => setPassword(text)}
@@ -612,12 +645,13 @@ export const Login = ({navigation}) => {
               <MaterialCommunityIcons
                 onPress={() => setShowPass(!showPass)}
                 style={{marginHorizontal: 10}}
-                name={showPass ? 'eye-off' : 'eye'}
+                name={showPass ? 'eye' : 'eye-off'}
                 size={25}
                 color={textColor}
               />
             </View>
           </View>
+
           <View
             style={{
               width: width * 0.9,
@@ -666,12 +700,12 @@ export const Login = ({navigation}) => {
               </Text>
             </View>
           </TouchableOpacity>
+          <ForgotPass />
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
               width: width * 0.3,
-              marginTop: 20,
             }}>
             <TouchableOpacity onPress={() => fbLogin()}>
               <MaterialCommunityIcons
@@ -716,8 +750,20 @@ export const Login = ({navigation}) => {
     };
   }, []);
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 6);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   return (
     <SafeAreaView
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       style={[
         styles.container,
         {
@@ -801,7 +847,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     textAlign: 'center',
     fontWeight: '800',
-    marginTop: 20,
+    marginTop: 10,
   },
   inputContainer: {
     // marginVertical: 5,

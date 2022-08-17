@@ -1,10 +1,13 @@
 import React, {useEffect, useState} from 'react';
-import {View} from 'react-native';
+import {Dimensions, Image, StyleSheet, View} from 'react-native';
 import WebView from 'react-native-webview';
 import {postData} from './FetchApi';
 import {useSelector} from 'react-redux';
+import {useSwipe} from './useSwipe';
 
-export const Legal = ({route}) => {
+const {width, height} = Dimensions.get('window');
+
+export const Legal = ({route, navigation}) => {
   const theme = useSelector(state => state.theme);
 
   const textColor = theme === 'dark' ? '#FFF' : '#191414';
@@ -36,8 +39,29 @@ export const Legal = ({route}) => {
     fetchPolicy();
   }, []);
 
+  const {onTouchStart, onTouchEnd} = useSwipe(onSwipeLeft, onSwipeRight, 306);
+
+  function onSwipeLeft() {
+    navigation.popToTop();
+  }
+
+  function onSwipeRight() {
+    navigation.popToTop();
+  }
+
   return (
-    <View style={{flex: 1, backgroundColor: backgroundColor}}>
+    <View
+      // onTouchStart={onTouchStart}
+      // onTouchEnd={onTouchEnd}
+      style={{flex: 1, backgroundColor: backgroundColor}}>
+      {route.params.page == 'Disclaimer' && (
+        <Image
+          source={{
+            uri: `https://booksinvoice.com/disclaimer-banner.jpg`,
+          }}
+          style={styles.image}
+        />
+      )}
       <WebView
         style={{flex: 1, backgroundColor: backgroundColor}}
         originWhitelist={['*']}
@@ -83,3 +107,17 @@ export const Legal = ({route}) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  image: {
+    width: width,
+    height: height * 0.16,
+    resizeMode: 'contain',
+    display: 'flex',
+    justifyContent: 'center',
+    borderRadius: 0,
+  },
+});
